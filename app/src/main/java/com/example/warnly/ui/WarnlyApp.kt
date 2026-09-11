@@ -138,8 +138,10 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
             bottomBar = {
                 Surface(
                     color = Color(0xFF0B0F14),
-                    tonalElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    tonalElevation = 0.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
                 ) {
                     Row(
                         modifier = Modifier
