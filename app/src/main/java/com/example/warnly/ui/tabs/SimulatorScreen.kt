@@ -89,9 +89,43 @@ fun SimulatorScreen(engine: DisasterEngine) {
             onClick = { engine.simulateFlashFlood() }
         )
 
-        // Scenario 6
+        // Scenario 6: Tsunami
         SimCard(
-            title = "6. Calibrated Zero False Alarm Verification (FR-02)",
+            title = "6. M7.9 Submarine Rupture & Tsunami Inundation Wave",
+            description = "Simulates shallow-water gravity wave physics (v = √(g·d)), deep ocean velocity (712 km/h), coastal ETA countdown, and mandatory vertical climb (+35m).",
+            buttonText = "Trigger Tsunami Wave Incursion",
+            buttonColor = Color(0xFF00838F),
+            onClick = { engine.simulateTsunamiEvent() }
+        )
+
+        // Scenario 7: P2P Disaster Mesh Relay
+        SimCard(
+            title = "7. Off-Grid P2P Mesh SOS Distress Broadcast",
+            description = "Dispatches ad-hoc Bluetooth/Wi-Fi Direct encrypted SOS distress packet through multi-hop neighbor relays with zero cellular/internet dependence.",
+            buttonText = "Broadcast P2P Mesh SOS Beacon",
+            buttonColor = Color(0xFFE91E63),
+            onClick = {
+                engine.meshNetwork.broadcastSosBeacon(
+                    latitude = engine.userLatitude.value,
+                    longitude = engine.userLongitude.value,
+                    medicalTriage = "IMMEDIATE_ASSISTANCE_REQUIRED",
+                    survivorCount = 4
+                )
+            }
+        )
+
+        // Scenario 8: 72-Hour Blackout Mode
+        SimCard(
+            title = "8. 72-Hour Grid Blackout Ultra-Low-Power Mode",
+            description = "Powers down non-critical subpixel drivers to 100% OLED true black (0 mW subpixel draw), duty-cycling sensors to achieve 72+ hours runtime.",
+            buttonText = "Engage 72h Survival Gating",
+            buttonColor = Color(0xFF37474F),
+            onClick = { engine.blackoutManager.enter72HourSurvivalMode() }
+        )
+
+        // Scenario 9: Calibrated Zero False Alarm Verification
+        SimCard(
+            title = "9. Calibrated Zero False Alarm Verification (FR-02)",
             description = "Resets all sensors to clear, stable skies. Enforces strict 0% risk probability gating rule to eliminate warning fatigue.",
             buttonText = "Reset to 0% Safe State",
             buttonColor = Color(0xFF00C853),

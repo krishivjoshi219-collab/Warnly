@@ -14,6 +14,8 @@ enum class AppNavTab(val title: String, val icon: String) {
     NAVIGATE("Offline Nav", "🧭"),
     EDGE_AI("Edge AI", "⚡"),
     HAZARDS("Multi-Hazard", "⚠️"),
+    MESH("P2P Mesh", "📶"),
+    BLACKOUT("Survival", "🔋"),
     SHELTERS("Shelters", "🛡️"),
     FAMILY_SHIELD("Family Shield", "👨‍👩‍👧"),
     PROTOCOLS("Protocols", "📋"),

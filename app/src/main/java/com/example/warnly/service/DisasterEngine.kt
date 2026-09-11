@@ -3,12 +3,17 @@ package com.example.warnly.service
 import android.content.Context
 import android.util.Log
 import com.example.warnly.audio.AcousticSirenSynthesizer
+import com.example.warnly.audio.DisasterVoiceGuide
 import com.example.warnly.data.DisasterRepository
 import com.example.warnly.hardware.LocalSensorManager
 import com.example.warnly.hardware.OpticalBeaconManager
+import com.example.warnly.mesh.P2PDisasterMesh
 import com.example.warnly.model.*
 import com.example.warnly.navigation.DisasterNavigator
 import com.example.warnly.physics.GeoMath
+import com.example.warnly.physics.TsunamiAlert
+import com.example.warnly.physics.TsunamiInundationEngine
+import com.example.warnly.power.BlackoutSurvivalManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +30,8 @@ import kotlin.math.max
  * Warnly Real-Time Resilience & Life-Safety Engine
  * Integrates live global open APIs (Open-Meteo Convective Models, USGS Real-time Seismic Feeds),
  * geodesic safety ring mathematics, acoustic siren synthesis, optical Morse SOS strobe,
- * automated 30-30 sheltering countdown timers, and local hardware-driven tactical disaster navigation.
+ * automated 30-30 sheltering countdown timers, local hardware-driven tactical disaster navigation,
+ * off-grid P2P disaster mesh, 72-hour blackout survival mode, and tsunami inundation physics.
  */
 class DisasterEngine(private val context: Context) {
 
@@ -35,6 +41,13 @@ class DisasterEngine(private val context: Context) {
     val opticalBeacon = OpticalBeaconManager(context)
     val sensorManager = LocalSensorManager(context)
     val navigator = DisasterNavigator(context, sensorManager)
+    val meshNetwork = P2PDisasterMesh(context)
+    val blackoutManager = BlackoutSurvivalManager(context)
+    val voiceGuide = DisasterVoiceGuide(context)
+
+    // Tsunami Coastal Alert
+    private val _tsunamiAlert = MutableStateFlow<TsunamiAlert?>(null)
+    val tsunamiAlert: StateFlow<TsunamiAlert?> = _tsunamiAlert.asStateFlow()
 
     // User Location (Default: San Francisco / Configurable / GPS)
     private val _userLatitude = MutableStateFlow(37.7749)
@@ -498,6 +511,9 @@ class DisasterEngine(private val context: Context) {
     /**
      * Scenario 4: Glacial Lake Outburst Flood (GLOF) Valley Surge
      */
+    /**
+     * Scenario 4: Glacial Lake Outburst Flood (GLOF) Valley Surge
+     */
     fun simulateGlofOutburst() {
         _selectedHazard.value = HazardType.GLOF
         _alertLevel.value = AlertLevel.DANGER
@@ -512,6 +528,10 @@ class DisasterEngine(private val context: Context) {
             verticalEvacuationMeters = 45, // Mandatory +45m vertical climb
             dischargeSurgeRateM3s = 2100.0,
             statusSummary = "High-altitude moraine barrier failed. 2,100 m³/s outburst torrent rushing down valley. Climb vertically (+45m) immediately! Do NOT follow river channel!"
+        )
+        voiceGuide.speakUrgentDirective(
+            "Glacial lake outburst flood torrent approaching down valley. Mandatory vertical climb forty-five meters immediately.",
+            isHighPriority = true
         )
     }
 
@@ -530,10 +550,32 @@ class DisasterEngine(private val context: Context) {
             dischargeSurgeRateM3s = 580.0,
             statusSummary = "Upstream cloudburst detected (75 mm/hr). Sudden wall of water moving through dry canyon washes. Evacuate low crossings now!"
         )
+        voiceGuide.speakUrgentDirective("Flash flood surge detected in canyon wash. Evacuate low water crossings now.")
     }
 
     /**
-     * Scenario 6: Reset to Calibrated 0% Safe Baseline (FR-02)
+     * Scenario 6: Submarine Rupture & Tsunami Inundation Warning
+     */
+    fun simulateTsunamiEvent() {
+        _selectedHazard.value = HazardType.TSUNAMI
+        _alertLevel.value = AlertLevel.DANGER
+        _isEmergencyOverlayVisible.value = true
+        if (_autoSirenOnDanger.value) siren.startSiren()
+
+        val alert = TsunamiInundationEngine.evaluateSubmarineEvent(
+            magnitude = 7.9,
+            epicenterDistanceKm = 165.0,
+            coastalName = "Pacific Coastal Inundation Basin"
+        )
+        _tsunamiAlert.value = alert
+        voiceGuide.speakUrgentDirective(
+            "Critical Tsunami Warning. Coastal surge arrival in nineteen minutes. Evacuate uphill immediately.",
+            isHighPriority = true
+        )
+    }
+
+    /**
+     * Scenario 7: Reset to Calibrated 0% Safe Baseline (FR-02)
      */
     fun resetToSafeState() {
         siren.stopSiren()
@@ -542,6 +584,7 @@ class DisasterEngine(private val context: Context) {
         seismicJob?.cancel()
         _seismicAlert.value = null
         _floodAlert.value = null
+        _tsunamiAlert.value = null
         _strikes.value = emptyList()
         _nearestStrikeDistanceKm.value = null
         _nearestStrikeBearing.value = 0.0
@@ -566,6 +609,9 @@ class DisasterEngine(private val context: Context) {
         opticalBeacon.release()
         sensorManager.release()
         navigator.release()
+        meshNetwork.release()
+        blackoutManager.release()
+        voiceGuide.release()
         countdownJob?.cancel()
         seismicJob?.cancel()
         scope.cancel()

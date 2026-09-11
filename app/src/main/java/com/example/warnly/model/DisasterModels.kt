@@ -4,7 +4,8 @@ enum class HazardType(val displayName: String, val iconLabel: String) {
     LIGHTNING("Lightning Strikes", "⚡"),
     GLOF("Glacial Outburst (GLOF)", "🌊"),
     FLASH_FLOOD("Flash Flood Surge", "🌧️"),
-    SEISMIC("Seismic Earthquake", "🌋")
+    SEISMIC("Seismic Earthquake", "🌋"),
+    TSUNAMI("Coastal Tsunami Inundation", "🌊")
 }
 
 enum class AlertLevel(val label: String, val severityColorHex: Long) {

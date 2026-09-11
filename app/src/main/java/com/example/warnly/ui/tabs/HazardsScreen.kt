@@ -18,13 +18,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.model.HazardType
+import com.example.warnly.physics.TsunamiAlert
 import com.example.warnly.service.DisasterEngine
+import com.example.warnly.ui.components.TopographicContourCanvas
 
 @Composable
 fun HazardsScreen(engine: DisasterEngine) {
     val selectedHazard by engine.selectedHazard.collectAsState()
     val seismicAlert by engine.seismicAlert.collectAsState()
     val floodAlert by engine.floodAlert.collectAsState()
+    val tsunamiAlert by engine.tsunamiAlert.collectAsState()
     val strikes by engine.strikes.collectAsState()
 
     Column(
@@ -99,6 +102,12 @@ fun HazardsScreen(engine: DisasterEngine) {
                 LightningTelemetryPanel(
                     strikes = strikes,
                     onTriggerDemo = { engine.simulateConvectiveIntrusion() }
+                )
+            }
+            HazardType.TSUNAMI -> {
+                TsunamiHazardPanel(
+                    tsunamiAlert = tsunamiAlert,
+                    onTriggerDemo = { engine.simulateTsunamiEvent() }
                 )
             }
         }
@@ -217,6 +226,20 @@ private fun GlofHazardPanel(
                         Text(text = floodAlert.statusSummary, color = Color.White, fontSize = 12.sp)
                     }
                 }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "OFFLINE TOPOGRAPHIC INUNDATION & ESCAPE ASCENT",
+                    color = Color(0xFF80D8FF),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TopographicContourCanvas(
+                    userElevationMeters = 10,
+                    targetShelterElevationMeters = 10 + floodAlert.verticalEvacuationMeters,
+                    targetBearingDegrees = 38.0,
+                    modifier = Modifier.fillMaxWidth().height(180.dp)
+                )
             } else {
                 Text(text = "All monitored alpine glacial basins stable. Normal hydrograph.", color = Color(0xFF00E676), fontSize = 13.sp)
             }
@@ -362,3 +385,99 @@ private fun LightningTelemetryPanel(
         }
     }
 }
+
+@Composable
+private fun TsunamiHazardPanel(
+    tsunamiAlert: TsunamiAlert?,
+    onTriggerDemo: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F1A24))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "🌊 SUBMARINE TSUNAMI INUNDATION PHYSICS",
+                color = Color(0xFF00E5FF),
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Shallow-water gravity wave telemetry: v = √(g·d). Coastal wave shoaling & runup elevation analysis.",
+                color = Color(0xFFB0BEC5),
+                fontSize = 11.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (tsunamiAlert != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A12))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "COASTAL ETA COUNTDOWN",
+                                color = Color(0xFFFF5252),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${tsunamiAlert.estimatedArrivalMinutes} min",
+                                color = Color(0xFFFF1744),
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(text = "Deep Ocean Speed: ${tsunamiAlert.deepOceanSpeedKmh.toInt()} km/h (Bathymetry 4,000m)", color = Color(0xFF80D8FF), fontSize = 12.sp)
+                        Text(text = "Projected Runup Height: ${tsunamiAlert.projectedRunupHeightMeters}m Surge", color = Color(0xFFFF8A80), fontWeight = FontWeight.Bold)
+                        Text(text = "Mandatory Vertical Ascent: +${tsunamiAlert.verticalAscentRequiredMeters}m above sea level", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(text = tsunamiAlert.evacuationDirective, color = Color.White, fontSize = 12.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "OFFLINE TOPOGRAPHIC INUNDATION & ESCAPE ASCENT",
+                    color = Color(0xFF80D8FF),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TopographicContourCanvas(
+                    userElevationMeters = 4,
+                    targetShelterElevationMeters = tsunamiAlert.verticalAscentRequiredMeters,
+                    targetBearingDegrees = 65.0,
+                    modifier = Modifier.fillMaxWidth().height(180.dp)
+                )
+            } else {
+                Text(
+                    text = "Submarine seismic fault monitors nominal. No ocean-basin tsunami warnings active.",
+                    color = Color(0xFF00E676),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onTriggerDemo,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00838F)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Simulate M7.9 Submarine Rupture & Inundation Wave", fontSize = 12.sp)
+            }
+        }
+    }
+}
+

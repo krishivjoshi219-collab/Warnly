@@ -34,6 +34,7 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
     val screenFlashState by engine.opticalBeacon.screenFlashState.collectAsState()
     val telemetryStatus by engine.liveTelemetryStatus.collectAsState()
     val locationName by engine.locationName.collectAsState()
+    val isBlackoutModeActive by engine.blackoutManager.isBlackoutModeActive.collectAsState()
 
     val primaryColor = when (alertLevel) {
         AlertLevel.DANGER -> Color(0xFFFF1744)
@@ -76,6 +77,16 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                             }
                         },
                         actions = {
+                            // Survival mode toggle
+                            IconButton(onClick = {
+                                if (isBlackoutModeActive) {
+                                    engine.blackoutManager.exitSurvivalMode()
+                                } else {
+                                    engine.blackoutManager.enter72HourSurvivalMode()
+                                }
+                            }) {
+                                Text(if (isBlackoutModeActive) "🔋" else "⚡", fontSize = 16.sp)
+                            }
                             // Sync live APIs button
                             IconButton(onClick = { engine.syncAllLiveFeeds() }) {
                                 Text("🔄", fontSize = 16.sp)
@@ -184,12 +195,19 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                     AppNavTab.NAVIGATE -> NavigationScreen(engine)
                     AppNavTab.EDGE_AI -> LocalEdgeScreen(engine)
                     AppNavTab.HAZARDS -> HazardsScreen(engine)
+                    AppNavTab.MESH -> MeshNetworkScreen(engine)
+                    AppNavTab.BLACKOUT -> BlackoutSurvivalScreen(engine)
                     AppNavTab.SHELTERS -> SheltersScreen(engine, onNavigateToShelter = { viewModel.setTab(AppNavTab.NAVIGATE) })
                     AppNavTab.FAMILY_SHIELD -> FamilyShieldScreen(engine)
                     AppNavTab.PROTOCOLS -> ProtocolsScreen()
                     AppNavTab.SIMULATOR -> SimulatorScreen(engine)
                 }
             }
+        }
+
+        // 72-Hour Pure OLED Blackout Survival Overlay
+        if (isBlackoutModeActive) {
+            BlackoutSurvivalScreen(engine)
         }
 
         // Screen Flash Strobe Overlay (Optical SOS)
