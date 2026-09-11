@@ -27,7 +27,8 @@ During catastrophic geophysical crises (severe convective lightning storms, glac
 
 | Release Asset | Format | Architecture | Download Link |
 | :--- | :--- | :--- | :--- |
-| **Warnly Production Release v1.0 (Official GitHub Release)** | `.apk` (12 MB) | Universal (ARM64 / ARMv7 / x86_64) | [**⬇️ Download Warnly APK (Direct CDN)**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.0.0/Warnly-Disaster-Resilience-v1.0.apk) |
+| **Warnly Production Release v1.1.0 (Official GitHub Release)** | `.apk` (12 MB) | Universal (ARM64 / ARMv7 / x86_64) | [**⬇️ Download Warnly APK v1.1.0 (Direct CDN)**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.1.0/Warnly-Disaster-Resilience-v1.1.apk) |
+| **Warnly Production Release v1.0.0 (Legacy Archive)** | `.apk` (12 MB) | Universal (ARM64 / ARMv7 / x86_64) | [**⬇️ Download Warnly APK v1.0.0**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.0.0/Warnly-Disaster-Resilience-v1.0.apk) |
 | **In-Repository Binary Mirror** | `.apk` (12 MB) | Universal (ARM64 / ARMv7 / x86_64) | [**📁 View In-Repo APK**](release/Warnly-Disaster-Resilience-v1.0.apk) |
 
 ```bash
