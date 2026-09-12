@@ -35,6 +35,11 @@ jobs:
       - name: Install React Native Dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Bundle React Native JavaScript
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+
       - name: Grant Execute Permission for Gradlew
         working-directory: android
         run: chmod +x gradlew
