@@ -1,4 +1,4 @@
-name: Build Warnly Android APKs
+name: Build Warnly Android APK
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-typescript-apk:
+  build-android-apk:
     name: Build React Native Mobile APK
     runs-on: ubuntu-latest
 
@@ -30,57 +30,24 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: typescript/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install React Native Dependencies
-        working-directory: typescript
         run: npm install --legacy-peer-deps
 
       - name: Grant Execute Permission for Gradlew
-        working-directory: typescript/android
+        working-directory: android
         run: chmod +x gradlew
 
       - name: Assemble React Native Debug APK with Gradle
-        working-directory: typescript/android
+        working-directory: android
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload TypeScript Mobile APK
+      - name: Upload React Native Mobile APK
         uses: actions/upload-artifact@v4
         with:
           name: Warnly-React-Native-Mobile-APK
-          path: typescript/android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
-
-  build-kotlin-apk:
-    name: Build Native Android Kotlin APK
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Grant Execute Permission for Gradlew
-        working-directory: kotlin
-        run: chmod +x gradlew
-
-      - name: Assemble Kotlin Debug APK
-        working-directory: kotlin
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Upload Kotlin Native APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Warnly-Kotlin-Native-APK
-          path: kotlin/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30

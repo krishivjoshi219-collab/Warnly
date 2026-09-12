@@ -31,14 +31,18 @@ Most weather apps give broad county-level forecasts hours in advance. Warnly foc
 
 ```
 Warnly/
-├── typescript/             # React Native / TypeScript mobile app
-│   ├── src/
-│   │   ├── components/     # UI components and safe Unicode icons
-│   │   ├── screens/        # Home, Radar, Shield, Weather, Settings, Simulator
-│   │   ├── lib/warnly/     # Risk math, weather feeds, and state store
-│   │   └── engine/         # Alert state machine and simulation scenarios
-│   └── android/            # Native Android project (Gradle wrapper)
-└── kotlin/                 # Native Android Kotlin edition
+├── android/            # Native Android project (Gradle wrapper & native modules)
+├── src/                # React Native / TypeScript source code
+│   ├── audio/          # Acoustic siren synthesizer & emergency audio
+│   ├── components/     # UI components, modals, and HUD overlays
+│   ├── engine/         # Alert state machine and simulation scenarios
+│   ├── hardware/       # Optical strobe & flashlight hardware triggers
+│   ├── lib/warnly/     # Risk math, feeds, DND bypass, and state store
+│   ├── screens/        # Home, Radar, Shield, Weather, Settings, Simulator
+│   ├── services/       # Shelter, zone, and telemetry services
+│   └── theme/          # Design system & dark mode tactical styling
+├── package.json        # Project dependencies & build scripts
+└── tsconfig.json       # TypeScript configuration
 ```
 
 ---
@@ -51,7 +55,6 @@ Warnly/
 
 ### Run Web Preview
 ```bash
-cd typescript
 npm install
 npm run dev
 ```
@@ -59,17 +62,16 @@ Open `http://localhost:3000` in your browser.
 
 ### Typecheck & Web Build
 ```bash
-cd typescript
 npm run build
 ```
 
 ### Build Android APK
 ```bash
-cd typescript/android
+cd android
 ./gradlew assembleDebug --no-daemon
 ```
 The compiled APK will be located at:
-`typescript/android/app/build/outputs/apk/debug/app-debug.apk`
+`android/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
