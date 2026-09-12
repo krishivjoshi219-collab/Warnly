@@ -242,7 +242,11 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
 
       {/* ── Tactical Action Strip ── */}
       <FadeIn duration={350} delay={90}>
-        <View style={styles.tacticalActionStrip}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tacticalActionStrip}
+        >
           <TouchableOpacity
             style={styles.tacticalActionItem}
             onPress={() => setCampsOpen(true)}
@@ -256,8 +260,6 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
               <Text style={styles.tacticalActionSub}>3 Stations</Text>
             </View>
           </TouchableOpacity>
-
-          <View style={styles.tacticalActionDivider} />
 
           <TouchableOpacity
             style={styles.tacticalActionItem}
@@ -273,8 +275,6 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
             </View>
           </TouchableOpacity>
 
-          <View style={styles.tacticalActionDivider} />
-
           <TouchableOpacity
             style={styles.tacticalActionItem}
             onPress={() => setBroadcastOpen(true)}
@@ -289,8 +289,6 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
             </View>
           </TouchableOpacity>
 
-          <View style={styles.tacticalActionDivider} />
-
           <TouchableOpacity
             style={styles.tacticalActionItem}
             onPress={() => setGuideOpen(true)}
@@ -304,7 +302,7 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
               <Text style={styles.tacticalActionSub}>Protocols</Text>
             </View>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </FadeIn>
 
       {/* ── Live Doppler Convective Vectors & Barometric Tendency ── */}
@@ -670,22 +668,20 @@ const styles = StyleSheet.create({
 
   // ── Tactical Action Strip ──
   tacticalActionStrip: {
+    gap: 8,
+    paddingVertical: 2,
+    paddingRight: 16,
+  },
+  tacticalActionItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: '#0C131F',
     borderRadius: RADII.xl,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-  },
-  tacticalActionItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   tacticalActionDivider: {
     width: 1,
