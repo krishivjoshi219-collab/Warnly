@@ -2,21 +2,31 @@
   "name": "warnly-disaster-resilience-ts",
   "private": true,
   "version": "1.1.0",
-  "type": "module",
+  "main": "index.js",
   "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "build:android": "cd android && ./gradlew assembleDebug --no-daemon",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "expo": "~51.0.28",
+    "expo-status-bar": "~1.12.1",
+    "lucide-react": "^1.45.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@babel/core": "^7.20.0",
+    "@react-native/babel-preset": "^0.76.7",
+    "@types/react": "~18.2.45",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.4.5",
-    "vite": "^8.3.0"
+    "vite": "^5.3.1"
   }
 }

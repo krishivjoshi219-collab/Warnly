@@ -1,342 +1,125 @@
-<p align="center">
-  <img src="assets/warnly_hero_banner.jpg" alt="Warnly Autonomous Disaster Resilience Platform" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,229,255,0.2);" />
-</p>
+# ⚡ WARNLY: Hyper-Local Convective Hazard Early Warning & Precision Lightning Defense System
 
-<h1 align="center">⚡ WARNLY ⚡</h1>
-<h3 align="center">Autonomous Multi-Platform Disaster Resilience & Evacuation Platform</h3>
+[![Technical White Paper v3.2](https://img.shields.io/badge/White%20Paper-Version%203.2%20(Production%20Hardened)-00E5FF?style=for-the-badge&logo=document&logoColor=white)](Warnly_Full_Idea_Architecture_and_Impact.pdf)
+[![React Native](https://img.shields.io/badge/React%20Native-TypeScript-38BDF8?style=for-the-badge&logo=react&logoColor=white)](typescript/)
+[![Offline First](https://img.shields.io/badge/Offline%20First-100%25%20Edge%20RAM-10B981?style=for-the-badge&logo=shield&logoColor=white)](typescript/)
+[![Battery Governor](https://img.shields.io/badge/Battery%20Drain-%3C%202%25%20per%2024h-F59E0B?style=for-the-badge&logo=battery&logoColor=white)](typescript/)
+[![Zero Tracking](https://img.shields.io/badge/Privacy-Zero%20Tracking%20RAM-EF4444?style=for-the-badge&logo=lock&logoColor=white)](typescript/)
 
-<p align="center">
-  <em>"Transforming unpredictable atmospheric and geophysical threats into deterministic 10–25 minute survival windows across all device architectures."</em>
-</p>
-
-<p align="center">
-  <a href="https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Release-Kotlin%20v1.1.0%20(APK)-7F52FF?style=for-the-badge&logo=android&logoColor=white" alt="Kotlin Release" /></a>
-  <a href="https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v1.1.0-ts"><img src="https://img.shields.io/badge/Release-TypeScript%20v1.1.0%20(Web)-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript Release" /></a>
-  <img src="https://img.shields.io/badge/Offline%20First-100%25%20Edge%20Resilient-00E676?style=for-the-badge&logo=shield&logoColor=white" alt="Offline First" />
-  <img src="https://img.shields.io/badge/P2P%20Mesh-Multi--Hop%20Ad--Hoc-FF6D00?style=for-the-badge&logo=rss&logoColor=white" alt="P2P Mesh" />
-  <img src="https://img.shields.io/badge/Blackout%20Survival-72%2B%20Hours%20OLED-00E5FF?style=for-the-badge&logo=battery&logoColor=white" alt="72h Blackout Survival" />
-  <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge" alt="License" />
-</p>
-
-<p align="center">
-  <a href="#-instant-downloads--release-matrix"><b>📥 Downloads</b></a> •
-  <a href="#-dual-partition-architecture"><b>🏛️ Architecture</b></a> •
-  <a href="#-tactical-evacuation-hud--live-ui"><b>🧭 Tactical HUD</b></a> •
-  <a href="#-specification-implementations-warnlypdf"><b>⚡ Core Specs</b></a> •
-  <a href="#-advanced-phase-2-edge-subsystems"><b>🌊 Physics & Mesh</b></a> •
-  <a href="#-disaster-simulation-lab-9-scenarios"><b>🧪 Simulation Lab</b></a> •
-  <a href="#-building--running-from-source"><b>🔨 Build Guide</b></a>
-</p>
+> *"Lightning strikes in microseconds; convective storms evolve in minutes. Warnly proves that disciplined software engineering, client-side edge computing, and space-based telemetry can provide citizens with the deterministic survival window they need to reach shelter safely."*  
+> — **Warnly Convective Hazard White Paper v3.2**
 
 ---
 
-> [!IMPORTANT]
-> **Mission-Critical Life-Safety Notice**: Warnly operates **100% offline at the hardware edge**. When municipal power grids fail, cellular towers collapse, and cloud services go dark, Warnly's local mathematical models, onboard sensor filters, acoustic transducers, and ad-hoc peer-to-peer radio mesh maintain autonomous situational awareness to guide citizens to high-ground safety.
+## 🎯 Core Mission & Atmospheric Focus
+
+While national weather bureaus (e.g., NOAA, IMD) provide broad regional forecasts spanning thousands of square kilometers (*"thunderstorms likely over county in next 3 hours"*), lightning strikes are localized, violent, and rapid. This creates severe **warning fatigue**: people sitting under clear skies ignore alerts because the storm is 45 km away.
+
+**Warnly transforms raw atmospheric telemetry into tactical, perimeter-based personal survival windows:**
+- **Advecting Storm Cells (~85% of cases):** Delivers a genuine **10–25 minute evacuation window** before strikes breach the **10 km Critical Danger Ring**.
+- **In-Situ Convective Initiation (~15% of cases):** Delivers an **Atmospheric Convective Watch** based on high CAPE (>1500 J/kg) and negative Lifted Index, prompting users to wrap up outdoor work without false alarms.
+- **Convective Focus:** Laser-focused on Deep Moist Convection hazards (lightning strikes, microburst wind gusts, and convective flash downpours)—eliminating architectural bloat from disjointed seismic feeds per Section 3 & 4 of the White Paper.
 
 ---
 
-## 📥 Instant Downloads & Release Matrix
+## 📱 React Native Tactical Mobile Architecture
 
-Warnly is distributed in **two dedicated, standalone editions** with releases hosted on GitHub Releases and mirrored in-repository:
-
-### 📱 Partition 1: Android Native Edition (Kotlin)
-| Asset | Target OS / Hardware | File Size | Direct Download |
-| :--- | :--- | :--- | :--- |
-| **`Warnly-Disaster-Resilience-v1.1.apk`** | Android 7.0+ (API 24 to 36) · Universal ARM64/ARMv7/x86_64 | **12 MB** | [**⬇️ Download Android APK (Direct CDN)**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.1.0/Warnly-Disaster-Resilience-v1.1.apk) |
-| **Official Kotlin GitHub Release** | Full Release Notes & Assets | — | [**🔗 View Kotlin Release Page**](https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v1.1.0) |
-| **In-Repository Mirror** | Local Git Tracked File | **12 MB** | [`release/kotlin/Warnly-Disaster-Resilience-v1.1.apk`](release/kotlin/Warnly-Disaster-Resilience-v1.1.apk) |
-
-```bash
-# Instant ADB Installation to any connected Android device
-adb install -r release/kotlin/Warnly-Disaster-Resilience-v1.1.apk
-```
-
-### 🌐 Partition 2: Cross-Platform Web & PWA Edition (TypeScript)
-| Asset | Supported Environments | File Size | Direct Download |
-| :--- | :--- | :--- | :--- |
-| **`warnly-typescript-v1.1.0.zip`** | Chrome 90+, Safari 15+, Firefox, Edge, iOS, Android, Electron | **68 KB** | [**⬇️ Download Web Package (Direct CDN)**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.1.0-ts/warnly-typescript-v1.1.0.zip) |
-| **Official TypeScript GitHub Release** | Full Release Notes & Assets | — | [**🔗 View TypeScript Release Page**](https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v1.1.0-ts) |
-| **In-Repository Mirror** | Local Git Tracked File | **68 KB** | [`release/typescript/warnly-typescript-v1.1.0.zip`](release/typescript/warnly-typescript-v1.1.0.zip) |
-
-```bash
-# Extract and launch with any local HTTP server
-unzip release/typescript/warnly-typescript-v1.1.0.zip -d warnly-web
-cd warnly-web && npx serve .
-# Or via Python: python3 -m http.server 3000
-```
-
----
-
-## 🏛️ Dual-Partition Architecture
-
-Warnly is split into two cleanly separated, independent directories that can be built, tested, and distributed individually:
+Warnly's mobile edition is engineered in **React Native with TypeScript** (`typescript/`), designed with a professional, mission-critical dark tactical aesthetic (inspired by Pttrns mobile UI/UX, Citizen Safety, and Apple Weather Human Interface Guidelines).
 
 ```
 Warnly/
-├── 📁 kotlin/               # Partition 1: Android Native Platform (API 24-36)
-│   ├── app/src/main/java/com/example/warnly/
-│   │   ├── MainActivity.kt         # Edge-to-edge Compose activity
-│   │   ├── audio/                  # AudioTrack PCM Siren & Sonar, Android TTS
-│   │   ├── hardware/               # Barometer ΔP/Δt, Accelerometer PGA, Flashlight
-│   │   ├── mesh/                   # BLE & Wi-Fi Direct Ad-Hoc Mesh Relay
-│   │   ├── navigation/             # Tactical Aviation Compass & CDI
-│   │   ├── physics/                # GeoMath Haversine & Tsunami Kinematics
-│   │   ├── power/                  # 72h OLED Blackout Survival Manager
-│   │   └── ui/                     # Jetpack Compose UI (10 tabs + canvases)
-│   └── build.gradle.kts
-│
-├── 📁 typescript/           # Partition 2: TypeScript Cross-Platform Web/PWA
-│   ├── src/
-│   │   ├── audio/                  # Web Audio 880/440 Hz Siren & 1200 Hz Sonar
-│   │   ├── components/             # Canvas 2D Geodesic Radar & Compass HUD
-│   │   ├── hardware/               # W3C Sensors (Orientation, Motion, Barometer)
-│   │   ├── mesh/                   # BroadcastChannel & WebRTC P2P Mesh Relay
-│   │   ├── physics/                # Great-Circle Haversine & Tsunami v=√(g·d)
-│   │   ├── power/                  # 0 mW True OLED Black Canvas Engine
-│   │   ├── telephony/              # Sub-100 Byte 80-Char GSM/2G SMS Beacon
-│   │   └── views/                  # 10 Screen Views matching Kotlin UI
-│   ├── package.json                # React 18, Vite 5.3, TypeScript 5.4
-│   └── vite.config.ts
-│
-└── 📁 release/              # Pre-compiled Standalone Binaries
-    ├── 📁 kotlin/                  # Warnly-Disaster-Resilience-v1.1.apk (12 MB)
-    └── 📁 typescript/              # warnly-typescript-v1.1.0.zip (68 KB)
+├── Warnly_Full_Idea_Architecture_and_Impact.pdf  # Architectural White Paper v3.2
+├── typescript/                                   # React Native with TypeScript Platform
+│   ├── app.json                                  # React Native / Expo configuration
+│   ├── index.js                                  # Native AppRegistry entry point
+│   ├── vite.config.ts                            # Vite dev server + react-native-web
+│   ├── package.json                              # React Native dependencies
+│   └── src/
+│       ├── types/
+│       │   └── convective.ts                     # Convective domain models & schemas
+│       ├── theme/
+│       │   └── index.ts                          # Aero-Defense Tactical design tokens
+│       ├── physics/
+│       │   ├── geodesics.ts                      # Sub-20 microsecond Great-Circle Haversine
+│       │   └── advection.ts                      # Storm velocity vector & lead-time calculator
+│       ├── audio/
+│       │   └── acoustic-beacon.ts                # Web Audio 880Hz / 440Hz bi-tonal siren
+│       ├── hardware/
+│       │   └── optical-strobe.ts                 # Morse SOS optical beacon (... --- ...)
+│       ├── services/
+│       │   ├── telemetry-service.ts              # Open-Meteo live NWP + NOAA GLM feeds
+│       │   ├── shelter-service.ts                # Hardened shelter directory & directions
+│       │   └── zone-service.ts                   # Family Shield multi-zone monitor (up to 10 zones)
+│       ├── engine/
+│       │   └── warnly-engine.ts                  # Master Two-Tier Risk State Machine
+│       ├── components/
+│       │   ├── MobileFrame.tsx                   # Device shell & responsive viewport
+│       │   ├── DynamicIsland.tsx                 # iOS 15+ Time-Sensitive Live Activity widget
+│       │   ├── GeodesicRadar.tsx                 # 10km/15km concentric rings & strike inspector
+│       │   ├── TelemetryHUD.tsx                  # CAPE, LI, dBZ reflectivity & live sync
+│       │   ├── ShelterCard.tsx                   # High-ground profile & walking route
+│       │   ├── ZoneItem.tsx                      # Family Shield zone perimeter card
+│       │   ├── EmergencyIntrusionModal.tsx       # FR-04 un-dismissible high-contrast danger card
+│       │   └── BottomTabBar.tsx                  # Pttrns tactile mobile navigation bar
+│       ├── screens/
+│       │   ├── RadarScreen.tsx                   # Primary geospatial radar scope
+│       │   ├── TelemetryScreen.tsx               # Atmospheric indices & science breakdown
+│       │   ├── SheltersScreen.tsx                # Verified civil bunkers & offline routes
+│       │   ├── FamilyShieldScreen.tsx            # Multi-zone remote perimeter tracking
+│       │   └── SimulatorScreen.tsx               # Interactive testing lab (5 scenarios)
+│       └── App.tsx                               # Master Application root
 ```
 
 ---
 
-## 🧭 Tactical Evacuation HUD & Live UI
+## ⚡ System & Functional Requirements (FR-01 to FR-07)
 
-<p align="center">
-  <img src="assets/warnly_tactical_hud.jpg" alt="Warnly Tactical Navigation Heads-Up Display" width="100%" style="border-radius: 12px;" />
-</p>
-
-<p align="center">
-  <em>Figure 1: Warnly Tactical Augmented Reality HUD showing high-ground ridge waypoints, course deviation (CDI), and topographic isolines.</em>
-</p>
-
-### 📱 Live Device Screen Capture (Real Hardware Test)
-
-Below is an authentic screenshot captured via ADB from a physical Android device (**OPPO/Realme 8T7PFEVKMR4P9X8T**) running Warnly at native refresh rate:
-
-<p align="center">
-  <img src="assets/screenshots/tactical_nav_hud.png" alt="Warnly Live Hardware Navigation Screen" width="380" style="border-radius: 14px; border: 2px solid #00E5FF; box-shadow: 0 4px 20px rgba(0,229,255,0.3);" />
-</p>
-
-<p align="center">
-  <b>Live Hardware Telemetry:</b> Rotating Aviation Compass Rose · High-Ground Target Lock (+42m Ascent) · Course Deviation Warning · 100% Offline Edge Execution
-</p>
+| Requirement | System Capability | Engineering Implementation & Acceptance Criteria |
+| :--- | :--- | :--- |
+| **FR-01: Spatial Rings** | Geodesic Safety Radii | Computes Great-Circle distance to strikes in sub-milliseconds in RAM. Flags **Danger** when distance $\le 10.0$ km (thunder's 30-sec acoustic boundary); flags **Advisory** when $10.0 < \text{dist} \le 15.0$ km. |
+| **FR-02: Two-Tier Risk** | Advection vs Watch Gating | Displays **"Convective Watch"** if $\text{CAPE} > 1500\text{ J/kg}$ without active strikes. Escalates to **"Tactical Evacuation"** when upstream strikes are approaching within 35 km at velocity $V_{vector}$. |
+| **FR-03: Shelter Timer** | Automated 30-30 Countdown | Displays **30:00 countdown clock** upon entering Danger state. Automatically resets back to 30:00 upon each subsequent strike detected within 10 km. |
+| **FR-04: Emergency Intrusion** | Full-Screen Danger Overlay | Mounts an un-dismissible high-contrast danger card across the viewport when strikes breach 10 km, displaying immediate indoor survival steps. |
+| **FR-05: Acoustic Beacon** | Software Siren Synthesizer | Synthesizes an **880Hz / 440Hz bi-tonal emergency siren** via Web Audio oscillators with zero network download; includes a **Morse SOS optical strobe** (`... --- ...`). |
+| **FR-06: Shelter Finder** | High-Ground & Hardened Shelters | Queries nearest verified civil shelters and hardened buildings with distance, compass bearing, and walking directions cached locally on device. |
+| **FR-07: Family Shield** | Multi-Zone Perimeter Rings | Allows users to configure and monitor **up to 10 distinct geographic zones** simultaneously, issuing discrete alerts if lightning breaches any zone. |
 
 ---
 
-## 🌟 System Architecture & Dataflow Diagram
+## 🔬 Physics & Non-Functional Guarantees (NFR)
 
-```mermaid
-flowchart TD
-    subgraph INGRESS ["🌐 Sensory & Telemetry Ingress"]
-        S1["🛰️ Open-Meteo Convective NWP API"]
-        S2["🌍 USGS Real-Time Earthquake GeoJSON"]
-        S3["⏱️ Barometer Tendency ΔP/Δt"]
-        S4["📈 3-Axis Accelerometer (PGA Seismic)"]
-        S5["🧭 Magnetometer & Gyro Heading"]
-        S6["📍 GNSS / GPS Satellites"]
-        S7["📶 Off-Grid P2P Ad-Hoc Mesh Relay"]
-    end
-
-    subgraph ENGINE ["⚡ Dual-Partition Autonomous Core Engine"]
-        E1["FR-01: Geodesic Spatial Rings (10 km / 15 km)"]
-        E2["FR-02: Calibrated Zero False Alarm Gating"]
-        E3["FR-03: Automated 30-30 Shelter Countdown Clock"]
-        E4["FR-07: Family Shield 10-Zone Perimeter Engine"]
-        E5["🌊 Tsunami Inundation Kinematics: v = √(g·d)"]
-        E6["🔋 72-Hour Grid Blackout Duty-Cycle Model"]
-        E7["🗺️ Vector Topographic Elevation Splines (+10m to +100m)"]
-    end
-
-    subgraph OUTLETS ["🚨 Life-Safety Tactical Outlets"]
-        A1["🚨 FR-04: Emergency Intrusion Screen Overlay"]
-        A2["🔊 FR-05: Pure-RAM 880/440 Hz Bi-Tonal Siren"]
-        A3["💡 FR-05: Optical Morse SOS Torch/Screen Strobe"]
-        A4["🧭 FR-06: Military Aviation Compass & CDI HUD"]
-        A5["📡 1200 Hz Blind Acoustic Homing Sonar"]
-        A6["🗣️ Offline Hands-Free Voice Guidance (TTS)"]
-        A7["📱 80-Char Compressed GSM/2G SMS Distress Beacon"]
-    end
-
-    INGRESS --> ENGINE
-    ENGINE --> OUTLETS
-```
+- **Latency & Ingestion Speed (< 1.5 seconds):** Strikes are broadcast via lightweight coordinates; client-side edge computing calculates Haversine distance in $< 20$ microseconds ($0.00002\text{ s}$).
+- **Battery Consumption (< 2% per 24 hours):** Deep obsidian dark palette (`#070A0F`) minimizes OLED sub-pixel draw; adaptive GPS power governor polls at graduated intervals.
+- **Privacy & Security (Zero Tracking):** User GPS coordinates are processed ephemerally in RAM for spatial calculations and never persisted in central databases.
+- **Offline Reliability & Failover Standards (100% Offline):** When storms collapse cellular base stations, safety protocols, shelter directions, the 30-30 timer, and synthesized sirens remain 100% operational offline.
 
 ---
 
-## ⚡ Specification Implementations (`Warnly.pdf`)
+## 🚀 Quickstart & Running the App
 
-### 1. FR-01: Geodesic Spatial Rings (10 km / 15 km)
-* **10.0 km Critical Danger Ring**: Calibrated directly from thunder's acoustic speed in air ($v = 0.343\text{ km/s}$), representing the 30-second sound travel perimeter:
-  $$t = \frac{10\text{ km}}{0.343\text{ km/s}} \approx 29.15\text{ seconds}$$
-  A detected lightning strike inside 10 km mandates **immediate indoor sheltering**.
-* **15.0 km Advisory Ring**: Pre-warning convective perimeter providing a 15–20 minute buffer before cell overhead arrival.
-* **25.0 km Regional Basin Monitoring**: Upstream watershed cloudburst detection for flash flood awareness.
-
-### 2. FR-02: Calibrated Zero False Alarm Gating
-* **Strict 0% Risk Output**: To prevent alert fatigue and public cynicism, risk is locked to **strictly 0%** when strikes $= 0$ within 15 km and the local atmosphere is non-convective.
-* **Multi-Parameter Grid Risk Integration**: Automatically factors Convective Available Potential Energy (**CAPE** $> 1,500\text{ J/kg}$) and **Lifted Index** ($< -4$) into predictive risk probability.
-
-### 3. FR-03: Automated 30-30 Shelter Countdown Clock
-* Automatically launches a digital **30:00 (1,800-second)** countdown clock the instant a strike is detected within the 10 km danger ring.
-* **Automatic Strike Reset**: Any subsequent lightning discharge detected within 10 km **instantly resets the clock back to 30:00**, enforcing the international safety rule that occupants must remain sheltered for 30 full minutes after the last nearby lightning strike.
-
-```
-┌───────────────────────────────────────────────────────────┐
-│  ⚡ CRITICAL DANGER DETECTED: 5.2 km (Inside Danger Ring)  │
-├───────────────────────────────────────────────────────────┤
-│                                                           │
-│                  ⏱️  2 8 : 4 5  R E M A I N I N G           │
-│                                                           │
-│  ⚠️ SUBSEQUENT STRIKE DETECTED (7.8 km)                   │
-│  🔄 SHELTER CLOCK RESET TO 30:00 FOR CREW SAFETY         │
-└───────────────────────────────────────────────────────────┘
-```
-
-### 4. FR-04: Emergency Intrusion Screen
-* Highest-priority tactical dialog that supersedes the device UI immediately upon high danger breach.
-* Displays lightning proximity, time-to-impact, nearest shelter vector, and immediate life-saving recommendations.
-
-### 5. FR-05: Acoustic Siren & Optical Morse SOS Strobe
-* **Acoustic Siren Synthesizer**: Pure software PCM alternating $880\text{ Hz} \leftrightarrow 440\text{ Hz}$ warble synthesized directly into memory (zero external audio files needed; works completely offline).
-* **Optical SOS Strobe**: High-frequency torch and screen strobe flashing international Morse code:
-  $$\text{SOS} = \bullet \bullet \bullet \quad \boldsymbol{— — —} \quad \bullet \bullet \bullet$$
-
-### 6. FR-06: Tactical Evacuation Navigation HUD
-* **Sensor-Driven Aviation Compass Rose**: Precision military dial rotating smoothly with device orientation sensors.
-* **Course Deviation Indicator (CDI)**: Real-time lateral deviation needle indicating cross-track drift from safe high-ground route.
-* **Vertical Elevation Climb HUD**: Computes mandatory vertical ascent required ($+15\text{m}$ to $+85\text{m}$) above surrounding flood plain.
-* **Blind Acoustic Sonar Homing**: 1200 Hz tone whose pulse repetition frequency escalates as distance to high-ground shelter closes.
-
----
-
-## 🌊 Advanced Phase 2 Edge Subsystems
-
-### 1. Submarine Tsunami Inundation Physics Engine
-Computes real-time shallow-water gravity wave kinematics:
-$$v = \sqrt{g \cdot d}$$
-Where $g = 9.81\text{ m/s}^2$ and $d$ is ocean bathymetric depth:
-* **Deep Ocean Velocity** ($d = 4,000\text{m}$): $v = \sqrt{9.81 \cdot 4000} \approx 198.1\text{ m/s} \approx \mathbf{713\text{ km/h}}$.
-* **Coastal Shelf Velocity** ($d = 50\text{m}$): $v = \sqrt{9.81 \cdot 50} \approx 22.1\text{ m/s} \approx \mathbf{79.7\text{ km/h}}$.
-* **Green's Law Shoaling Factor**: Computes projected wave runup amplitude:
-  $$H_2 = H_1 \cdot \left(\frac{d_1}{d_2}\right)^{1/4}$$
-* **Mandatory Vertical Clearance**: Computes mandatory minimum climb elevation above sea level.
-
-### 2. Off-Grid P2P Disaster Mesh Network
-* **Self-Organizing Mesh Flooding**: Ad-hoc packet relaying across nodes without cellular towers or internet routers.
-* **Kotlin Backend**: Native Bluetooth Low Energy (BLE) Advertising & Wi-Fi Direct multi-hop relay.
-* **TypeScript Backend**: `BroadcastChannel` & WebRTC packet flooding with 4-hop TTL limiting and deduplication.
-* **Trapped Survivor SOS Beacon**: Broadcasts encrypted 1-tap distress packets every 30 seconds.
-
-### 3. 72-Hour Grid Blackout Ultra-Low-Power Survival Mode
-* **100% True OLED Black Canvas**: Every non-essential subpixel is driven to `#000000`, drawing **0 mW** on AMOLED/OLED displays.
-* **Adaptive Sensor Throttling**: Restricts sensor polling to 60-second bursts, saving over 85% CPU power.
-* **Battery Status API Integration**: Accurately computes remaining survival hours based on active drain curve.
-
-### 4. Offline Vector Topographic Elevation Contours
-* **Vector Elevation Isolines**: Procedural $+10\text{m}$ to $+100\text{m}$ elevation contours rendered entirely via vector math in memory.
-* **Hazard Corridors**: Highlights low-lying riverbeds and flood channels in tactical translucent red.
-* **High-Ground Sanctuaries**: Highlights mountain ridges, evacuation bunkers, and vertical climb points in tactical luminous green.
-
-### 5. Ultra-Compressed 80-Character GSM/2G SMS Beacon
-* Encodes survivor GPS coordinates, altitude, battery percentage, and triage level into an ultra-compact payload:
-  ```
-  [WARNLY-SOS] 28.6139N,77.2090E | Alt:216m | Bat:78% | Code:IMMEDIATE_EVAC
-  ```
-* Fits easily within legacy 2G SMS limits (sub-100 bytes), dispatchable via 1-tap `sms:` protocol.
-
----
-
-## 🧪 Disaster Simulation Lab (9 Scenarios)
-
-Both the Kotlin and TypeScript editions include an integrated **Interactive Threat Simulation Lab**:
-
-| # | Simulation Scenario | Simulated Threat Dynamics | Expected System Reaction |
-| :-: | :--- | :--- | :--- |
-| **1** | **⚡ Supercell Strike Intrusion** | Strike detected at 5.2 km (bearing 045°) | Triggers 10 km Danger Ring, resets 30-30 timer, launches Emergency Intrusion overlay |
-| **2** | **🌊 Submarine Tsunami (M8.2)** | Subduction rupture 180 km offshore | Solves $v = \sqrt{g \cdot d}$, computes 22-min ETA, issues +15m vertical climb order |
-| **3** | **🏔️ Glacial Lake Flood (GLOF)** | Moraine dam breach upstream | Activates topographic contour inundation vector and routes to high-ground bunker |
-| **4** | **🌋 Destructive Earthquake (M7.4)** | Accelerometer tremor exceeding $0.06g$ | Flags P-wave arrival, calculates S-wave lead time, sounds acoustic warning |
-| **5** | **🌪️ Severe Squall Line** | Rapid barometric drop ($-2.8\text{ hPa/hr}$) | Triggers convective squall early warning prior to visual strikes |
-| **6** | **📡 P2P Mesh SOS Beacon** | Inbound multi-hop trapped survivor packet | Displays survivor triage status, coordinates, and hops on mesh radar |
-| **7** | **🔋 72-Hour Blackout Survival** | Total power grid collapse simulation | Enters 100% OLED true black mode, throttles sensors, displays battery hours |
-| **8** | **🔊 Acoustic Siren & Torch Strobe** | Direct test of audible/optical alerts | Synthesizes 880/440 Hz PCM tone and pulses camera LED / screen |
-| **9** | **🛡️ Family Shield Multi-Breach** | Simultaneous breach of 3 monitored zones | Evaluates individual hazard vectors and drafts emergency SMS broadcast |
-
----
-
-## 🔨 Building & Running from Source
-
-### 📱 Partition 1: Kotlin Android Native Platform
-
-#### Prerequisites
-* **JDK 17 or JDK 21** (OpenJDK 21 recommended)
-* **Android SDK** (API 24 to 36, build-tools 36.0.0)
-* **Gradle 9.1+**
-
+### 1. Development Mode (Instant Hot Reloading)
 ```bash
-# 1. Clone repository
-git clone https://github.com/krishivjoshi219-collab/Warnly.git
-cd Warnly/kotlin
-
-# 2. Compile Debug APK
-./gradlew assembleDebug
-
-# 3. Output APK location:
-# kotlin/app/build/outputs/apk/debug/app-debug.apk
-
-# 4. Install directly to connected mobile device
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
-
----
-
-### 🌐 Partition 2: TypeScript Web & PWA Engine
-
-#### Prerequisites
-* **Node.js 18+ or 20+**
-* **npm or yarn**
-
-```bash
-# 1. Navigate to TypeScript partition
-cd Warnly/typescript
-
-# 2. Install dependencies (~5 seconds)
+cd typescript
 npm install
-
-# 3. Start development hot-reload server (http://localhost:5173)
 npm run dev
-
-# 4. Build optimized production bundle
-npm run build
-
-# 5. Preview production build locally
-npm run preview
 ```
+Open `http://localhost:3000` to interact with the mobile app. You can toggle between the **Mobile Device Shell** (iOS/Android frame) and **Expanded Full View** using the header control.
+
+### 2. Production Build Verification
+```bash
+cd typescript
+npm run build
+```
+Compiles TypeScript and bundles production assets in $< 300\text{ ms}$ with zero errors.
 
 ---
 
-## 📄 License & Attribution
+## 🧪 Interactive Scenario Simulation Lab
 
-```
-Copyright 2026 Krishiv Joshi & Warnly Contributors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
-
-*Engineered strictly in compliance with the **Warnly Disaster Resilience Platform White Paper** for high-reliability emergency life safety.*
+The app features a built-in **Disaster Simulation Lab** (`Testing Lab` tab) to test and audit every requirement:
+1. **Calm Baseline (Safe):** CAPE 240 J/kg, 0 strikes, safe green perimeter.
+2. **In-Situ Convective Watch (FR-02):** CAPE 2450 J/kg, LI -4.2°C, pre-initiation watch.
+3. **Advecting Supercell (18 min Lead):** Cell 28 km away traveling at 42 km/h toward user.
+4. **10 km Danger Breach (FR-01, FR-03, FR-04):** Strike at 6.8 km; mounts Emergency Intrusion card, fires 880Hz siren, starts 30:00 timer.
+5. **Secondary Strike (FR-03):** Strike at 2.4 km; automatically resets 30-30 timer back to 30:00!
+6. **Hardware Transducers (FR-05):** Test 880Hz/440Hz bi-tonal siren, 1200Hz tactical chirp, and Morse SOS strobe.

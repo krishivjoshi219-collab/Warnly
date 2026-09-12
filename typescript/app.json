@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Warnly",
+    "slug": "warnly",
+    "version": "3.2.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.warnly.convective"
+    },
+    "android": {
+      "package": "com.warnly.convective",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "USE_FULL_SCREEN_INTENT",
+        "POST_NOTIFICATIONS",
+        "WAKE_LOCK",
+        "VIBRATE"
+      ]
+    }
+  }
+}
