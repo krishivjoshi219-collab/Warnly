@@ -26,3 +26,7 @@ yarn-error.log*
 *.pem
 *.p12
 *.pfx
+
+# Screenshots and media
+WhatsApp Image*
+*.jpeg

@@ -1,7 +1,9 @@
+import { registerRootComponent } from 'expo';
 import { AppRegistry } from 'react-native';
 import { App } from './src/App';
-import appConfig from './app.json';
 
-const appName = appConfig.name || 'Warnly';
+// Register both 'main' (for MainActivity.kt) and 'Warnly'
+AppRegistry.registerComponent('main', () => App);
+AppRegistry.registerComponent('Warnly', () => App);
 
-AppRegistry.registerComponent(appName, () => App);
+registerRootComponent(App);
