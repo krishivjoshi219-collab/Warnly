@@ -27,10 +27,13 @@ yarn-error.log*
 *.p12
 *.pfx
 
-# Screenshots and media
+# Screenshots, media and local documents
 WhatsApp Image*
 *.jpeg
+*.jpg
+*.pdf
 
 # Local reference folders
 first_code/
 first_code
+
