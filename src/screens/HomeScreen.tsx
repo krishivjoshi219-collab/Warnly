@@ -174,8 +174,7 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
           style={[
             styles.riskCard,
             {
-              backgroundColor: riskCardBg,
-              borderColor: levelColor + '35',
+              borderColor: levelColor + '30',
             },
             level === 'danger' && SHADOWS.glowDanger,
             level === 'advisory' && SHADOWS.glowWarning,
@@ -183,7 +182,7 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
           ]}
         >
           {/* Subtle top-edge highlight */}
-          <View style={[styles.riskCardTopEdge, { backgroundColor: levelColor + '20' }]} />
+          <View style={[styles.riskCardTopEdge, { backgroundColor: levelColor + '35' }]} />
 
           {/* Card header: icon + location + level */}
           <View style={styles.riskCardHeader}>
@@ -229,6 +228,7 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
               value={weather ? String(Math.round(weather.cape)) : '—'}
               unit="J/kg"
               accent={COLORS.warning}
+              style={styles.statsTile}
             />
             <View style={styles.statsDivider} />
             <MetricTile
@@ -236,13 +236,15 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
               value={weather ? weather.liftedIndex.toFixed(1) : '—'}
               unit="K"
               accent={COLORS.accentSky}
+              style={styles.statsTile}
             />
             <View style={styles.statsDivider} />
             <MetricTile
               label="NEAREST ⚡"
               value={nearest ? String(nearest.distanceKm) : 'None'}
               unit={nearest ? ' km' : ''}
-              accent={nearest ? COLORS.danger : COLORS.textSecondary}
+              accent={nearest ? COLORS.danger : COLORS.safe}
+              style={styles.statsTile}
             />
           </View>
         </View>
@@ -513,7 +515,7 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 100,
+    paddingBottom: 135,
     gap: 12,
   },
   refreshBtn: {
@@ -538,16 +540,17 @@ const styles = StyleSheet.create({
   },
   quickAction: {
     backgroundColor: COLORS.card,
-    borderRadius: RADII.xl,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 13,
+    paddingHorizontal: 8,
     alignItems: 'center',
     gap: 5,
+    ...SHADOWS.sm,
   },
   quickActionIcon: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: RADII.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -559,19 +562,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   quickActionSub: {
-    fontSize: 9,
+    fontSize: 9.5,
     color: COLORS.textTertiary,
     textAlign: 'center',
   },
 
   // ── Risk Card ──
   riskCard: {
+    backgroundColor: COLORS.card,
     borderRadius: RADII['3xl'],
     borderWidth: 1,
     overflow: 'hidden',
+    ...SHADOWS.md,
   },
   riskCardTopEdge: {
-    height: 1,
+    height: 1.5,
     marginHorizontal: 16,
     marginTop: 1,
     borderRadius: 1,
@@ -591,8 +596,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   riskIconBox: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: RADII.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -621,21 +626,29 @@ const styles = StyleSheet.create({
   statsStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(12,20,34,0.4)',
+  },
+  statsTile: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    alignItems: 'center',
   },
   statsDivider: {
     width: 1,
-    height: 36,
+    height: 32,
     backgroundColor: COLORS.border,
-    marginHorizontal: 12,
+    marginHorizontal: 4,
   },
 
   // ── Rain Banner ──
   rainBanner: {
     borderColor: COLORS.safeBorder,
-    backgroundColor: 'rgba(0,229,255,0.06)',
+    backgroundColor: COLORS.card,
   },
   rainBannerInner: {
     flexDirection: 'row',

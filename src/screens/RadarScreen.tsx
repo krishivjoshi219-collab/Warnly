@@ -346,13 +346,14 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 100,
+    paddingBottom: 135,
     gap: 12,
   },
 
   chipsBar: {
-    gap: 6,
-    paddingVertical: 2,
+    gap: 8,
+    paddingVertical: 4,
+    paddingRight: 16,
   },
   chip: {
     flexDirection: 'row',

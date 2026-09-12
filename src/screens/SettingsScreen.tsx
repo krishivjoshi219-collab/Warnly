@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 100,
+    paddingBottom: 135,
     gap: 12,
   },
 

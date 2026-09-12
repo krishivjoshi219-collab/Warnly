@@ -356,9 +356,6 @@ const HazardCard: React.FC<HazardCardProps> = ({
         {/* Bottom: name + sub */}
         <Text style={styles.hazardTitle}>{title}</Text>
         <Text style={styles.hazardSub} numberOfLines={2}>{subtitle}</Text>
-
-        {/* Tap affordance */}
-        <ChevronRight size={10} color={COLORS.textMuted + '60'} style={{ marginTop: 4 }} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -480,10 +477,11 @@ const styles = StyleSheet.create({
   hazardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   hazardCardWrap: {
-    width: '48%',
+    flex: 1,
+    minWidth: '47%',
   },
   hazardCard: {
     backgroundColor: COLORS.card,
@@ -492,6 +490,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     padding: 14,
     gap: 4,
+    ...SHADOWS.sm,
   },
   hazardCardTop: {
     flexDirection: 'row',

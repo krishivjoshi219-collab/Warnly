@@ -72,15 +72,14 @@ export const ShieldScreen: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       {/* Title Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Family Shield</Text>
-          <Text style={styles.headerSubtitle}>
-            Multi-zone rings for loved ones & properties
-          </Text>
-        </View>
-        <Text style={styles.brandBadge}>SHIELD</Text>
-      </View>
+      <FadeIn duration={300}>
+        <ScreenHeader
+          title="Family Shield"
+          subtitle="Multi-zone rings for loved ones & properties"
+          badge="SHIELD"
+          badgeVariant="safe"
+        />
+      </FadeIn>
 
       {/* Pro Tier Banner */}
       <View style={styles.proBanner}>
@@ -414,48 +413,21 @@ const styles = StyleSheet.create({
   },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 90,
+    paddingTop: 14,
+    paddingBottom: 135,
     gap: 12,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: COLORS.textPrimary,
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  brandBadge: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: COLORS.safe,
-    letterSpacing: 2,
-    backgroundColor: COLORS.safeBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.sm,
-    borderWidth: 1,
-    borderColor: COLORS.safeBorder,
-  },
   proBanner: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: RADII.xl,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.safeBorder,
-    padding: 14,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
+    ...SHADOWS.md,
   },
   proBannerLeft: {
     flexDirection: "row",
@@ -549,14 +521,15 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   primaryPlaceCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: RADII.xl,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.safeBorder,
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    ...SHADOWS.sm,
   },
   dangerCard: {
     borderColor: COLORS.dangerBorder,
@@ -638,14 +611,15 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
   },
   emptyState: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: 20,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 24,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    ...SHADOWS.sm,
   },
   emptyStateTitle: {
     fontSize: 14,
@@ -663,11 +637,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.safe,
-    borderRadius: RADII.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    borderRadius: RADII.xl,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     gap: 6,
-    marginTop: 4,
+    marginTop: 6,
+    ...SHADOWS.glowSafe,
   },
   addFirstBtnText: {
     fontSize: 12,
@@ -678,14 +653,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   placeCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: RADII.xl,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 12,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    ...SHADOWS.sm,
   },
   placeCardLeft: {
     flexDirection: "row",
@@ -720,12 +696,13 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   sirenCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: 20,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 14,
-    gap: 8,
+    padding: 16,
+    gap: 10,
+    ...SHADOWS.sm,
   },
   sirenHeader: {
     flexDirection: "row",
@@ -733,26 +710,26 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sirenTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     color: COLORS.textPrimary,
     letterSpacing: 0.5,
   },
   sirenSubtitle: {
     fontSize: 11,
-    color: COLORS.textMuted,
-    lineHeight: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 16,
   },
   sirenBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.dangerBg,
-    borderRadius: RADII.lg,
+    borderRadius: RADII.xl,
     borderWidth: 1,
     borderColor: COLORS.dangerBorder,
-    paddingVertical: 10,
-    gap: 6,
+    paddingVertical: 12,
+    gap: 7,
     marginTop: 4,
   },
   sirenBtnText: {
