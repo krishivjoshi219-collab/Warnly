@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,12 +15,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.model.AlertLevel
 import com.example.warnly.service.DisasterEngine
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
+/**
+ * FR-07: Family Shield 10-Zone Perimeter Monitoring Screen
+ * Monitors multiple geographically dispersed perimeters simultaneously.
+ */
 @Composable
 fun FamilyShieldScreen(engine: DisasterEngine) {
     val zones by engine.familyShieldZones.collectAsState()
@@ -29,121 +36,127 @@ fun FamilyShieldScreen(engine: DisasterEngine) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(14.dp)
+            .background(VoidBlack)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // 1. Header
+        TacticalPanel(
+            borderColor = BorderBright,
+            contentPadding = PaddingValues(14.dp)
         ) {
-            Column {
-                Text(
-                    text = "FAMILY SHIELD MULTI-ZONE RINGS",
-                    color = Color(0xFFFF80AB),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 15.sp,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = "FR-07: Monitoring 10 dispersed perimeters simultaneously.",
-                    color = Color(0xFF90A4AE),
-                    fontSize = 12.sp
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF880E4F), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "${zones.size}/10 Active", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = NeonCyan, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "FAMILY SHIELD MULTI-PERIMETER",
+                            color = NeonCyan,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "FR-07: 10 DISPERSED ASSET RINGS ACTIVE",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
+                TacticalBadge(
+                    text = "${zones.size}/10 MONITORED",
+                    accentColor = CyberEmerald
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
+        // 2. Zone List
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(zones) { zone ->
                 val badgeColor = when (zone.alertLevel) {
-                    AlertLevel.DANGER -> Color(0xFFFF1744)
-                    AlertLevel.ADVISORY -> Color(0xFFFFB300)
-                    AlertLevel.SAFE -> Color(0xFF00E676)
+                    AlertLevel.DANGER -> CriticalCrimson
+                    AlertLevel.ADVISORY -> HazardAmber
+                    AlertLevel.SAFE -> CyberEmerald
                 }
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFF263238), RoundedCornerShape(14.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141923))
-                ) {
+                val borderTone = when (zone.alertLevel) {
+                    AlertLevel.DANGER -> BorderCritical
+                    AlertLevel.ADVISORY -> BorderAmber
+                    AlertLevel.SAFE -> BorderGlass
+                }
+
+                TacticalPanel(borderColor = borderTone) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Text(text = zone.type.icon, fontSize = 24.sp)
-                            Spacer(modifier = Modifier.width(12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = zone.type.icon, fontSize = 22.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = zone.name,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    text = zone.name.uppercase(),
+                                    color = TextHighlight,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily.Monospace
                                 )
                                 Text(
                                     text = zone.type.title,
-                                    color = Color(0xFF90A4AE),
-                                    fontSize = 11.sp
+                                    color = TextSecondary,
+                                    fontSize = 10.sp
                                 )
                                 if (zone.nearestStrikeKm != null) {
                                     Text(
-                                        text = "Nearest Strike: ${zone.nearestStrikeKm} km away",
-                                        color = if (zone.nearestStrikeKm <= 15.0) Color(0xFFFFCA28) else Color(0xFF78909C),
-                                        fontSize = 11.sp
+                                        text = "Nearest Threat: ${String.format("%.1f", zone.nearestStrikeKm)} km away",
+                                        color = if (zone.nearestStrikeKm <= 15.0) HazardAmber else TextSecondary,
+                                        fontSize = 10.sp,
+                                        fontFamily = FontFamily.Monospace
                                     )
                                 }
                             }
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
-                            Box(
-                                modifier = Modifier
-                                    .background(badgeColor.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
-                                    .border(1.dp, badgeColor, RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    text = zone.alertLevel.name,
-                                    color = badgeColor,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            TacticalBadge(
+                                text = zone.alertLevel.name,
+                                accentColor = badgeColor
+                            )
 
                             Spacer(modifier = Modifier.height(6.dp))
 
-                            IconButton(
+                            TacticalButton(
+                                text = "BROADCAST SMS",
                                 onClick = {
                                     val sendIntent = Intent().apply {
                                         action = Intent.ACTION_SEND
                                         putExtra(
                                             Intent.EXTRA_TEXT,
-                                            "⚠️ WARNLY ALERT: Perimeter advisory for ${zone.name}. Current status is ${zone.alertLevel.name}. Nearest strike: ${zone.nearestStrikeKm} km. Seek shelter if thunder is heard!"
+                                            "⚠️ WARNLY ALERT: Perimeter advisory for ${zone.name}. Current status is ${zone.alertLevel.name}. Nearest strike: ${zone.nearestStrikeKm ?: 0} km. Take indoor shelter if thunder is heard!"
                                         )
                                         type = "text/plain"
                                     }
-                                    context.startActivity(Intent.createChooser(sendIntent, "Broadcast Perimeter Alert"))
+                                    context.startActivity(Intent.createChooser(sendIntent, "Share Warnly Alert"))
                                 },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Text("📢", fontSize = 16.sp)
-                            }
+                                accentColor = BorderGlass,
+                                leadingIcon = "📤",
+                                height = 32.dp
+                            )
                         }
                     }
                 }

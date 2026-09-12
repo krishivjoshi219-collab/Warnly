@@ -6,21 +6,25 @@ import androidx.compose.ui.test.onNodeWithText
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import com.example.warnly.theme.WarnlyTheme
+import com.example.warnly.ui.WarnlyApp
 
-/** UI tests for [com.example.warnly.ui.main.MainScreen]. */
+/** UI instrumented smoke test for Warnly. */
 class MainScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before
   fun setup() {
-    composeTestRule.setContent { MainScreen(FAKE_DATA) }
+    composeTestRule.setContent {
+      WarnlyTheme {
+        WarnlyApp()
+      }
+    }
   }
 
   @Test
-  fun firstItem_exists() {
-    FAKE_DATA.forEach { composeTestRule.onNodeWithText("Hello $it!").assertExists() }
+  fun appHeader_exists() {
+    composeTestRule.onNodeWithText("WARNLY").assertExists()
   }
 }
-
-private val FAKE_DATA = listOf("Sample1", "Sample2", "Sample3")

@@ -2,26 +2,36 @@ package com.example.warnly.ui.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.model.HazardType
+import com.example.warnly.model.LightningStrike
+import com.example.warnly.model.SeismicAlert
+import com.example.warnly.model.FloodAlert
 import com.example.warnly.physics.TsunamiAlert
 import com.example.warnly.service.DisasterEngine
-import com.example.warnly.ui.components.TopographicContourCanvas
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
+/**
+ * Multi-Hazard Resilience Ecosystem Screen
+ * Unified telemetry across atmospheric and geophysical threats.
+ */
 @Composable
 fun HazardsScreen(engine: DisasterEngine) {
     val selectedHazard by engine.selectedHazard.collectAsState()
@@ -33,52 +43,95 @@ fun HazardsScreen(engine: DisasterEngine) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(VoidBlack)
             .verticalScroll(rememberScrollState())
-            .padding(14.dp)
+            .padding(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "MULTI-HAZARD RESILIENCE ECOSYSTEM",
-            color = Color(0xFF00E5FF),
-            fontWeight = FontWeight.Black,
-            fontSize = 15.sp,
-            letterSpacing = 1.sp
-        )
-        Text(
-            text = "Unified telemetry across atmospheric and geophysical threats.",
-            color = Color(0xFF90A4AE),
-            fontSize = 12.sp
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Hazard Type Selector
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        // 1. Header
+        TacticalPanel(
+            borderColor = BorderBright,
+            contentPadding = PaddingValues(14.dp)
         ) {
-            HazardType.values().forEach { hazard ->
-                val isSelected = (hazard == selectedHazard)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { engine.setHazard(hazard) },
-                    label = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = NeonCyan, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
                         Text(
-                            text = "${hazard.iconLabel} ${hazard.displayName.split(" ")[0]}",
-                            fontSize = 11.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            text = "MULTI-HAZARD MATRIX",
+                            color = NeonCyan,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
                         )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF0D47A1),
-                        selectedLabelColor = Color.White
-                    ),
-                    modifier = Modifier.weight(1f)
+                        Text(
+                            text = "UNIFIED SENSORY & KINEMATICS TELEMETRY",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
+                TacticalBadge(
+                    text = "5 VECTORS",
+                    accentColor = HighGroundTeal
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // 2. Tactical Hazard Type Selector Bar
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(HazardType.values()) { hazard ->
+                val isSelected = (hazard == selectedHazard)
+                val badgeColor = when (hazard) {
+                    HazardType.LIGHTNING -> NeonCyan
+                    HazardType.SEISMIC -> CriticalCrimson
+                    HazardType.GLOF -> ElectricBlue
+                    HazardType.FLASH_FLOOD -> HazardAmber
+                    HazardType.TSUNAMI -> TacticalPurple
+                }
 
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) SurfaceElevated else SurfaceDark)
+                        .border(
+                            1.dp,
+                            if (isSelected) badgeColor else BorderGlass,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .clickable { engine.setHazard(hazard) }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(text = hazard.iconLabel, fontSize = 13.sp)
+                        Text(
+                            text = hazard.displayName.split(" ")[0].uppercase(),
+                            color = if (isSelected) badgeColor else TextSecondary,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+        }
+
+        // 3. Dynamic Hazard Intelligence Panel
         when (selectedHazard) {
             HazardType.SEISMIC -> {
                 SeismicHazardPanel(
@@ -116,273 +169,240 @@ fun HazardsScreen(engine: DisasterEngine) {
 
 @Composable
 private fun SeismicHazardPanel(
-    seismicAlert: com.example.warnly.model.SeismicAlert?,
+    seismicAlert: SeismicAlert?,
     onTriggerDemo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF161A22))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "🌋 USGS SEISMIC P/S WAVE DIFFERENTIAL",
-                color = Color(0xFFFF5252),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Primary P-wave (6.0 km/s) detected before destructive shear S-wave (3.5 km/s).",
-                color = Color(0xFFB0BEC5),
-                fontSize = 11.sp
-            )
+    TacticalPanel(borderColor = BorderCritical) {
+        TacticalSectionHeader(
+            tag = "USGS-SEISMIC",
+            title = "Earthquake P/S Wave Differential",
+            trailingBadge = if (seismicAlert != null) "TREMOR ARMED" else "STANDBY",
+            badgeColor = if (seismicAlert != null) CriticalCrimson else BorderGlass,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            if (seismicAlert != null && seismicAlert.sWaveCountdownSeconds > 0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFB71C1C), RoundedCornerShape(12.dp))
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "DESTRUCTIVE S-WAVE ARRIVAL IN",
-                            color = Color(0xFFFFCDD2),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "${seismicAlert.sWaveCountdownSeconds}s",
-                            color = Color.White,
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Text(
-                            text = "DROP, COVER & HOLD ON! (Magnitude ${seismicAlert.magnitude} • ${seismicAlert.epicenterDistanceKm.toInt()} km away)",
-                            color = Color(0xFFFFEBEE),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = "No active seismic P-wave events detected in immediate fault sectors.",
-                    color = Color(0xFF00E676),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 12.dp)
+        if (seismicAlert != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TacticalMetricBox(
+                    label = "MAGNITUDE",
+                    value = "M${seismicAlert.magnitude}",
+                    statusColor = CriticalCrimson,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalMetricBox(
+                    label = "EPICENTER",
+                    value = "${seismicAlert.epicenterDistanceKm.toInt()} km",
+                    unit = seismicAlert.epicenterLocationName,
+                    statusColor = HazardAmber,
+                    modifier = Modifier.weight(1.4f)
+                )
+                TacticalMetricBox(
+                    label = "S-WAVE COUNTDOWN",
+                    value = "${seismicAlert.sWaveCountdownSeconds}s",
+                    statusColor = CriticalCrimson,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onTriggerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Simulate M6.4 Earthquake P/S Differential", fontSize = 12.sp)
-            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Primary P-wave (6.0 km/s) detected before destructive shear S-wave (3.5 km/s). Estimated MMI: ${seismicAlert.estimatedMmi}.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
+        } else {
+            Text(
+                text = "USGS seismic network standby. Detects P-wave velocity differentials to deliver 15–45 second early warnings prior to destructive ground motion.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
         }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        TacticalButton(
+            text = "TRIGGER M6.4 SEISMIC COUNTDOWN",
+            onClick = onTriggerDemo,
+            accentColor = CriticalCrimson,
+            leadingIcon = "🌋",
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun GlofHazardPanel(
-    floodAlert: com.example.warnly.model.FloodAlert?,
+    floodAlert: FloodAlert?,
     onTriggerDemo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF101923))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "🌊 GLACIAL LAKE OUTBURST FLOOD (GLOF)",
-                color = Color(0xFF40C4FF),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "High-altitude moraine lake collapse monitoring with mandatory vertical escape (+30-50m).",
-                color = Color(0xFFB0BEC5),
-                fontSize = 11.sp
-            )
+    TacticalPanel(borderColor = BorderBright) {
+        TacticalSectionHeader(
+            tag = "GLOF-VALLEY",
+            title = "Glacial Lake Outburst Flood Inundation",
+            trailingBadge = if (floodAlert != null) "CREST INBOUND" else "STANDBY",
+            badgeColor = if (floodAlert != null) HazardAmber else BorderGlass,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (floodAlert != null && floodAlert.floodType.contains("GLOF")) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0D2538))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(text = "Crest Lead-Time: ${floodAlert.crestLeadTimeMinutes} min", color = Color(0xFF80D8FF), fontWeight = FontWeight.Bold)
-                        Text(text = "Required Vertical Climb: +${floodAlert.verticalEvacuationMeters}m uphill", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold)
-                        Text(text = "Discharge Surge: ${floodAlert.dischargeSurgeRateM3s.toInt()} m³/s", color = Color(0xFFFF8A80), fontSize = 12.sp)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = floodAlert.statusSummary, color = Color.White, fontSize = 12.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "OFFLINE TOPOGRAPHIC INUNDATION & ESCAPE ASCENT",
-                    color = Color(0xFF80D8FF),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                TopographicContourCanvas(
-                    userElevationMeters = 10,
-                    targetShelterElevationMeters = 10 + floodAlert.verticalEvacuationMeters,
-                    targetBearingDegrees = 38.0,
-                    modifier = Modifier.fillMaxWidth().height(180.dp)
-                )
-            } else {
-                Text(text = "All monitored alpine glacial basins stable. Normal hydrograph.", color = Color(0xFF00E676), fontSize = 13.sp)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onTriggerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0277BD)),
-                modifier = Modifier.fillMaxWidth()
+        if (floodAlert != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Simulate GLOF Moraine Burst (+45m Vertical Escape)", fontSize = 12.sp)
+                TacticalMetricBox(
+                    label = "CREST ETA",
+                    value = "${floodAlert.crestLeadTimeMinutes} min",
+                    statusColor = HazardAmber,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalMetricBox(
+                    label = "VERTICAL CLIMB",
+                    value = "+${floodAlert.verticalEvacuationMeters}m",
+                    statusColor = HighGroundTeal,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalMetricBox(
+                    label = "DISCHARGE",
+                    value = "${floodAlert.dischargeSurgeRateM3s.toInt()}",
+                    unit = "m³/s",
+                    statusColor = ElectricBlue,
+                    modifier = Modifier.weight(1f)
+                )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Moraine breach upstream at ${floodAlert.basinName}. Mandatory immediate vertical climb out of valley riverbed.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
+        } else {
+            Text(
+                text = "Glacial basin moraine monitoring standby. High-altitude outburst models compute hydrological surge wave velocities down valleys.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
         }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        TacticalButton(
+            text = "SIMULATE GLOF MORAINE BURST",
+            onClick = onTriggerDemo,
+            accentColor = ElectricBlue,
+            leadingIcon = "🌊",
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun FlashFloodPanel(
-    floodAlert: com.example.warnly.model.FloodAlert?,
+    floodAlert: FloodAlert?,
     onTriggerDemo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF151D24))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "🌧️ FLASH FLOOD RUNOFF SURGE",
-                color = Color(0xFF64B5F6),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Rapid wash and canyon drainage surge alerts derived from minutely rainfall telemetry.",
-                color = Color(0xFFB0BEC5),
-                fontSize = 11.sp
-            )
+    TacticalPanel(borderColor = BorderAmber) {
+        TacticalSectionHeader(
+            tag = "CANYON-SURGE",
+            title = "Flash Flood Canyon Runoff",
+            trailingBadge = if (floodAlert != null) "ACTIVE SURGE" else "MONITORING",
+            badgeColor = if (floodAlert != null) HazardAmber else BorderGlass,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Upstream convective cloudbursts exceeding 50 mm/hr trigger rapid canyon washes and flash flood hydrographs.",
+            color = TextSecondary,
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            lineHeight = 16.sp
+        )
 
-            if (floodAlert != null && floodAlert.floodType.contains("Flash")) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2833))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(text = "Surge Lead-Time: ${floodAlert.crestLeadTimeMinutes} min", color = Color(0xFFFFCA28), fontWeight = FontWeight.Bold)
-                        Text(text = "Basin: ${floodAlert.basinName}", color = Color.White, fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = floodAlert.statusSummary, color = Color(0xFFECEFF1), fontSize = 12.sp)
-                    }
-                }
-            } else {
-                Text(text = "Dry drainage channels. Runoff risk negligible.", color = Color(0xFF00E676), fontSize = 13.sp)
-            }
+        Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onTriggerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Simulate Canyon Flash Flood Runoff Surge", fontSize = 12.sp)
-            }
-        }
+        TacticalButton(
+            text = "TRIGGER CANYON RUNOFF SURGE",
+            onClick = onTriggerDemo,
+            accentColor = HazardAmber,
+            leadingIcon = "🌧️",
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun LightningTelemetryPanel(
-    strikes: List<com.example.warnly.model.LightningStrike>,
+    strikes: List<LightningStrike>,
     onTriggerDemo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF131821))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "⚡ VLF/LF LIGHTNING STROKE TELEMETRY",
-                color = Color(0xFFFFD600),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Real-time ground discharges with sub-kilometer TOA accuracy & peak current (kA).",
-                color = Color(0xFFB0BEC5),
-                fontSize = 11.sp
-            )
+    TacticalPanel(borderColor = BorderBright) {
+        TacticalSectionHeader(
+            tag = "LIGHTNING-01",
+            title = "Atmospheric Strike Log",
+            trailingBadge = "${strikes.size} DETECTIONS",
+            badgeColor = if (strikes.isEmpty()) CyberEmerald else CriticalCrimson,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (strikes.isEmpty()) {
-                Text(
-                    text = "Zero strike discharges detected in local 15 km perimeter.",
-                    color = Color(0xFF00E676),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    strikes.take(6).forEach { strike ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFF1D2430), RoundedCornerShape(8.dp))
-                                .padding(10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "${String.format("%.1f", strike.distanceKm)} km (${strike.bearingDegrees.toInt()}°)",
-                                    color = if (strike.distanceKm <= 10.0) Color(0xFFFF1744) else Color(0xFFFFB300),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                                Text(
-                                    text = "Current: ${String.format("%.1f", strike.intensityKa)} kA",
-                                    color = Color(0xFF90A4AE),
-                                    fontSize = 11.sp
-                                )
-                            }
-                            Text(
-                                text = if (strike.distanceKm <= 10.0) "CRITICAL RING" else "ADVISORY RING",
-                                color = if (strike.distanceKm <= 10.0) Color(0xFFFF5252) else Color(0xFFFFD54F),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+        if (strikes.isNotEmpty()) {
+            strikes.take(5).forEach { strike ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "⚡", fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${String.format("%.1f", strike.distanceKm)} km • ${strike.bearingDegrees.toInt()}°",
+                            color = if (strike.distanceKm <= 10.0) CriticalCrimson else HazardAmber,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
                     }
+                    Text(
+                        text = "${strike.intensityKa.toInt()} kA • ${strike.ageSeconds}s ago",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onTriggerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57F17)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Simulate Approaching Lightning Cell", fontSize = 12.sp)
-            }
+        } else {
+            Text(
+                text = "Zero convective lightning discharges detected within 15 km perimeter.",
+                color = CyberEmerald,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace
+            )
         }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        TacticalButton(
+            text = "SIMULATE 5.2 KM STRIKE INTRUSION",
+            onClick = onTriggerDemo,
+            accentColor = CriticalCrimson,
+            leadingIcon = "⚡",
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -391,93 +411,68 @@ private fun TsunamiHazardPanel(
     tsunamiAlert: TsunamiAlert?,
     onTriggerDemo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F1A24))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "🌊 SUBMARINE TSUNAMI INUNDATION PHYSICS",
-                color = Color(0xFF00E5FF),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Shallow-water gravity wave telemetry: v = √(g·d). Coastal wave shoaling & runup elevation analysis.",
-                color = Color(0xFFB0BEC5),
-                fontSize = 11.sp
-            )
+    TacticalPanel(borderColor = BorderBright) {
+        TacticalSectionHeader(
+            tag = "TSUNAMI-01",
+            title = "Submarine Rupture & Shoaling Kinematics",
+            trailingBadge = if (tsunamiAlert != null) "WAVE INBOUND" else "STANDBY",
+            badgeColor = if (tsunamiAlert != null) CriticalCrimson else BorderGlass,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (tsunamiAlert != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A12))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "COASTAL ETA COUNTDOWN",
-                                color = Color(0xFFFF5252),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "${tsunamiAlert.estimatedArrivalMinutes} min",
-                                color = Color(0xFFFF1744),
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Black,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = "Deep Ocean Speed: ${tsunamiAlert.deepOceanSpeedKmh.toInt()} km/h (Bathymetry 4,000m)", color = Color(0xFF80D8FF), fontSize = 12.sp)
-                        Text(text = "Projected Runup Height: ${tsunamiAlert.projectedRunupHeightMeters}m Surge", color = Color(0xFFFF8A80), fontWeight = FontWeight.Bold)
-                        Text(text = "Mandatory Vertical Ascent: +${tsunamiAlert.verticalAscentRequiredMeters}m above sea level", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = tsunamiAlert.evacuationDirective, color = Color.White, fontSize = 12.sp)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "OFFLINE TOPOGRAPHIC INUNDATION & ESCAPE ASCENT",
-                    color = Color(0xFF80D8FF),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                TopographicContourCanvas(
-                    userElevationMeters = 4,
-                    targetShelterElevationMeters = tsunamiAlert.verticalAscentRequiredMeters,
-                    targetBearingDegrees = 65.0,
-                    modifier = Modifier.fillMaxWidth().height(180.dp)
-                )
-            } else {
-                Text(
-                    text = "Submarine seismic fault monitors nominal. No ocean-basin tsunami warnings active.",
-                    color = Color(0xFF00E676),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onTriggerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00838F)),
-                modifier = Modifier.fillMaxWidth()
+        if (tsunamiAlert != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Simulate M7.9 Submarine Rupture & Inundation Wave", fontSize = 12.sp)
+                TacticalMetricBox(
+                    label = "DEEP V (v=√(g·d))",
+                    value = "${tsunamiAlert.deepOceanSpeedKmh.toInt()}",
+                    unit = "km/h",
+                    statusColor = CriticalCrimson,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalMetricBox(
+                    label = "COASTAL ETA",
+                    value = "${tsunamiAlert.estimatedArrivalMinutes}m",
+                    statusColor = HazardAmber,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalMetricBox(
+                    label = "MANDATORY CLIMB",
+                    value = "+${tsunamiAlert.verticalAscentRequiredMeters}m",
+                    statusColor = HighGroundTeal,
+                    modifier = Modifier.weight(1f)
+                )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Kinematics: Deep ocean (d=4000m) velocity ${tsunamiAlert.deepOceanSpeedKmh.toInt()} km/h. Shoaling amplitude at coast: ${tsunamiAlert.projectedRunupHeightMeters}m. Mandatory vertical ascent!",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
+        } else {
+            Text(
+                text = "Coastal tsunami inundation engine standby. Solves shallow-water wave equation v = √(g·d) and Green's law shoaling factors.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
         }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        TacticalButton(
+            text = "TRIGGER M8.2 TSUNAMI SCENARIO",
+            onClick = onTriggerDemo,
+            accentColor = TacticalPurple,
+            leadingIcon = "🌊",
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
-

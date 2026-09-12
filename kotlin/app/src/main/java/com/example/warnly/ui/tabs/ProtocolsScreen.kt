@@ -6,15 +6,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.data.DisasterRepository
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
+/**
+ * Demographic Evacuation Protocols Screen
+ * Offline-first verified life-safety procedures conforming to OSHA & WMO standards.
+ */
 @Composable
 fun ProtocolsScreen() {
     val protocols = DisasterRepository.demographicProtocols
@@ -22,86 +31,114 @@ fun ProtocolsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(14.dp)
+            .background(VoidBlack)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "DEMOGRAPHIC EVACUATION PROTOCOLS",
-            color = Color(0xFFFFD54F),
-            fontWeight = FontWeight.Black,
-            fontSize = 15.sp,
-            letterSpacing = 1.sp
-        )
-        Text(
-            text = "Offline-first verified life-safety procedures conforming to OSHA & WMO standards.",
-            color = Color(0xFF90A4AE),
-            fontSize = 12.sp
-        )
+        // 1. Header
+        TacticalPanel(
+            borderColor = BorderBright,
+            contentPadding = PaddingValues(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = HazardAmber, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "DEMOGRAPHIC PROTOCOLS",
+                            color = HazardAmber,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "OSHA 1926 & WMO COMPLIANT ACTION CHECKLISTS",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
 
-        Spacer(modifier = Modifier.height(14.dp))
+                TacticalBadge(
+                    text = "STANDARDS",
+                    accentColor = HazardAmber
+                )
+            }
+        }
 
+        // 2. Protocols List
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(protocols) { protocol ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFF263238), RoundedCornerShape(14.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF131922))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                TacticalPanel(borderColor = BorderGlass) {
+                    Text(
+                        text = protocol.title.uppercase(),
+                        color = TextHighlight,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(SurfaceDark)
+                            .border(1.dp, BorderSubtle, RoundedCornerShape(6.dp))
+                            .padding(8.dp)
+                    ) {
                         Text(
-                            text = protocol.title,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            text = "VULNERABILITY: ${protocol.vulnerabilityProfile}",
+                            color = HazardAmber,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            lineHeight = 14.sp
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFF212C3B), RoundedCornerShape(6.dp))
-                                .padding(8.dp)
-                        ) {
-                            Text(
-                                text = "⚠️ ${protocol.vulnerabilityProfile}",
-                                color = Color(0xFFFFCC80),
-                                fontSize = 11.sp,
-                                lineHeight = 15.sp
-                            )
-                        }
+                    Text(
+                        text = "RULE: ${protocol.oshaOrSafetyRule}",
+                        color = HighGroundTeal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        Text(
-                            text = "Rule: ${protocol.oshaOrSafetyRule}",
-                            color = Color(0xFF80DEEA),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            protocol.actionChecklist.forEachIndexed { idx, step ->
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    Text(
-                                        text = "${idx + 1}.",
-                                        color = Color(0xFFFFD54F),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = step,
-                                        color = Color(0xFFECEFF1),
-                                        fontSize = 12.sp,
-                                        lineHeight = 16.sp
-                                    )
-                                }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        protocol.actionChecklist.forEachIndexed { idx, step ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    text = "[0${idx + 1}]",
+                                    color = NeonCyan,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = step,
+                                    color = TextPrimary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp
+                                )
                             }
                         }
                     }

@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -26,11 +26,12 @@ import androidx.compose.ui.unit.sp
 import com.example.warnly.model.Shelter
 import com.example.warnly.physics.GeoMath
 import com.example.warnly.service.DisasterEngine
-import com.example.warnly.ui.components.TacticalCompassCanvas
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
 /**
  * Tactical Offline Disaster Navigation Screen
- * Fully autonomous local mobile guidance system for life-saving evacuation.
+ * Fully autonomous mobile guidance system for life-saving high-ground evacuation.
  * Operates 100% offline with zero network connectivity.
  */
 @Composable
@@ -51,7 +52,7 @@ fun NavigationScreen(engine: DisasterEngine) {
     val isHomingActive by navigator.homingBeeper.isHomingActive.collectAsState()
     val allShelters by engine.shelters.collectAsState()
 
-    val primaryColor = if (isAligned) Color(0xFF00E676) else Color(0xFFFFD600)
+    val navColor = if (isAligned) CyberEmerald else HazardAmber
     val distanceDisplay = if (distanceMeters >= 1000.0) {
         String.format("%.2f km", distanceMeters / 1000.0)
     } else {
@@ -61,406 +62,272 @@ fun NavigationScreen(engine: DisasterEngine) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF070A0E))
+            .background(VoidBlack)
             .verticalScroll(rememberScrollState())
             .padding(14.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // 1. Header & Autonomous Offline Badge
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        TacticalPanel(
+            borderColor = if (isAligned) BorderEmerald else BorderBright,
+            contentPadding = PaddingValues(14.dp)
         ) {
-            Column {
-                Text(
-                    text = "TACTICAL EVACUATION NAV",
-                    color = primaryColor,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 16.sp,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = "100% Offline Sensor Guidance • Zero Cellular Needed",
-                    color = Color(0xFF90A4AE),
-                    fontSize = 11.sp
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF004D40), RoundedCornerShape(6.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "OFFLINE HUD ACTIVE",
-                    color = Color(0xFF64FFDA),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 2. Active Shelter Destination Card
-        selectedShelter?.let { shelter ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, primaryColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF101721))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = shelter.name,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
-                            Text(
-                                text = "${shelter.type.title} • ${shelter.address}",
-                                color = Color(0xFF80CBC4),
-                                fontSize = 11.sp
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0xFF1B5E20), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        ) {
-                            Text(
-                                text = "+${shelter.elevationGainMeters}m High Ground",
-                                color = Color(0xFFB9F6CA),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 3. Course Deviation Indicator (CDI) Ribbon
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = if (isAligned) 2.dp else 1.dp,
-                    color = if (isAligned) Color(0xFF00E676) else Color(0xFFFFB300),
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isAligned) Color(0xFF003314) else Color(0xFF261D00)
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp, horizontal = 14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = guidanceInstruction,
-                    color = if (isAligned) Color(0xFF69F0AE) else Color(0xFFFFE082),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // 4. Large Compass Canvas HUD
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .background(Color(0xFF0B0F14), CircleShape)
-                .border(2.dp, Color(0xFF263238), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            TacticalCompassCanvas(
-                currentHeadingDegrees = currentHeading,
-                targetBearingDegrees = targetBearing,
-                isAligned = isAligned,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Center HUD Readout
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .background(Color(0xEE070A0E), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = distanceDisplay,
-                    color = primaryColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
-                )
-                Text(
-                    text = if (isAligned) "TARGET LOCKED" else "HDG ${currentHeading.toInt()}°",
-                    color = if (isAligned) Color(0xFF00E676) else Color(0xFF90A4AE),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // 5. Digital Telemetry HUD Metrics
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF101721))
-            ) {
-                Column(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("BEARING", color = Color(0xFF78909C), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text(
-                        "${targetBearing.toInt()}°",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(GeoMath.bearingToCardinal(targetBearing), color = Color(0xFF80CBC4), fontSize = 10.sp)
-                }
-            }
-
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF101721))
-            ) {
-                Column(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("DEVIATION", color = Color(0xFF78909C), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text(
-                        "${if (relativeDeviation >= 0) "+" else ""}${relativeDeviation.toInt()}°",
-                        color = if (isAligned) Color(0xFF00E676) else Color(0xFFFFB300),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(if (isAligned) "ALIGNED" else "STEER", color = Color(0xFF90A4AE), fontSize = 10.sp)
-                }
-            }
-
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF101721))
-            ) {
-                Column(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("ELEVATION", color = Color(0xFF78909C), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text(
-                        "+${verticalClimb}m",
-                        color = Color(0xFF64FFDA),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text("VERTICAL CLIMB", color = Color(0xFF00B0FF), fontSize = 9.sp)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 6. Hazard Corridor Warning (if lightning intersects path)
-        hazardWarning?.let { warning ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color(0xFFFF1744), RoundedCornerShape(10.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2B0B11))
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("⚡", fontSize = 20.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = warning,
-                        color = Color(0xFFFF8A80),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-        }
-
-        // 7. Blind / Zero-Visibility Acoustic Sonar Homing Toggle
-        Button(
-            onClick = { navigator.toggleAcousticHoming() },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isHomingActive) Color(0xFFD50000) else Color(0xFF00695C)
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (isHomingActive) "🔊 STOP ACOUSTIC HOMING" else "📡 START BLIND ACOUSTIC HOMING", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        Text(
-            text = "Sonification chirps accelerate to 5 Hz as phone faces shelter bearing. Designed for zero-visibility smoke, night blackouts & torrential rain.",
-            color = Color(0xFF78909C),
-            fontSize = 10.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 8. Shelter Quick Switcher
-        Text(
-            text = "SELECT HIGH-GROUND DESTINATION",
-            color = Color(0xFFCFD8DC),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(allShelters) { shelter ->
-                val isCurrent = (shelter.id == selectedShelter?.id)
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (isCurrent) Color(0xFF004D40) else Color(0xFF131A22),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            1.dp,
-                            if (isCurrent) Color(0xFF00E676) else Color(0xFF263238),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .clickable {
-                            engine.startNavigatingTo(shelter)
-                        }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = navColor, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = shelter.name,
-                            color = if (isCurrent) Color(0xFF69F0AE) else Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            text = "TACTICAL EVACUATION HUD",
+                            color = navColor,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
                         )
                         Text(
-                            text = "${shelter.distanceKm} km • +${shelter.elevationGainMeters}m",
-                            color = Color(0xFF90A4AE),
-                            fontSize = 10.sp
+                            text = "100% OFFLINE SENSOR GUIDANCE • ZERO CELL DEPENDENCY",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
                         )
                     }
                 }
+
+                TacticalBadge(
+                    text = if (isAligned) "LOCK-ON" else "COURSE CORR",
+                    accentColor = navColor
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // 9. Manual Steer Simulation (For Testing / Calibration)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, Color(0xFF263238), RoundedCornerShape(10.dp)),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF101721))
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = "🧪 DESKTOP / SENSOR TEST OVERRIDE",
-                    color = Color(0xFF80D8FF),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "If hardware magnetometer is stationary or on emulator, tap to test orientation:",
-                    color = Color(0xFF78909C),
-                    fontSize = 10.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+        // 2. Active High-Ground Target Lock Card
+        selectedShelter?.let { shelter ->
+            TacticalPanel(borderColor = BorderBright) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Button(
-                        onClick = { sensorManager.setManualHeading(targetBearing.toFloat()) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        Text("Lock-On", fontSize = 10.sp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = shelter.name.uppercase(),
+                            color = TextHighlight,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Text(
+                            text = "${shelter.type.title} • ${shelter.address}",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
                     }
-                    Button(
-                        onClick = { sensorManager.setManualHeading(((targetBearing + 35f) % 360f).toFloat()) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA000)),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        Text("+35° Right", fontSize = 10.sp)
-                    }
-                    Button(
-                        onClick = { sensorManager.setManualHeading(((targetBearing + 180f) % 360f).toFloat()) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000)),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        Text("180° Reverse", fontSize = 10.sp)
-                    }
-                    Button(
-                        onClick = { sensorManager.setManualHeading(null) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF455A64)),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        Text("Live Gyro", fontSize = 10.sp)
-                    }
+                    TacticalBadge(
+                        text = "+${shelter.elevationGainMeters}M RIDGE",
+                        accentColor = HighGroundTeal
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TacticalMetricBox(
+                        label = "DISTANCE",
+                        value = distanceDisplay,
+                        statusColor = navColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TacticalMetricBox(
+                        label = "BEARING",
+                        value = "${targetBearing.toInt()}°",
+                        unit = GeoMath.bearingToCardinal(targetBearing),
+                        statusColor = NeonCyan,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TacticalMetricBox(
+                        label = "DRIFT",
+                        value = "${if (relativeDeviation > 0) "+" else ""}${relativeDeviation.toInt()}°",
+                        statusColor = if (isAligned) CyberEmerald else HazardAmber,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TacticalMetricBox(
+                        label = "ASCENT",
+                        value = "+${verticalClimb}m",
+                        statusColor = HighGroundTeal,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 10. Fallback External Offline Map Intent
-        OutlinedButton(
-            onClick = {
-                selectedShelter?.let { s ->
-                    val geoUri = Uri.parse("geo:${s.latitude},${s.longitude}?q=${Uri.encode(s.name)}")
-                    val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
-                    context.startActivity(Intent.createChooser(mapIntent, "Open Offline Map App"))
-                }
-            },
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF80D8FF)),
-            modifier = Modifier.fillMaxWidth()
+        // 3. Course Deviation Indicator (CDI) Ribbon
+        TacticalPanel(
+            borderColor = if (isAligned) BorderEmerald else BorderAmber,
+            contentPadding = PaddingValues(12.dp)
         ) {
-            Text("🗺️ Launch External Offline Map App (OsmAnd / Organic Maps)", fontSize = 11.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = guidanceInstruction.uppercase(),
+                    color = if (isAligned) CyberEmerald else HazardAmber,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.weight(1f)
+                )
+                TacticalBadge(
+                    text = if (isAligned) "ALIGNMENT ±8° OK" else "CROSS-TRACK DRIFT",
+                    accentColor = if (isAligned) CyberEmerald else HazardAmber
+                )
+            }
+
+            if (hazardWarning != null) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "⚠️ $hazardWarning",
+                    color = CriticalCrimson,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        // 4. Tactical Compass Rose Canvas (FR-06)
+        TacticalPanel(
+            borderColor = BorderSubtle,
+            contentPadding = PaddingValues(6.dp)
+        ) {
+            TacticalSectionHeader(
+                tag = "HSI-01",
+                title = "Tactical Aviation Compass & CDI",
+                trailingBadge = "${currentHeading.toInt()}° MAG",
+                badgeColor = NeonCyan,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) {
+                TacticalCompassCanvas(
+                    currentHeadingDegrees = currentHeading,
+                    targetBearingDegrees = targetBearing,
+                    isAligned = isAligned,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        // 5. Blind Navigation Sonar & Voice Guide
+        TacticalPanel(borderColor = BorderGlass) {
+            TacticalSectionHeader(
+                tag = "AUDIO-01",
+                title = "Blind Navigation Acoustic & Voice HUD",
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                TacticalButton(
+                    text = if (isHomingActive) "STOP 1200HZ SONAR" else "START HOMING SONAR",
+                    onClick = {
+                        if (isHomingActive) navigator.homingBeeper.stopHoming() else navigator.homingBeeper.startHoming()
+                    },
+                    accentColor = if (isHomingActive) CyberEmerald else SurfaceDark,
+                    leadingIcon = "📡",
+                    modifier = Modifier.weight(1f)
+                )
+
+                TacticalButton(
+                    text = "SPEAK GUIDANCE (TTS)",
+                    onClick = {
+                        engine.voiceGuide.speakUrgentDirective(guidanceInstruction, true)
+                    },
+                    accentColor = NeonCyan,
+                    leadingIcon = "🗣️",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        // 6. Offline Vector Topographic Contours Canvas
+        TacticalPanel(borderColor = BorderSubtle) {
+            TacticalSectionHeader(
+                tag = "TERRAIN-01",
+                title = "Offline Vector Elevation Contours",
+                trailingBadge = "+${verticalClimb}m Required",
+                badgeColor = HighGroundTeal,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+
+            TopographicContourCanvas(
+                userElevationMeters = 12,
+                targetShelterElevationMeters = verticalClimb,
+                targetBearingDegrees = targetBearing,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 7. High-Ground Shelter Quick-Switch Carousel
+        TacticalPanel(borderColor = BorderGlass) {
+            TacticalSectionHeader(
+                tag = "SHELTER-LIST",
+                title = "Select Evacuation Waypoint",
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(allShelters) { s ->
+                    val isCurrent = (s.id == selectedShelter?.id)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isCurrent) SurfaceElevated else SurfaceDark)
+                            .border(
+                                1.dp,
+                                if (isCurrent) CyberEmerald else BorderGlass,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clickable { engine.startNavigatingTo(s) }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = s.name,
+                                color = if (isCurrent) CyberEmerald else TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            Text(
+                                text = "${s.distanceKm} km • ${s.bearingDegrees.toInt()}° • +${s.elevationGainMeters}m",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

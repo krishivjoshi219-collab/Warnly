@@ -1,24 +1,26 @@
 package com.example.warnly.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.warnly.theme.*
 import kotlin.math.*
 
 /**
- * Tactical Disaster Evacuation Compass HUD Canvas
- * Renders an offline aviation/tactical compass rose with:
- *  - Rotating dial driven by device magnetometer/azimuth
- *  - High-visibility Waypoint Pointer oriented towards safe shelter bearing
- *  - Dynamic lock-on glow when aligned (±8°)
- *  - Cardinal direction markings (N, NE, E, SE, S, SW, W, NW)
+ * Tactical Aviation Evacuation Compass & CDI (Course Deviation Indicator)
+ * Precision aerospace dial driven by device magnetometer & gyro sensors.
  */
 @Composable
 fun TacticalCompassCanvas(
@@ -27,179 +29,216 @@ fun TacticalCompassCanvas(
     isAligned: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val alignedGlowColor = Color(0xFF00E676)   // Emerald Target Lock
-    val standardDialColor = Color(0xFF37474F)  // Gunmetal slate
-    val targetNeedleColor = if (isAligned) Color(0xFF00E676) else Color(0xFFFFD600) // Golden Amber or Neon Green
-    val northColor = Color(0xFFFF1744)         // Crimson North
+    val infiniteTransition = rememberInfiniteTransition(label = "compassGlow")
+    val lockAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "lockAlpha"
+    )
 
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val radius = min(size.width, size.height) / 2f - 24f
-        if (radius <= 0) return@Canvas
+    val dialColor = if (isAligned) CyberEmerald else NeonCyan
+    val needleColor = if (isAligned) CyberEmerald else HazardAmber
 
-        // 1. Compass Background Dial Circles
-        drawCircle(
-            color = Color(0xFF0D131A),
-            radius = radius,
-            center = center
-        )
-        drawCircle(
-            color = if (isAligned) alignedGlowColor.copy(alpha = 0.4f) else standardDialColor,
-            radius = radius,
-            center = center,
-            style = Stroke(width = if (isAligned) 3f else 1.5f)
-        )
-        drawCircle(
-            color = standardDialColor.copy(alpha = 0.5f),
-            radius = radius * 0.75f,
-            center = center,
-            style = Stroke(width = 1f)
-        )
-        drawCircle(
-            color = standardDialColor.copy(alpha = 0.3f),
-            radius = radius * 0.45f,
-            center = center,
-            style = Stroke(width = 1f)
-        )
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val radius = min(size.width, size.height) / 2f - 20f
+            if (radius <= 0) return@Canvas
 
-        // Center Crosshair
-        drawLine(
-            color = standardDialColor.copy(alpha = 0.7f),
-            start = Offset(center.x - 20f, center.y),
-            end = Offset(center.x + 20f, center.y),
-            strokeWidth = 1.5f
-        )
-        drawLine(
-            color = standardDialColor.copy(alpha = 0.7f),
-            start = Offset(center.x, center.y - 20f),
-            end = Offset(center.x, center.y + 20f),
-            strokeWidth = 1.5f
-        )
-
-        // 2. Rotating Ticks & Cardinal Directions (Rotates with -currentHeading)
-        val rotationOffsetRad = Math.toRadians(-currentHeadingDegrees.toDouble())
-
-        for (deg in 0 until 360 step 15) {
-            val angleRad = Math.toRadians(deg.toDouble()) + rotationOffsetRad - (PI / 2.0)
-            val isMajor = (deg % 90 == 0)
-            val isSemi = (deg % 45 == 0)
-            val tickLen = when {
-                isMajor -> 22f
-                isSemi -> 14f
-                else -> 8f
-            }
-
-            val startX = (center.x + (radius - tickLen) * cos(angleRad)).toFloat()
-            val startY = (center.y + (radius - tickLen) * sin(angleRad)).toFloat()
-            val endX = (center.x + radius * cos(angleRad)).toFloat()
-            val endY = (center.y + radius * sin(angleRad)).toFloat()
-
-            val tickColor = when {
-                deg == 0 -> northColor
-                isMajor -> Color(0xFFB0BEC5)
-                else -> Color(0xFF546E7A)
-            }
-
-            drawLine(
-                color = tickColor,
-                start = Offset(startX, startY),
-                end = Offset(endX, endY),
-                strokeWidth = if (isMajor) 2.5f else 1.2f
-            )
-
-            // Draw Cardinal Text (N, E, S, W)
-            if (isMajor || isSemi) {
-                val textRadius = radius - 38f
-                val textX = (center.x + textRadius * cos(angleRad)).toFloat()
-                val textY = (center.y + textRadius * sin(angleRad)).toFloat()
-
-                val label = when (deg) {
-                    0 -> "N"
-                    45 -> "NE"
-                    90 -> "E"
-                    135 -> "SE"
-                    180 -> "S"
-                    225 -> "SW"
-                    270 -> "W"
-                    315 -> "NW"
-                    else -> ""
-                }
-
-                drawContext.canvas.nativeCanvas.apply {
-                    val paint = android.graphics.Paint().apply {
-                        color = if (deg == 0) 0xFFFF1744.toInt() else 0xFFCFD8DC.toInt()
-                        textSize = if (isMajor) 28f else 18f
-                        isFakeBoldText = true
-                        textAlign = android.graphics.Paint.Align.CENTER
-                    }
-                    drawText(label, textX, textY + 10f, paint)
-                }
-            }
-        }
-
-        // 3. Fixed Device Top Index Pointer (Phone Orientation)
-        val fixedIndexY = center.y - radius - 8f
-        val indexTriangle = Path().apply {
-            moveTo(center.x, fixedIndexY)
-            lineTo(center.x - 10f, fixedIndexY - 14f)
-            lineTo(center.x + 10f, fixedIndexY - 14f)
-            close()
-        }
-        drawPath(
-            path = indexTriangle,
-            color = if (isAligned) alignedGlowColor else Color.White
-        )
-
-        // 4. Target Waypoint Vector Pointer (Points to Shelter Bearing)
-        val targetRelativeAngleDeg = targetBearingDegrees - currentHeadingDegrees
-        val targetAngleRad = Math.toRadians(targetRelativeAngleDeg) - (PI / 2.0)
-
-        val arrowHeadRadius = radius * 0.88f
-        val arrowTipX = (center.x + arrowHeadRadius * cos(targetAngleRad)).toFloat()
-        val arrowTipY = (center.y + arrowHeadRadius * sin(targetAngleRad)).toFloat()
-
-        // Waypoint Arrowhead
-        val arrowBaseRadius = radius * 0.72f
-        val leftAngleRad = targetAngleRad - 0.14
-        val rightAngleRad = targetAngleRad + 0.14
-
-        val arrowLeftX = (center.x + arrowBaseRadius * cos(leftAngleRad)).toFloat()
-        val arrowLeftY = (center.y + arrowBaseRadius * sin(leftAngleRad)).toFloat()
-        val arrowRightX = (center.x + arrowBaseRadius * cos(rightAngleRad)).toFloat()
-        val arrowRightY = (center.y + arrowBaseRadius * sin(rightAngleRad)).toFloat()
-
-        val arrowPath = Path().apply {
-            moveTo(arrowTipX, arrowTipY)
-            lineTo(arrowLeftX, arrowLeftY)
-            lineTo(center.x, center.y)
-            lineTo(arrowRightX, arrowRightY)
-            close()
-        }
-
-        // Glow ring if aligned
-        if (isAligned) {
+            // 1. Compass Instrument Cavity
             drawCircle(
-                color = alignedGlowColor.copy(alpha = 0.25f),
-                radius = 32f,
-                center = Offset(arrowTipX, arrowTipY)
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF04121C),
+                        Color(0xFF02070E),
+                        VoidBlack
+                    ),
+                    center = center,
+                    radius = radius + 15f
+                ),
+                radius = radius + 6f,
+                center = center
             )
+
+            // Outer Instrument Bezel
+            drawCircle(
+                color = if (isAligned) CyberEmerald.copy(alpha = lockAlpha) else BorderBright.copy(alpha = 0.4f),
+                radius = radius,
+                center = center,
+                style = Stroke(width = if (isAligned) 3f else 1.5f)
+            )
+
+            // Concentric Gauge Rings
+            drawCircle(
+                color = BorderGlass.copy(alpha = 0.5f),
+                radius = radius * 0.72f,
+                center = center,
+                style = Stroke(width = 1f)
+            )
+            drawCircle(
+                color = BorderGlass.copy(alpha = 0.3f),
+                radius = radius * 0.42f,
+                center = center,
+                style = Stroke(width = 1f)
+            )
+
+            // 2. Rotating Ticks & Cardinal Dial
+            val rotationOffsetRad = Math.toRadians(-currentHeadingDegrees.toDouble())
+
+            for (deg in 0 until 360 step 10) {
+                val angleRad = Math.toRadians(deg.toDouble()) + rotationOffsetRad - (PI / 2.0)
+                val isMajor = (deg % 90 == 0)
+                val isSemi = (deg % 30 == 0)
+                val tickLen = when {
+                    isMajor -> 20f
+                    isSemi -> 13f
+                    else -> 7f
+                }
+
+                val startX = (center.x + (radius - tickLen) * cos(angleRad)).toFloat()
+                val startY = (center.y + (radius - tickLen) * sin(angleRad)).toFloat()
+                val endX = (center.x + radius * cos(angleRad)).toFloat()
+                val endY = (center.y + radius * sin(angleRad)).toFloat()
+
+                val tickColor = when {
+                    deg == 0 -> CriticalCrimson
+                    isMajor -> TextPrimary
+                    else -> BorderGlass
+                }
+
+                drawLine(
+                    color = tickColor,
+                    start = Offset(startX, startY),
+                    end = Offset(endX, endY),
+                    strokeWidth = if (isMajor) 2.5f else 1.2f
+                )
+
+                // Draw Cardinal Text (N, E, S, W)
+                if (isMajor) {
+                    val textRadius = radius - 34f
+                    val textX = (center.x + textRadius * cos(angleRad)).toFloat()
+                    val textY = (center.y + textRadius * sin(angleRad)).toFloat()
+
+                    val label = when (deg) {
+                        0 -> "N"
+                        90 -> "E"
+                        180 -> "S"
+                        270 -> "W"
+                        else -> ""
+                    }
+
+                    drawContext.canvas.nativeCanvas.apply {
+                        val paint = android.graphics.Paint().apply {
+                            color = if (deg == 0) 0xFFFF1744.toInt() else 0xFFF1F5F9.toInt()
+                            textSize = 28f
+                            isFakeBoldText = true
+                            textAlign = android.graphics.Paint.Align.CENTER
+                        }
+                        drawText(label, textX, textY + 10f, paint)
+                    }
+                }
+            }
+
+            // 3. Target Waypoint Bug (Points toward shelter bearing)
+            val targetRad = Math.toRadians(targetBearingDegrees - currentHeadingDegrees - 90.0)
+            val bugDist = radius * 0.88f
+            val bx = (center.x + bugDist * cos(targetRad)).toFloat()
+            val by = (center.y + bugDist * sin(targetRad)).toFloat()
+
+            // Waypoint Triangle Bug
+            val bugPath = Path().apply {
+                val headX = (center.x + (radius - 2f) * cos(targetRad)).toFloat()
+                val headY = (center.y + (radius - 2f) * sin(targetRad)).toFloat()
+                val leftRad = targetRad + 0.18
+                val rightRad = targetRad - 0.18
+                val baseRadius = radius - 24f
+                val lx = (center.x + baseRadius * cos(leftRad)).toFloat()
+                val ly = (center.y + baseRadius * sin(leftRad)).toFloat()
+                val rx = (center.x + baseRadius * cos(rightRad)).toFloat()
+                val ry = (center.y + baseRadius * sin(rightRad)).toFloat()
+
+                moveTo(headX, headY)
+                lineTo(lx, ly)
+                lineTo(rx, ry)
+                close()
+            }
+            drawPath(path = bugPath, color = needleColor.copy(alpha = 0.4f))
+            drawPath(path = bugPath, color = needleColor, style = Stroke(width = 2f))
+
+            // Vector line connecting center to target waypoint bug
+            drawLine(
+                color = needleColor.copy(alpha = if (isAligned) 0.8f else 0.45f),
+                start = center,
+                end = Offset(bx, by),
+                strokeWidth = if (isAligned) 2.5f else 1.5f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+            )
+
+            // 4. Center Aircraft / Heading Reticle
+            val shipLength = 22f
+            val shipWidth = 14f
+            val shipPath = Path().apply {
+                moveTo(center.x, center.y - shipLength)
+                lineTo(center.x + shipWidth, center.y + shipLength * 0.5f)
+                lineTo(center.x, center.y + shipLength * 0.2f)
+                lineTo(center.x - shipWidth, center.y + shipLength * 0.5f)
+                close()
+            }
+            drawPath(path = shipPath, color = if (isAligned) CyberEmerald else NeonCyan)
+
+            // Fixed Top Heading Index Lubber Line (12 O'clock)
+            val lubberPath = Path().apply {
+                moveTo(center.x, center.y - radius + 2f)
+                lineTo(center.x - 9f, center.y - radius - 16f)
+                lineTo(center.x + 9f, center.y - radius - 16f)
+                close()
+            }
+            drawPath(path = lubberPath, color = NeonCyan)
         }
 
-        drawPath(
-            path = arrowPath,
-            color = targetNeedleColor.copy(alpha = 0.85f)
-        )
-        drawPath(
-            path = arrowPath,
-            color = targetNeedleColor,
-            style = Stroke(width = 2f)
-        )
+        // Tactical HUD Telemetry Overlay
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                TacticalBadge(
+                    text = "HDG: ${currentHeadingDegrees.toInt()}° TRUE",
+                    accentColor = NeonCyan
+                )
+                TacticalBadge(
+                    text = if (isAligned) "TARGET LOCKED" else "STEER TO: ${targetBearingDegrees.toInt()}°",
+                    accentColor = if (isAligned) CyberEmerald else HazardAmber
+                )
+            }
 
-        // Center Waypoint Dot
-        drawCircle(
-            color = targetNeedleColor,
-            radius = 6f,
-            center = center
-        )
+            if (isAligned) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TacticalBadge(
+                        text = ">>> ON VECTOR TO HIGH GROUND <<<",
+                        accentColor = CyberEmerald
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(1.dp))
+            }
+        }
     }
 }

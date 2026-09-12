@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +15,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.service.DisasterEngine
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
 /**
  * 72-Hour Ultra-Low-Power Blackout Survival Screen
@@ -42,18 +44,31 @@ fun BlackoutSurvivalScreen(engine: DisasterEngine) {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // Top Header
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                PulsingLed(color = CyberEmerald, size = 8.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "72-HOUR BLACKOUT SURVIVAL HUD",
+                    color = CyberEmerald,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 1.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "⚡ 72-HOUR BLACKOUT SURVIVAL HUD",
-                color = Color(0xFF00E676),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp
-            )
-            Text(
-                text = "Pure OLED Subpixel Power Gating • CPU Duty-Cycled",
+                text = "PURE OLED SUBPIXEL POWER GATING • 0 MW CANVAS",
                 color = Color(0xFF555555),
-                fontSize = 10.sp
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace
             )
         }
 
@@ -62,56 +77,66 @@ fun BlackoutSurvivalScreen(engine: DisasterEngine) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Big Battery % and Projected Hours
+            // Big Battery %
             Text(
                 text = "$batteryPct%",
-                color = if (batteryPct <= 20) Color(0xFFFF1744) else Color(0xFF00E676),
-                fontSize = 58.sp,
+                color = if (batteryPct <= 20) CriticalCrimson else CyberEmerald,
+                fontSize = 64.sp,
                 fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = (-2).sp
             )
+
             Text(
-                text = if (isCharging) "CHARGING • UNLIMITED" else "~$hoursRemaining HOURS REMAINING",
-                color = Color(0xFFAAAAAA),
-                fontSize = 16.sp,
+                text = if (isCharging) "EXTERNAL POWER CONNECTED" else "~$hoursRemaining HOURS REMAINING",
+                color = Color(0xFFCCCCCC),
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
             )
+
             Text(
                 text = "Duty Cycle: 58s Sleep / 2s Sensor Wake",
                 color = Color(0xFF444444),
-                fontSize = 11.sp
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Waypoint Quick Bearing
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, Color(0xFF222222), RoundedCornerShape(8.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF050505))
+                    .background(Color(0xFF06090D), RoundedCornerShape(8.dp))
+                    .border(1.dp, Color(0xFF1A2633), RoundedCornerShape(8.dp))
+                    .padding(14.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "HIGH-GROUND WAYPOINT",
                         color = Color(0xFF666666),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 1.sp
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedShelter?.name ?: "No Shelter Selected",
+                        text = selectedShelter?.name ?: "Nearest High Ridge",
                         color = Color.White,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Distance: ${(distanceMeters / 1000.0 * 10).toInt() / 10.0} km • Compass: ${currentHeading.toInt()}°",
-                        color = Color(0xFF00E676),
-                        fontSize = 13.sp,
+                        text = "Distance: ${(distanceMeters / 1000.0 * 10).toInt() / 10.0} km • Heading: ${currentHeading.toInt()}°",
+                        color = CyberEmerald,
+                        fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace
                     )
                 }
@@ -123,39 +148,22 @@ fun BlackoutSurvivalScreen(engine: DisasterEngine) {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Button(
+            TacticalButton(
+                text = if (isTorchActive) "STOP OPTICAL SOS STROBE" else "PULSE MORSE SOS FLASHLIGHT",
                 onClick = {
                     if (isTorchActive) engine.opticalBeacon.stopSosStrobe() else engine.opticalBeacon.startSosStrobe()
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isTorchActive) Color(0xFFD50000) else Color(0xFF222222)
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = if (isTorchActive) "💡 STOP SOS STROBE" else "🔦 PULSE MORSE SOS FLASHLIGHT",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                accentColor = if (isTorchActive) CriticalCrimson else CyberEmerald,
+                leadingIcon = if (isTorchActive) "💡" else "🔦",
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Button(
-                onClick = {
-                    if (isBlackoutActive) blackoutManager.disableBlackoutMode() else blackoutManager.enableBlackoutMode()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isBlackoutActive) Color(0xFF00897B) else Color(0xFF1B5E20)
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = if (isBlackoutActive) "EXIT BLACKOUT SURVIVAL (RESTORE NORMAL UI)" else "ENGAGE DEEP SURVIVAL MODE",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            TacticalButton(
+                text = "EXIT 72H SURVIVAL MODE",
+                onClick = { blackoutManager.exitSurvivalMode() },
+                accentColor = Color(0xFF555555),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

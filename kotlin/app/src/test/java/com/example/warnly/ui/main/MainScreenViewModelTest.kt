@@ -1,27 +1,29 @@
 package com.example.warnly.ui.main
 
-import com.example.warnly.data.DataRepository
-import junit.framework.TestCase.assertEquals
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.runTest
+import com.example.warnly.ui.AppNavTab
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class MainScreenViewModelTest {
-  @Test
-  fun uiState_initiallyLoading() = runTest {
-    val viewModel = MainScreenViewModel(FakeMyModelRepository())
-    assertEquals(viewModel.uiState.first(), MainScreenUiState.Loading)
-  }
+class WarnlyViewModelTest {
 
-  @Test
-  fun uiState_onItemSaved_isDisplayed() = runTest {
-    val viewModel = MainScreenViewModel(FakeMyModelRepository())
-    assertEquals(viewModel.uiState.first(), MainScreenUiState.Loading)
-  }
-}
+    @Test
+    fun testAppNavTabEnum() {
+        assertEquals(10, AppNavTab.values().size)
+        assertEquals("Radar & Rings", AppNavTab.RADAR.title)
+        assertEquals("Offline Nav", AppNavTab.NAVIGATE.title)
+        assertEquals("Edge AI", AppNavTab.EDGE_AI.title)
+        assertEquals("Multi-Hazard", AppNavTab.HAZARDS.title)
+        assertEquals("P2P Mesh", AppNavTab.MESH.title)
+        assertEquals("Survival", AppNavTab.BLACKOUT.title)
+        assertEquals("Shelters", AppNavTab.SHELTERS.title)
+        assertEquals("Family Shield", AppNavTab.FAMILY_SHIELD.title)
+        assertEquals("Protocols", AppNavTab.PROTOCOLS.title)
+        assertEquals("Test Hub", AppNavTab.SIMULATOR.title)
+    }
 
-private class FakeMyModelRepository : DataRepository {
-  override val data: Flow<List<String>> = flow { emit(listOf("Sample")) }
+    @Test
+    fun testTabInitialState() {
+        val tab = AppNavTab.RADAR
+        assertEquals("📡", tab.icon)
+    }
 }

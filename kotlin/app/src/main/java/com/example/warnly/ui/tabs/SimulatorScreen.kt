@@ -1,21 +1,30 @@
 package com.example.warnly.ui.tabs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.service.DisasterEngine
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
+/**
+ * Disaster Simulation & Test Hub Screen
+ * Allows validating all 9 threat scenarios and live API integrations.
+ */
 @Composable
 fun SimulatorScreen(engine: DisasterEngine) {
     val autoSiren by engine.autoSirenOnDanger.collectAsState()
@@ -25,228 +34,233 @@ fun SimulatorScreen(engine: DisasterEngine) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(VoidBlack)
             .verticalScroll(rememberScrollState())
             .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column {
-            Text(
-                text = "DISASTER SIMULATION & TEST HUB",
-                color = Color(0xFF00E5FF),
-                fontWeight = FontWeight.Black,
-                fontSize = 15.sp,
-                letterSpacing = 1.sp
-            )
-            Text(
-                text = "Test and validate all White Paper requirements, sirens, alarms, and timers.",
-                color = Color(0xFF90A4AE),
-                fontSize = 12.sp
-            )
+        // 1. Header
+        TacticalPanel(
+            borderColor = BorderBright,
+            contentPadding = PaddingValues(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = NeonCyan, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "DISASTER SIMULATION LAB",
+                            color = NeonCyan,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "9 WHITE PAPER SCENARIOS & HARDWARE VALIDATION",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
+                TacticalBadge(
+                    text = "LAB ARMED",
+                    accentColor = HighGroundTeal
+                )
+            }
         }
 
-        // Scenario 1
-        SimCard(
-            title = "1. Convective Thunderstorm Intrusion",
+        // 2. Scenario Cards
+        SimCardItem(
+            index = "01",
+            title = "Convective Thunderstorm Intrusion",
             description = "Simulates atmospheric charge build-up (CAPE 2450 J/kg, LI -5.8), followed by strikes breaching 15 km Advisory and 10 km Critical Danger Rings. Starts 30-30 timer and triggers siren.",
-            buttonText = "Trigger Convective Intrusion",
-            buttonColor = Color(0xFFD50000),
+            buttonText = "TRIGGER CONVECTIVE INTRUSION",
+            buttonColor = CriticalCrimson,
+            icon = "⚡",
             onClick = { engine.simulateConvectiveIntrusion() }
         )
 
-        // Scenario 2
-        SimCard(
-            title = "2. Subsequent Strike 30-30 Timer Reset (FR-03)",
-            description = "Simulates a secondary strike at 4.2 km. Automatically resets the 30-30 countdown clock back to 30:00 to prevent premature resumption of outdoor activities.",
-            buttonText = "Trigger Strike Reset (4.2 km)",
-            buttonColor = Color(0xFFFF6D00),
+        SimCardItem(
+            index = "02",
+            title = "Subsequent Strike 30-30 Reset (FR-03)",
+            description = "Simulates a secondary strike at 4.2 km. Automatically resets the 30-30 countdown clock back to 30:00 to prevent premature outdoor resumption.",
+            buttonText = "TRIGGER STRIKE RESET (4.2 KM)",
+            buttonColor = HazardAmber,
+            icon = "🔄",
             onClick = { engine.simulateSecondaryStrikeReset() }
         )
 
-        // Scenario 3
-        SimCard(
-            title = "3. Seismic P/S Differential Arrival Countdown",
+        SimCardItem(
+            index = "03",
+            title = "Seismic P/S Differential Arrival",
             description = "Simulates USGS P-wave detection for M6.4 earthquake 85 km away. Displays live countdown to destructive S-wave arrival (P: 6 km/s vs S: 3.5 km/s).",
-            buttonText = "Trigger Seismic Countdown",
-            buttonColor = Color(0xFFC2185B),
+            buttonText = "TRIGGER SEISMIC COUNTDOWN",
+            buttonColor = CriticalCrimson,
+            icon = "🌋",
             onClick = { engine.simulateSeismicEvent() }
         )
 
-        // Scenario 4
-        SimCard(
-            title = "4. Glacial Lake Outburst Flood (GLOF)",
+        SimCardItem(
+            index = "04",
+            title = "Glacial Lake Outburst Flood (GLOF)",
             description = "Simulates high-altitude moraine dam burst. 28 min crest lead-time with mandatory vertical evacuation (+45m upward climb).",
-            buttonText = "Trigger GLOF Valley Surge",
-            buttonColor = Color(0xFF0091EA),
+            buttonText = "TRIGGER GLOF VALLEY SURGE",
+            buttonColor = ElectricBlue,
+            icon = "🌊",
             onClick = { engine.simulateGlofOutburst() }
         )
 
-        // Scenario 5
-        SimCard(
-            title = "5. Flash Flood Canyon Runoff Surge",
+        SimCardItem(
+            index = "05",
+            title = "Flash Flood Canyon Runoff Surge",
             description = "Simulates 65 mm/hr upstream cloudburst triggering sudden canyon runoff surge.",
-            buttonText = "Trigger Flash Flood Surge",
-            buttonColor = Color(0xFF2979FF),
+            buttonText = "TRIGGER FLASH FLOOD SURGE",
+            buttonColor = ElectricBlue,
+            icon = "🌧️",
             onClick = { engine.simulateFlashFlood() }
         )
 
-        // Scenario 6: Tsunami
-        SimCard(
-            title = "6. M7.9 Submarine Rupture & Tsunami Inundation Wave",
+        SimCardItem(
+            index = "06",
+            title = "M7.9 Submarine Tsunami Wave Inundation",
             description = "Simulates shallow-water gravity wave physics (v = √(g·d)), deep ocean velocity (712 km/h), coastal ETA countdown, and mandatory vertical climb (+35m).",
-            buttonText = "Trigger Tsunami Wave Incursion",
-            buttonColor = Color(0xFF00838F),
+            buttonText = "TRIGGER TSUNAMI WAVE INCURSION",
+            buttonColor = TacticalPurple,
+            icon = "🌊",
             onClick = { engine.simulateTsunamiEvent() }
         )
 
-        // Scenario 7: P2P Disaster Mesh Relay
-        SimCard(
-            title = "7. Off-Grid P2P Mesh SOS Distress Broadcast",
+        SimCardItem(
+            index = "07",
+            title = "Off-Grid P2P Mesh SOS Distress Broadcast",
             description = "Dispatches ad-hoc Bluetooth/Wi-Fi Direct encrypted SOS distress packet through multi-hop neighbor relays with zero cellular/internet dependence.",
-            buttonText = "Broadcast P2P Mesh SOS Beacon",
-            buttonColor = Color(0xFFE91E63),
+            buttonText = "BROADCAST P2P MESH SOS BEACON",
+            buttonColor = HazardAmber,
+            icon = "📶",
             onClick = {
                 engine.meshNetwork.broadcastSosBeacon(
                     latitude = engine.userLatitude.value,
                     longitude = engine.userLongitude.value,
-                    medicalTriage = "IMMEDIATE_ASSISTANCE_REQUIRED",
+                    medicalTriage = "IMMEDIATE_EXTRACTION",
                     survivorCount = 4
                 )
             }
         )
 
-        // Scenario 8: 72-Hour Blackout Mode
-        SimCard(
-            title = "8. 72-Hour Grid Blackout Ultra-Low-Power Mode",
+        SimCardItem(
+            index = "08",
+            title = "72-Hour Grid Blackout Ultra-Low-Power Mode",
             description = "Powers down non-critical subpixel drivers to 100% OLED true black (0 mW subpixel draw), duty-cycling sensors to achieve 72+ hours runtime.",
-            buttonText = "Engage 72h Survival Gating",
-            buttonColor = Color(0xFF37474F),
+            buttonText = "ENGAGE 72H SURVIVAL GATING",
+            buttonColor = HighGroundTeal,
+            icon = "🔋",
             onClick = { engine.blackoutManager.enter72HourSurvivalMode() }
         )
 
-        // Scenario 9: Calibrated Zero False Alarm Verification
-        SimCard(
-            title = "9. Calibrated Zero False Alarm Verification (FR-02)",
+        SimCardItem(
+            index = "09",
+            title = "Calibrated Zero False Alarm Verification (FR-02)",
             description = "Resets all sensors to clear, stable skies. Enforces strict 0% risk probability gating rule to eliminate warning fatigue.",
-            buttonText = "Reset to 0% Safe State",
-            buttonColor = Color(0xFF00C853),
+            buttonText = "RESET TO 0% GATED SAFE STATE",
+            buttonColor = CyberEmerald,
+            icon = "🛡️",
             onClick = { engine.resetToSafeState() }
         )
 
-        // Live Telemetry Network Ingestion
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, Color(0xFF1E88E5), RoundedCornerShape(12.dp)),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F1A26))
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Text(
-                    text = "🌐 LIVE NWP TELEMETRY INGESTION",
-                    color = Color(0xFF64B5F6),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = "Pulls real-time live meteorological data from Open-Meteo for your coordinates.",
-                    color = Color(0xFF90A4AE),
-                    fontSize = 11.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    onClick = { engine.syncAllLiveFeeds() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Sync Live Open-Meteo & USGS APIs", fontSize = 12.sp)
-                }
-            }
+        // 3. Live Telemetry Network Ingestion Card
+        TacticalPanel(borderColor = BorderBright) {
+            TacticalSectionHeader(
+                tag = "API-SYNC",
+                title = "Live Satellite & Seismic Feeds",
+                trailingBadge = "LIVE INGESTION",
+                badgeColor = NeonCyan,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
+            Text(
+                text = "Connects to Open-Meteo Convective NWP API and USGS Earthquake Catalog API to refresh live background telemetry.",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TacticalButton(
+                text = "SYNC LIVE METEOROLOGY & SEISMIC FEEDS",
+                onClick = { engine.syncAllLiveFeeds() },
+                accentColor = NeonCyan,
+                leadingIcon = "🔄",
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-
-        // Hardware Controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF151922))
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Text(
-                    text = "🛠️ HARDWARE BEACON DIAGNOSTICS",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            if (isSirenOn) engine.siren.stopSiren() else engine.siren.startSiren()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSirenOn) Color(0xFFD50000) else Color(0xFF37474F)
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(if (isSirenOn) "Stop Siren" else "Start 880Hz Siren", fontSize = 11.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            if (isTorchActive) engine.opticalBeacon.stopSosStrobe() else engine.opticalBeacon.startSosStrobe()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isTorchActive) Color(0xFFFF9100) else Color(0xFF37474F)
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(if (isTorchActive) "Stop SOS" else "Morse SOS Torch", fontSize = 11.sp)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { engine.showEmergencyOverlay() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB71C1C)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Display Full-Screen Danger Overlay (FR-04)", fontSize = 12.sp)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
 @Composable
-private fun SimCard(
+private fun SimCardItem(
+    index: String,
     title: String,
     description: String,
     buttonText: String,
     buttonColor: Color,
+    icon: String,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0xFF263238), RoundedCornerShape(12.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF131821))
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(text = title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = description, color = Color(0xFFB0BEC5), fontSize = 11.sp, lineHeight = 15.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = onClick,
-                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    TacticalPanel(borderColor = BorderGlass) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "[$index]",
+                    color = buttonColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title.uppercase(),
+                    color = TextHighlight,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace
+                )
             }
+            Text(text = icon, fontSize = 14.sp)
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = description,
+            color = TextSecondary,
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            lineHeight = 15.sp
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        TacticalButton(
+            text = buttonText,
+            onClick = onClick,
+            accentColor = buttonColor,
+            modifier = Modifier.fillMaxWidth(),
+            height = 40.dp
+        )
     }
 }

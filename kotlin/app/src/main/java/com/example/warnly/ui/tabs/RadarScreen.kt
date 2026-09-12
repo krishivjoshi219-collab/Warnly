@@ -6,23 +6,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warnly.model.AlertLevel
 import com.example.warnly.physics.GeoMath
 import com.example.warnly.service.DisasterEngine
-import com.example.warnly.ui.components.GeodesicRadarCanvas
-import com.example.warnly.ui.components.RiskGaugeCard
-import com.example.warnly.ui.components.ShelterTimerView
+import com.example.warnly.theme.*
+import com.example.warnly.ui.components.*
 
+/**
+ * Radar & Geodesic Rings Situational Awareness Screen
+ * Implements FR-01, FR-02, FR-03, and quick tactical actuators.
+ */
 @Composable
 fun RadarScreen(engine: DisasterEngine) {
     val alertLevel by engine.alertLevel.collectAsState()
@@ -35,88 +39,106 @@ fun RadarScreen(engine: DisasterEngine) {
     val isTimerActive by engine.isTimerActive.collectAsState()
     val resetCount by engine.timerResetCount.collectAsState()
     val isTorchActive by engine.opticalBeacon.isStrobeActive.collectAsState()
+    val isSirenOn = engine.siren.isSirenActive()
 
     val levelBannerColor = when (alertLevel) {
-        AlertLevel.DANGER -> Color(0xFFFF1744)
-        AlertLevel.ADVISORY -> Color(0xFFFFB300)
-        AlertLevel.SAFE -> Color(0xFF00E676)
+        AlertLevel.DANGER -> CriticalCrimson
+        AlertLevel.ADVISORY -> HazardAmber
+        AlertLevel.SAFE -> CyberEmerald
+    }
+
+    val levelBorderColor = when (alertLevel) {
+        AlertLevel.DANGER -> BorderCritical
+        AlertLevel.ADVISORY -> BorderAmber
+        AlertLevel.SAFE -> BorderEmerald
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(VoidBlack)
             .verticalScroll(rememberScrollState())
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Top Geodesic Status Badge
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.5.dp, levelBannerColor, RoundedCornerShape(12.dp)),
-            colors = CardDefaults.cardColors(containerColor = levelBannerColor.copy(alpha = 0.12f))
+        // 1. Top DEFCON Status Banner
+        TacticalPanel(
+            borderColor = levelBorderColor,
+            contentPadding = PaddingValues(14.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = alertLevel.label,
-                        color = levelBannerColor,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 16.sp,
-                        letterSpacing = 1.sp
-                    )
-                    Text(
-                        text = if (nearestStrikeKm != null) {
-                            "Nearest Strike: ${String.format("%.1f", nearestStrikeKm)} km (${GeoMath.bearingToCardinal(nearestStrikeBearing)} • ${(nearestStrikeBearing).toInt()}°)"
-                        } else {
-                            "No active strikes detected within 15 km perimeter"
-                        },
-                        color = Color(0xFFCFD8DC),
-                        fontSize = 12.sp
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulsingLed(color = levelBannerColor, size = 9.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = alertLevel.label,
+                            color = levelBannerColor,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = if (nearestStrikeKm != null) {
+                                "NEAREST STRIKE: ${String.format("%.1f", nearestStrikeKm)} KM (${GeoMath.bearingToCardinal(nearestStrikeBearing)} • ${(nearestStrikeBearing).toInt()}°)"
+                            } else {
+                                "15 KM PERIMETER CLEAR • ZERO INTRUSIONS"
+                            },
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
 
                 if (alertLevel == AlertLevel.DANGER) {
-                    Button(
+                    TacticalButton(
+                        text = "ACTION HUD",
                         onClick = { engine.showEmergencyOverlay() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1744)),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text("ACTION", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    }
+                        accentColor = CriticalCrimson,
+                        leadingIcon = "🚨",
+                        height = 36.dp
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // 2. Geodesic Safety Rings Radar (FR-01)
+        TacticalPanel(
+            borderColor = BorderSubtle,
+            contentPadding = PaddingValues(8.dp)
+        ) {
+            TacticalSectionHeader(
+                tag = "RADAR-01",
+                title = "Geodesic Range Rings (10km / 15km)",
+                trailingBadge = if (strikes.isEmpty()) "ALL CLEAR" else "${strikes.size} DETECTIONS",
+                badgeColor = if (strikes.isEmpty()) CyberEmerald else CriticalCrimson,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+            )
 
-        // Geodesic Safety Rings Radar
-        GeodesicRadarCanvas(
-            alertLevel = alertLevel,
-            strikes = strikes,
-            shelters = shelters,
-            stormSpeedKmh = atmos.stormSpeedKmh,
-            stormBearingDegrees = atmos.stormBearingDegrees,
-            modifier = Modifier.fillMaxWidth()
-        )
+            GeodesicRadarCanvas(
+                alertLevel = alertLevel,
+                strikes = strikes,
+                shelters = shelters,
+                stormSpeedKmh = atmos.stormSpeedKmh,
+                stormBearingDegrees = atmos.stormBearingDegrees,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Calibrated Risk Probability Card (FR-02)
+        // 3. Calibrated Risk Probability Card (FR-02)
         RiskGaugeCard(
             atmosphericIndices = atmos,
             nearestStrikeKm = nearestStrikeKm
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Automated 30-30 Sheltering Countdown Clock (FR-03)
+        // 4. Automated 30-30 Sheltering Countdown Clock (FR-03)
         ShelterTimerView(
             remainingSeconds = timerSec,
             isActive = isTimerActive,
@@ -125,46 +147,38 @@ fun RadarScreen(engine: DisasterEngine) {
             onStopTimer = { engine.stop30_30Timer() }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        // 5. Rapid Audible & Optical Actuators
+        TacticalPanel(borderColor = BorderGlass) {
+            TacticalSectionHeader(
+                tag = "ACT-01",
+                title = "Hardware Alert Actuators",
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
 
-        // Siren and SOS Beacon Quick Launch Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF13181F))
-        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                val isSirenOn = engine.siren.isSirenActive()
-                Button(
+                TacticalButton(
+                    text = if (isSirenOn) "STOP 880/440HZ SIREN" else "START WARBLE SIREN",
                     onClick = {
                         if (isSirenOn) engine.siren.stopSiren() else engine.siren.startSiren()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSirenOn) Color(0xFFD50000) else Color(0xFF37474F)
-                    ),
+                    accentColor = if (isSirenOn) CriticalCrimson else SurfaceDark,
+                    leadingIcon = if (isSirenOn) "🚨" else "🔊",
                     modifier = Modifier.weight(1f)
-                ) {
-                    Text(text = if (isSirenOn) "🚨 Silence Siren" else "🔊 Test Siren (880Hz)", fontSize = 12.sp)
-                }
+                )
 
-                Button(
+                TacticalButton(
+                    text = if (isTorchActive) "STOP SOS STROBE" else "FLASH MORSE SOS",
                     onClick = {
                         if (isTorchActive) engine.opticalBeacon.stopSosStrobe() else engine.opticalBeacon.startSosStrobe()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isTorchActive) Color(0xFFFF8F00) else Color(0xFF37474F)
-                    ),
+                    accentColor = if (isTorchActive) HazardAmber else SurfaceDark,
+                    leadingIcon = if (isTorchActive) "💡" else "🔦",
                     modifier = Modifier.weight(1f)
-                ) {
-                    Text(text = if (isTorchActive) "💡 Stop SOS" else "🔦 Optical SOS Strobe", fontSize = 12.sp)
-                }
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }

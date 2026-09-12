@@ -9,17 +9,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class AppNavTab(val title: String, val icon: String) {
-    RADAR("Radar & Rings", "📡"),
-    NAVIGATE("Offline Nav", "🧭"),
-    EDGE_AI("Edge AI", "⚡"),
-    HAZARDS("Multi-Hazard", "⚠️"),
-    MESH("P2P Mesh", "📶"),
-    BLACKOUT("Survival", "🔋"),
-    SHELTERS("Shelters", "🛡️"),
-    FAMILY_SHIELD("Family Shield", "👨‍👩‍👧"),
-    PROTOCOLS("Protocols", "📋"),
-    SIMULATOR("Test Hub", "🧪")
+enum class AppNavTab(val title: String, val icon: String, val shortTag: String = "") {
+    RADAR("Radar & Rings", "📡", "RADAR"),
+    NAVIGATE("Offline Nav", "🧭", "NAV HUD"),
+    EDGE_AI("Edge AI", "⚡", "EDGE AI"),
+    HAZARDS("Multi-Hazard", "⚠️", "HAZARDS"),
+    MESH("P2P Mesh", "📶", "MESH P2P"),
+    BLACKOUT("Survival", "🔋", "BLACKOUT"),
+    SHELTERS("Shelters", "🛡️", "SHELTERS"),
+    FAMILY_SHIELD("Family Shield", "👨‍👩‍👧", "SHIELD"),
+    PROTOCOLS("Protocols", "📋", "PROTOCOLS"),
+    SIMULATOR("Test Hub", "🧪", "SIM LAB")
+}
+
+enum class StationCategory(val label: String, val icon: String) {
+    SURVEILLANCE("SURVEILLANCE", "📡"),
+    HAZARDS("HAZARD INTEL", "⚠️"),
+    OFF_GRID("OFF-GRID NET", "📶"),
+    OPERATIONS("OPERATIONS", "🎛️")
+}
+
+fun AppNavTab.getCategory(): StationCategory = when (this) {
+    AppNavTab.RADAR, AppNavTab.NAVIGATE, AppNavTab.EDGE_AI -> StationCategory.SURVEILLANCE
+    AppNavTab.HAZARDS, AppNavTab.SHELTERS, AppNavTab.FAMILY_SHIELD -> StationCategory.HAZARDS
+    AppNavTab.MESH, AppNavTab.BLACKOUT -> StationCategory.OFF_GRID
+    AppNavTab.PROTOCOLS, AppNavTab.SIMULATOR -> StationCategory.OPERATIONS
+}
+
+fun StationCategory.getTabs(): List<AppNavTab> = when (this) {
+    StationCategory.SURVEILLANCE -> listOf(AppNavTab.RADAR, AppNavTab.NAVIGATE, AppNavTab.EDGE_AI)
+    StationCategory.HAZARDS -> listOf(AppNavTab.HAZARDS, AppNavTab.SHELTERS, AppNavTab.FAMILY_SHIELD)
+    StationCategory.OFF_GRID -> listOf(AppNavTab.MESH, AppNavTab.BLACKOUT)
+    StationCategory.OPERATIONS -> listOf(AppNavTab.PROTOCOLS, AppNavTab.SIMULATOR)
 }
 
 class WarnlyViewModel(application: Application) : AndroidViewModel(application) {

@@ -1,6 +1,7 @@
 package com.example.warnly.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -9,24 +10,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.warnly.model.AlertLevel
 import com.example.warnly.model.HazardType
+import com.example.warnly.theme.*
 
 /**
- * FR-04: Full-Screen Emergency Intrusion Overlay
- * High-contrast life-safety card mounted when hazards breach critical danger thresholds.
+ * FR-04: Full-Screen Emergency Intrusion Screen
+ * Highest-priority tactical dialog that supersedes standard UI upon critical danger breach.
  */
 @Composable
 fun EmergencyOverlayDialog(
@@ -41,41 +45,68 @@ fun EmergencyOverlayDialog(
     onDismiss: () -> Unit,
     onNavigateToShelter: (() -> Unit)? = null
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "emergencyStrobe")
+    val strobeAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "strobeAlpha"
+    )
+
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
         Dialog(
-            onDismissRequest = { /* un-dismissible by back click, explicit button needed */ },
-            properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = false, dismissOnClickOutside = false)
+            onDismissRequest = { /* un-dismissible without explicit button click */ },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF0D0204).copy(alpha = 0.96f))
+                    .background(Color(0xF5050204))
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Card(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(2.dp, Color(0xFFFF1744), RoundedCornerShape(20.dp))
-                        .clip(RoundedCornerShape(20.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0608))
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF1F0508),
+                                    VoidBlack
+                                )
+                            )
+                        )
+                        .border(
+                            width = 2.dp,
+                            color = CriticalCrimson.copy(alpha = strobeAlpha),
+                            shape = RoundedCornerShape(18.dp)
+                        )
+                        .padding(20.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp)
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Flashing banner
+                        // Flashing Threat Header Banner
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFFF1744), RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(CriticalCrimson)
                                 .padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -83,7 +114,8 @@ fun EmergencyOverlayDialog(
                                 text = "CRITICAL LIFE-SAFETY ALERT",
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
+                                fontFamily = FontFamily.Monospace,
                                 letterSpacing = 2.sp
                             )
                         }
@@ -91,119 +123,98 @@ fun EmergencyOverlayDialog(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "DANGER PERIMETER BREACH",
-                            color = Color(0xFFFF5252),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
+                            text = "10 KM DANGER PERIMETER BREACH",
+                            color = CriticalCrimson,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 18.sp,
+                            fontFamily = FontFamily.Monospace,
                             textAlign = TextAlign.Center
                         )
 
+                        Spacer(modifier = Modifier.height(6.dp))
+
                         Text(
                             text = if (nearestStrikeKm != null) {
-                                "Lightning Strike Detected at ${String.format("%.1f", nearestStrikeKm)} km (Bearing ${(nearestStrikeBearing).toInt()}°)\nInside Thunder's 30-Second Travel Ring!"
+                                "Lightning Strike Detected at ${String.format("%.1f", nearestStrikeKm)} km (Bearing ${(nearestStrikeBearing).toInt()}°)\nInside Thunder's 30-Second Acoustic Travel Boundary!"
                             } else {
                                 "Geophysical Threat Incursion Detected Inside Primary Danger Ring!"
                             },
                             color = Color(0xFFFFCDD2),
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Evacuation Action Checklist
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2C0A0D)),
-                            modifier = Modifier.fillMaxWidth()
+                        // Evacuation Action Protocol Checklist
+                        TacticalPanel(
+                            borderColor = BorderCritical,
+                            backgroundColor = Color(0xFF180508),
+                            contentPadding = PaddingValues(12.dp)
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "MANDATORY EVACUATION ACTIONS:",
-                                    color = Color(0xFFFF8A80),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "MANDATORY EVACUATION ACTIONS:",
+                                color = CriticalCrimson,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                                ActionStepItem("1", "TAKE HARDENED INDOOR SHELTER IMMEDIATELY. Do not wait for rain or visual strike confirmation.")
-                                ActionStepItem("2", "SUSPEND CRANES & OUTDOOR WORK (OSHA Rule: 10-mile radius suspension).")
-                                ActionStepItem("3", "STAY AWAY FROM PLUMBING, CORDED PHONES, WIRED APPLIANCES, AND WINDOWS.")
-                                ActionStepItem("4", "30-30 TIMER ACTIVE: Stay sheltered for 30 full minutes after the last nearby strike.")
-                            }
+                            ActionStepItem("1", "TAKE HARDENED INDOOR SHELTER IMMEDIATELY. Do not wait for rain or visual strike confirmation.")
+                            ActionStepItem("2", "SUSPEND OUTDOOR & CRANE WORK (OSHA Rule: 10-mile radius suspension).")
+                            ActionStepItem("3", "STAY AWAY FROM PLUMBING, CORDED PHONES, WIRED APPLIANCES, AND WINDOWS.")
+                            ActionStepItem("4", "30-30 TIMER ACTIVE: Stay sheltered for 30 full minutes after the last nearby strike.")
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Hardware Controls Row
+                        // Hardware Actuator Controls (Siren & Torch)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
+                            TacticalButton(
+                                text = if (isSirenActive) "SIREN: ON" else "SIREN: OFF",
                                 onClick = onToggleSiren,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isSirenActive) Color(0xFFD50000) else Color(0xFF424242)
-                                ),
+                                accentColor = if (isSirenActive) CriticalCrimson else BorderGlass,
+                                leadingIcon = "🚨",
                                 modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = if (isSirenActive) "Siren: ON" else "Siren: OFF",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                            }
+                            )
 
-                            Button(
+                            TacticalButton(
+                                text = if (isTorchActive) "STROBE: ON" else "STROBE: OFF",
                                 onClick = onToggleTorch,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isTorchActive) Color(0xFFFF9100) else Color(0xFF424242)
-                                ),
+                                accentColor = if (isTorchActive) HazardAmber else BorderGlass,
+                                leadingIcon = "💡",
                                 modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = if (isTorchActive) "SOS Strobe: ON" else "SOS Torch: OFF",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                            }
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        // Immediate Evacuation Navigation Button
-                        Button(
+                        // Navigation to Shelter Vector Button
+                        TacticalButton(
+                            text = "LOCK EVACUATION HUD TO SHELTER",
                             onClick = {
-                                onDismiss()
                                 onNavigateToShelter?.invoke()
+                                onDismiss()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text = "🧭 EVACUATE NOW (OFFLINE HUD)",
-                                fontWeight = FontWeight.Black,
-                                color = Color(0xFF003314),
-                                fontSize = 14.sp
-                            )
-                        }
+                            accentColor = CyberEmerald,
+                            leadingIcon = "🧭",
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        // Acknowledge Button
-                        OutlinedButton(
+                        TacticalButton(
+                            text = "ACKNOWLEDGE & MINIMIZE ALERT",
                             onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5252))
-                        ) {
-                            Text(
-                                text = "Acknowledge & Monitor Radar",
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFFFFCDD2)
-                            )
-                        }
+                            accentColor = TextMuted,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -212,27 +223,35 @@ fun EmergencyOverlayDialog(
 }
 
 @Composable
-private fun ActionStepItem(number: String, text: String) {
+private fun ActionStepItem(number: String, instruction: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp),
         verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
-                .size(22.dp)
-                .background(Color(0xFFFF1744), RoundedCornerShape(11.dp)),
+                .size(18.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(CriticalCrimson.copy(alpha = 0.3f))
+                .border(1.dp, CriticalCrimson, RoundedCornerShape(3.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = number, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = number,
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace
+            )
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = text,
-            color = Color(0xFFEEEEEE),
-            fontSize = 12.sp,
-            lineHeight = 16.sp
+            text = instruction,
+            color = Color(0xFFFFEBEE),
+            fontSize = 11.sp,
+            lineHeight = 15.sp
         )
     }
 }
