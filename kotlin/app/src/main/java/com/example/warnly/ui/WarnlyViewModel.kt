@@ -23,10 +23,10 @@ enum class AppNavTab(val title: String, val icon: String, val shortTag: String =
 }
 
 enum class StationCategory(val label: String, val icon: String) {
-    SURVEILLANCE("SURVEILLANCE", "📡"),
-    HAZARDS("HAZARD INTEL", "⚠️"),
-    OFF_GRID("OFF-GRID NET", "📶"),
-    OPERATIONS("OPERATIONS", "🎛️")
+    SURVEILLANCE("SURV", "📡"),
+    HAZARDS("HAZARDS", "⚠️"),
+    OFF_GRID("OFF-GRID", "📶"),
+    OPERATIONS("OPS", "🎛️")
 }
 
 fun AppNavTab.getCategory(): StationCategory = when (this) {

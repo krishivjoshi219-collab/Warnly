@@ -235,13 +235,14 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         StationCategory.values().forEach { cat ->
                             val isCatActive = (cat == activeCategory)
                             Box(
                                 modifier = Modifier
+                                    .weight(1f)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(if (isCatActive) NeonCyan.copy(alpha = 0.15f) else Color.Transparent)
                                     .border(
@@ -252,19 +253,24 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                                     .clickable {
                                         viewModel.setTab(cat.getTabs().first())
                                     }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    .padding(vertical = 5.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
                                     Text(cat.icon, fontSize = 11.sp)
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = cat.label,
                                         color = if (isCatActive) NeonCyan else TextMuted,
                                         fontSize = 9.sp,
                                         fontWeight = if (isCatActive) FontWeight.Black else FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.8.sp
+                                        letterSpacing = 0.5.sp,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
