@@ -51,7 +51,7 @@ export const MONITORED_FEEDS: Omit<FeedStatus, "status" | "latencyMs" | "lastChe
 
 /**
  * Sends real HTTP requests to verify connectivity and measure latency to each live disaster feed.
- * Completely truthful â€” if a server is down or slow, it reports offline and exact error.
+ * Completely truthful - if a server is down or slow, it reports offline and exact error.
  */
 export async function checkFeedHealth(feed: typeof MONITORED_FEEDS[number]): Promise<FeedStatus> {
   const start = performance.now();

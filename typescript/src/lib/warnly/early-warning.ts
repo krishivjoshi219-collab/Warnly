@@ -90,7 +90,7 @@ export async function computeEarlyWarnings(
         "Move vertically up adjacent hillsides at least 30-50 meters above the riverbed.",
         "Glacial outburst floods travel with violent mud, boulders and ice at 35 km/h.",
         "Immediately evacuate all low-lying riverbanks, bridges, and valley settlements.",
-        "Do not stop to collect belongings â€” every minute counts.",
+        "Do not stop to collect belongings - every minute counts.",
         "Head to the nearest designated high-ground ridge or safe camp.",
       ],
       recommendedShelterType: "high_ground",
@@ -125,7 +125,7 @@ export async function computeEarlyWarnings(
       title: "CRITICAL: Lightning Inside 10 km Safety Zone",
       leadTimeMinutes: 0,
       leadTimeDisplay: "IMMEDIATE BREACH",
-      primaryAction: "GET INDOORS NOW â€” 30/30 RULE ACTIVE",
+      primaryAction: "GET INDOORS NOW - 30/30 RULE ACTIVE",
       actionSteps: [
         "Immediately enter a fully enclosed building or hard-topped vehicle.",
         "Stay away from windows, corded devices, plumbing, and concrete walls.",
@@ -152,13 +152,13 @@ export async function computeEarlyWarnings(
       id: "lightning-early-warning",
       kind: "lightning",
       severity: estArrivalMin <= 15 ? "warning" : "advisory",
-      title: `Thunderstorm Cell Approaching â€” Early Warning`,
+      title: `Thunderstorm Cell Approaching - Early Warning`,
       leadTimeMinutes: estArrivalMin,
       leadTimeDisplay: `${estArrivalMin} mins advance warning`,
       primaryAction: `SEEK HARD-TOPPED SHELTER WITHIN ${estArrivalMin} MINUTES`,
       actionSteps: [
         `Active strike detected ${closestDist.toFixed(1)} km out, moving towards your safety zone.`,
-        `Estimated breach in ~${estArrivalMin} minutes â€” finish outdoor tasks and move indoors now.`,
+        `Estimated breach in ~${estArrivalMin} minutes - finish outdoor tasks and move indoors now.`,
         "Charge essential phones/powerbanks before electrical storm reaches your area.",
         "Unplug valuable electronics and sensitive appliances.",
       ],
@@ -184,7 +184,7 @@ export async function computeEarlyWarnings(
       severity: isSevere ? "critical" : "warning",
       title: isSevere
         ? "CRITICAL FLASH FLOOD & WATER SURGE WARNING"
-        : "Flash Flood Early Advisory â€” Heavy Runoff",
+        : "Flash Flood Early Advisory - Heavy Runoff",
       leadTimeMinutes: leadTime,
       leadTimeDisplay: `${leadTime} mins surge lead time`,
       primaryAction: "EVACUATE LOW GROUND & NEVER DRIVE THROUGH WATER",
@@ -202,7 +202,7 @@ export async function computeEarlyWarnings(
         { label: "Surge Peak ETA", value: `~${leadTime} mins` },
         {
           label: "River Flow",
-          value: flood.discharge != null ? `${flood.discharge} mÂ³/s` : "High runoff",
+          value: flood.discharge != null ? `${flood.discharge} m\u00B3/s` : "High runoff",
         },
       ],
       timestamp: now,
@@ -230,7 +230,7 @@ export async function computeEarlyWarnings(
       severity: recentNearbyQuake.mag >= 5.5 || isImminent ? "critical" : "warning",
       title: isImminent
         ? `SEISMIC ALERT: Strong S-Wave Shaking in ${sWaveCountdown}s!`
-        : `Recent M${recentNearbyQuake.mag.toFixed(1)} Quake â€” Aftershock Early Watch`,
+        : `Recent M${recentNearbyQuake.mag.toFixed(1)} Quake - Aftershock Early Watch`,
       leadTimeMinutes: isImminent ? Math.round(sWaveCountdown / 60) : 15,
       leadTimeDisplay: isImminent ? `${sWaveCountdown} sec S-wave alert` : `Aftershocks watch`,
       primaryAction: "DROP, COVER, AND HOLD ON UNDER STURDY FURNITURE",
@@ -239,7 +239,7 @@ export async function computeEarlyWarnings(
         "COVER your head and neck under a sturdy desk or table.",
         "HOLD ON to your shelter until shaking completely stops.",
         "Stay away from exterior glass windows, mirrors, and unanchored tall cabinets.",
-        "After shaking, evacuate to open fields via stairs â€” do NOT use elevators.",
+        "After shaking, evacuate to open fields via stairs - do NOT use elevators.",
       ],
       recommendedShelterType: "assembly_field",
       metrics: [

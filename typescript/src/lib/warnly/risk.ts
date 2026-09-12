@@ -6,7 +6,7 @@ export const OUTER_RADIUS_KM = 15;
 const R = 6371;
 const rad = (d: number) => (d * Math.PI) / 180;
 
-/** Great-circle (haversine) distance in km â€” geodesic model. */
+/** Great-circle (haversine) distance in km - geodesic model. */
 export function distanceKm(a: Coords, b: Coords): number {
   const dLat = rad(b.lat - a.lat);
   const dLon = rad(b.lon - a.lon);
@@ -83,7 +83,7 @@ export const levelMeta: Record<
 > = {
   safe: {
     label: "YOUR ZONE IS SAFE",
-    sub: "0 strikes detected Â· normal weather conditions",
+    sub: "0 strikes detected \u00B7 normal weather conditions",
     color: "var(--color-safe)",
     ring: "shadow-[0_0_60px_-18px_var(--color-safe)]",
     badge: "bg-safe/15 text-safe border-safe/30",

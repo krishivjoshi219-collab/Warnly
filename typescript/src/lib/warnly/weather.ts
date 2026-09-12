@@ -58,9 +58,9 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
     if (!res.ok) throw new Error("geocode failed");
     const j = (await res.json()) as { city?: string; locality?: string; countryName?: string; principalSubdivision?: string };
     const name = j.city || j.locality || j.principalSubdivision;
-    return [name, j.countryName].filter(Boolean).join(", ") || `${lat.toFixed(2)}Â°, ${lon.toFixed(2)}Â°`;
+    return [name, j.countryName].filter(Boolean).join(", ") || `${lat.toFixed(2)}\u00B0, ${lon.toFixed(2)}\u00B0`;
   } catch {
-    return `${lat.toFixed(2)}Â°, ${lon.toFixed(2)}Â°`;
+    return `${lat.toFixed(2)}\u00B0, ${lon.toFixed(2)}\u00B0`;
   }
 }
 

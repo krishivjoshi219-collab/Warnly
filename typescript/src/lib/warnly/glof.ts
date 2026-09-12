@@ -44,7 +44,7 @@ export const CRITICAL_GLACIAL_LAKES: GlacialLakeBasin[] = [
     elevationM: 4580,
     areaSqKm: 1.65,
     hazardRating: "very_high",
-    recentEvents: "One of Nepal's largest moraine-dammed lakes holding >80 million mÂ³ of water.",
+    recentEvents: "One of Nepal's largest moraine-dammed lakes holding >80 million m\u00B3 of water.",
   },
   {
     id: "np-imja-tsho",
@@ -196,7 +196,7 @@ export async function evaluateGlofRisk(
   }
 
   // Broad High Mountain Asia boundary check (Himalayas, Karakoram, Hindu Kush, Tibetan Plateau)
-  // Lat: 26Â°N - 37Â°N, Lon: 68Â°E - 104Â°E
+  // Lat: 26 deg N - 37 deg N, Lon: 68 deg E - 104 deg E
   const isHighMountainAsia =
     coords.lat >= 25.5 && coords.lat <= 38.0 && coords.lon >= 68.0 && coords.lon <= 104.5;
   const isAndeanZone =
@@ -221,7 +221,7 @@ export async function evaluateGlofRisk(
   }
 
   // Determine environmental triggers:
-  // High altitude freezing level estimated based on surface temperature lapse rate (~6.5Â°C / 1000m)
+  // High altitude freezing level estimated based on surface temperature lapse rate (~6.5 deg C / 1000m)
   const estFreezingLevel = Math.round(Math.max(2000, (tempC / 6.5) * 1000 + 1400));
   const rapidMelt = tempC >= 26;
   const heavyUpstreamRain = precipNow >= 8;
@@ -230,23 +230,23 @@ export async function evaluateGlofRisk(
   const moderateSurge = dischargeSurge >= 1.6;
 
   let riskLevel: "none" | "advisory" | "watch" | "warning" = "none";
-  let headline = `Monitored Basin (${nearest.lake.name}) â€” Normal Water Level`;
+  let headline = `Monitored Basin (${nearest.lake.name}) - Normal Water Level`;
   let leadTime = nearest.downstreamTravelTimeMin;
 
   if (nearest.distanceKm <= 80 && (severeCloudburst || severeSurge)) {
     if (severeCloudburst && severeSurge) {
       riskLevel = "warning";
-      headline = `CRITICAL GLOF WARNING â€” Glacial Outburst Surge (${nearest.lake.name})`;
+      headline = `CRITICAL GLOF WARNING - Glacial Outburst Surge (${nearest.lake.name})`;
     } else {
       riskLevel = "watch";
-      headline = `GLOF Early Watch â€” Elevated High-Altitude Surge in ${nearest.lake.basin}`;
+      headline = `GLOF Early Watch - Elevated High-Altitude Surge in ${nearest.lake.basin}`;
     }
   } else if (nearest.distanceKm <= 120 && (severeCloudburst || moderateSurge)) {
     riskLevel = "advisory";
     headline = `Glacial Melt & High Runoff Advisory in ${nearest.lake.basin}`;
   } else {
     riskLevel = "none";
-    headline = `Normal River Flow â€” No Outburst Detected (${nearest.lake.name})`;
+    headline = `Normal River Flow - No Outburst Detected (${nearest.lake.name})`;
   }
 
   return {
