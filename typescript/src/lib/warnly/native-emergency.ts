@@ -1,6 +1,8 @@
 import { NativeModules, Platform } from "react-native";
 
-const { WarnlyEmergencyModule } = NativeModules;
+function getModule() {
+  return NativeModules.WarnlyEmergencyModule;
+}
 
 export interface EmergencyModuleInterface {
   isAvailable: boolean;
@@ -13,32 +15,39 @@ export interface EmergencyModuleInterface {
 }
 
 export const NativeEmergency: EmergencyModuleInterface = {
-  isAvailable: Platform.OS === "android" && !!WarnlyEmergencyModule,
+  get isAvailable() {
+    return Platform.OS === "android" && !!getModule();
+  },
 
   startAlarmSiren: () => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.startAlarmSiren) {
+    const mod = getModule();
+    console.log("[NativeEmergency] startAlarmSiren called, mod available:", !!mod);
+    if (Platform.OS === "android" && mod?.startAlarmSiren) {
       try {
-        WarnlyEmergencyModule.startAlarmSiren();
-      } catch {
-        /* fallback */
+        mod.startAlarmSiren();
+      } catch (err) {
+        console.error("[NativeEmergency] startAlarmSiren error:", err);
       }
     }
   },
 
   stopAlarmSiren: () => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.stopAlarmSiren) {
+    const mod = getModule();
+    console.log("[NativeEmergency] stopAlarmSiren called, mod available:", !!mod);
+    if (Platform.OS === "android" && mod?.stopAlarmSiren) {
       try {
-        WarnlyEmergencyModule.stopAlarmSiren();
-      } catch {
-        /* fallback */
+        mod.stopAlarmSiren();
+      } catch (err) {
+        console.error("[NativeEmergency] stopAlarmSiren error:", err);
       }
     }
   },
 
   checkDndPermission: async (): Promise<boolean> => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.checkDndPermission) {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.checkDndPermission) {
       try {
-        return await WarnlyEmergencyModule.checkDndPermission();
+        return await mod.checkDndPermission();
       } catch {
         return false;
       }
@@ -47,9 +56,10 @@ export const NativeEmergency: EmergencyModuleInterface = {
   },
 
   requestDndPermission: () => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.requestDndPermission) {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.requestDndPermission) {
       try {
-        WarnlyEmergencyModule.requestDndPermission();
+        mod.requestDndPermission();
       } catch {
         /* fallback */
       }
@@ -57,9 +67,10 @@ export const NativeEmergency: EmergencyModuleInterface = {
   },
 
   setupEmergencyNotificationChannel: () => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.setupEmergencyNotificationChannel) {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.setupEmergencyNotificationChannel) {
       try {
-        WarnlyEmergencyModule.setupEmergencyNotificationChannel();
+        mod.setupEmergencyNotificationChannel();
       } catch {
         /* fallback */
       }
@@ -67,9 +78,10 @@ export const NativeEmergency: EmergencyModuleInterface = {
   },
 
   postCriticalAlert: (title: string, message: string) => {
-    if (Platform.OS === "android" && WarnlyEmergencyModule?.postCriticalAlert) {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.postCriticalAlert) {
       try {
-        WarnlyEmergencyModule.postCriticalAlert(title, message);
+        mod.postCriticalAlert(title, message);
       } catch {
         /* fallback */
       }
