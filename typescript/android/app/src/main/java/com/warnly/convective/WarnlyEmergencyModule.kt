@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFormat
+import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
 import android.provider.Settings
@@ -113,8 +114,28 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
      */
     @ReactMethod
     fun startAlarmSiren() {
-        if (isPlayingSiren) return
+        if (isPlayingSiren) {
+            Log.d(TAG, "startAlarmSiren called but siren is already active")
+            return
+        }
         isPlayingSiren = true
+        Log.i(TAG, "Starting emergency alarm siren with STREAM_ALARM routing")
+
+        try {
+            val am = reactApplicationContext.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (am != null) {
+                val maxVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                val curVol = am.getStreamVolume(AudioManager.STREAM_ALARM)
+                Log.i(TAG, "STREAM_ALARM volume is $curVol/$maxVol")
+                if (curVol < (maxVol * 0.7).toInt()) {
+                    val boosted = (maxVol * 0.85).toInt().coerceAtLeast(1)
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, boosted, 0)
+                    Log.i(TAG, "Boosted STREAM_ALARM volume to $boosted")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not adjust alarm stream volume", e)
+        }
 
         sirenThread = Thread {
             val sampleRate = 44100
@@ -131,6 +152,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
             val audioAttr = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                 .build()
 
             val audioFormat = AudioFormat.Builder()
@@ -146,6 +168,12 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()
 
+            if (track.state != AudioTrack.STATE_INITIALIZED) {
+                Log.e(TAG, "AudioTrack failed to initialize! state=${track.state}")
+                isPlayingSiren = false
+                return@Thread
+            }
+
             audioTrack = track
 
             try {
@@ -154,7 +182,8 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                 val bufferSamples = (sampleRate * halfPeriodSec).toInt()
                 val pcmBuffer = ShortArray(bufferSamples)
 
-                while (isPlayingSiren) {
+                Log.i(TAG, "Emergency siren loop running on high-priority audio thread")
+                while (isPlayingSiren && !Thread.currentThread().isInterrupted) {
                     val currentFreq = if (toggle) highFreq else lowFreq
                     val angularFreq = 2.0 * Math.PI * currentFreq / sampleRate
 
@@ -175,6 +204,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                     track.release()
                 } catch (ignored: Exception) {}
                 audioTrack = null
+                Log.i(TAG, "Emergency siren stopped and AudioTrack released")
             }
         }.apply {
             priority = Thread.MAX_PRIORITY
@@ -187,6 +217,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
      */
     @ReactMethod
     fun stopAlarmSiren() {
+        Log.i(TAG, "stopAlarmSiren called, interrupting siren thread")
         isPlayingSiren = false
         sirenThread?.interrupt()
         sirenThread = null
@@ -234,6 +265,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
             builder.setPriority(Notification.PRIORITY_MAX)
         }
 
+        Log.i(TAG, "Posting critical notification: $title - $message")
         nm.notify(NOTIFICATION_ID, builder.build())
     }
 }

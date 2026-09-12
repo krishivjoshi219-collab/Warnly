@@ -36,6 +36,8 @@ export const ShieldScreen: React.FC = () => {
     addPlace,
     removePlace,
     startSiren,
+    stopSiren,
+    sirenActive,
     units,
   } = usePro();
 
@@ -312,12 +314,28 @@ export const ShieldScreen: React.FC = () => {
           Test the two-tone 760Hz/960Hz acoustic emergency sound designed to wake sleeping households.
         </Text>
         <TouchableOpacity
-          style={styles.sirenBtn}
-          onPress={startSiren}
+          style={[
+            styles.sirenBtn,
+            sirenActive && { backgroundColor: COLORS.danger, borderColor: COLORS.danger },
+          ]}
+          onPress={() => {
+            if (sirenActive) {
+              stopSiren();
+            } else {
+              startSiren();
+            }
+          }}
           activeOpacity={0.8}
         >
-          <Volume2 size={15} color={COLORS.danger} />
-          <Text style={styles.sirenBtnText}>Test Two-Tone Emergency Siren</Text>
+          <Volume2 size={15} color={sirenActive ? "#FFFFFF" : COLORS.danger} />
+          <Text
+            style={[
+              styles.sirenBtnText,
+              sirenActive && { color: "#FFFFFF" },
+            ]}
+          >
+            {sirenActive ? "Stop Emergency Siren" : "Test Two-Tone Emergency Siren"}
+          </Text>
         </TouchableOpacity>
       </View>
 

@@ -30,6 +30,7 @@ import { checkAllFeedHealth, type FeedStatus } from "../lib/warnly/feed-health";
 import { PaywallModal } from "../components/warnly/PaywallModal";
 import { GuideModal } from "../components/warnly/GuideModal";
 import { NativeEmergency } from "../lib/warnly/native-emergency";
+import { startSirenAudio, stopSirenAudio } from "../lib/warnly/siren";
 import { COLORS, RADII, FONTS } from "../theme";
 
 export const SettingsScreen: React.FC = () => {
@@ -42,6 +43,8 @@ export const SettingsScreen: React.FC = () => {
     alertRadiusKm,
     setAlertRadiusKm,
     startSiren,
+    stopSiren,
+    sirenActive,
     apiKeys,
     setApiKey,
   } = usePro();
@@ -294,13 +297,27 @@ export const SettingsScreen: React.FC = () => {
           Synthesizes a 760Hz/960Hz dual-frequency oscillation that penetrates background noise.
         </Text>
         <TouchableOpacity
-          style={styles.sirenTestBtn}
-          onPress={startSiren}
+          style={[
+            styles.sirenTestBtn,
+            sirenActive && { backgroundColor: COLORS.danger, borderColor: COLORS.danger },
+          ]}
+          onPress={() => {
+            if (sirenActive) {
+              stopSiren();
+            } else {
+              startSiren();
+            }
+          }}
           activeOpacity={0.8}
         >
-          <Volume2 size={15} color={COLORS.danger} />
-          <Text style={styles.sirenTestBtnText}>
-            Test Two-Tone Emergency Siren
+          <Volume2 size={15} color={sirenActive ? "#FFFFFF" : COLORS.danger} />
+          <Text
+            style={[
+              styles.sirenTestBtnText,
+              sirenActive && { color: "#FFFFFF" },
+            ]}
+          >
+            {sirenActive ? "Stop Emergency Siren" : "Test Two-Tone Emergency Siren"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -357,6 +374,10 @@ export const SettingsScreen: React.FC = () => {
                 "WARNLY CRITICAL TEST ALERT",
                 "Life-safety breakthrough alert verified on high-priority alarm channel."
               );
+              startSirenAudio();
+              setTimeout(() => {
+                stopSirenAudio();
+              }, 4000);
             }}
             activeOpacity={0.8}
           >

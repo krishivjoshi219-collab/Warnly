@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.warnly.model.AlertLevel
 import com.example.warnly.theme.*
+import com.example.warnly.ui.components.DynamicIslandHud
 import com.example.warnly.ui.components.EmergencyOverlayDialog
 import com.example.warnly.ui.components.PulsingLed
 import com.example.warnly.ui.components.TacticalBadge
@@ -39,6 +40,8 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
     val alertLevel by engine.alertLevel.collectAsState()
     val nearestStrikeKm by engine.nearestStrikeDistanceKm.collectAsState()
     val nearestStrikeBearing by engine.nearestStrikeBearing.collectAsState()
+    val timerSeconds by engine.timerRemainingSeconds.collectAsState()
+    val isTimerActive by engine.isTimerActive.collectAsState()
     val isOverlayVisible by engine.isEmergencyOverlayVisible.collectAsState()
     val isSirenActive = engine.siren.isSirenActive()
     val isTorchActive by engine.opticalBeacon.isStrobeActive.collectAsState()
@@ -66,175 +69,78 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(SurfaceDark)
-                        .border(
-                            width = 1.dp,
-                            color = BorderGlass,
-                            shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    DeepObsidian,
+                                    VoidBlack
+                                )
+                            )
                         )
+                        .statusBarsPadding()
                 ) {
-                    // Aerospace Command Header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Title & Status LED
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            PulsingLed(color = alertAccentColor, size = 9.dp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "WARNLY",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 18.sp,
-                                color = TextHighlight,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 2.sp
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            TacticalBadge(
-                                text = alertLevel.name,
-                                accentColor = alertAccentColor
-                            )
-                        }
-
-                        // Tactical Quick-Action Command Cluster
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // 72h Survival toggle with battery %
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isBlackoutModeActive) CyberEmerald.copy(alpha = 0.2f) else SurfaceElevated)
-                                    .border(
-                                        1.dp,
-                                        if (isBlackoutModeActive) CyberEmerald else BorderGlass,
-                                        RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable {
-                                        if (isBlackoutModeActive) {
-                                            engine.blackoutManager.exitSurvivalMode()
-                                        } else {
-                                            engine.blackoutManager.enter72HourSurvivalMode()
-                                        }
-                                    }
-                                    .padding(horizontal = 7.dp, vertical = 5.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("🔋", fontSize = 11.sp)
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Text(
-                                        text = "$batteryPct%",
-                                        color = if (batteryPct <= 20) CriticalCrimson else CyberEmerald,
-                                        fontSize = 10.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                    // Floating Interactive Dynamic Island HUD
+                    DynamicIslandHud(
+                        alertLevel = alertLevel,
+                        nearestStrikeKm = nearestStrikeKm,
+                        nearestStrikeBearing = nearestStrikeBearing,
+                        timerSeconds = timerSeconds,
+                        isTimerActive = isTimerActive,
+                        batteryPct = batteryPct,
+                        isBlackoutActive = isBlackoutModeActive,
+                        isSirenActive = isSirenActive,
+                        isTorchActive = isTorchActive,
+                        locationName = locationName,
+                        telemetryStatus = telemetryStatus,
+                        onToggleSiren = {
+                            if (isSirenActive) engine.siren.stopSiren() else engine.siren.startSiren()
+                        },
+                        onToggleTorch = {
+                            if (isTorchActive) engine.opticalBeacon.stopSosStrobe() else engine.opticalBeacon.startSosStrobe()
+                        },
+                        onToggleBlackout = {
+                            if (isBlackoutModeActive) {
+                                engine.blackoutManager.exitSurvivalMode()
+                            } else {
+                                engine.blackoutManager.enter72HourSurvivalMode()
                             }
-
-                            // Sync live APIs button
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(SurfaceElevated)
-                                    .border(1.dp, BorderGlass, RoundedCornerShape(6.dp))
-                                    .clickable { engine.syncAllLiveFeeds() }
-                                    .padding(horizontal = 7.dp, vertical = 5.dp)
-                            ) {
-                                Text("🔄", fontSize = 12.sp)
-                            }
-
-                            // Siren toggle button
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isSirenActive) CriticalCrimson.copy(alpha = 0.25f) else SurfaceElevated)
-                                    .border(
-                                        1.dp,
-                                        if (isSirenActive) CriticalCrimson else BorderGlass,
-                                        RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable {
-                                        if (isSirenActive) engine.siren.stopSiren() else engine.siren.startSiren()
-                                    }
-                                    .padding(horizontal = 7.dp, vertical = 5.dp)
-                            ) {
-                                Text(if (isSirenActive) "🚨" else "🔊", fontSize = 12.sp)
-                            }
-
-                            // Optical torch SOS toggle
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isTorchActive) HazardAmber.copy(alpha = 0.25f) else SurfaceElevated)
-                                    .border(
-                                        1.dp,
-                                        if (isTorchActive) HazardAmber else BorderGlass,
-                                        RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable {
-                                        if (isTorchActive) engine.opticalBeacon.stopSosStrobe() else engine.opticalBeacon.startSosStrobe()
-                                    }
-                                    .padding(horizontal = 7.dp, vertical = 5.dp)
-                            ) {
-                                Text(if (isTorchActive) "💡" else "🔦", fontSize = 12.sp)
-                            }
-                        }
-                    }
-
-                    // Live Telemetry Ribbon & GNSS Location
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(VoidBlack)
-                            .padding(horizontal = 14.dp, vertical = 5.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "📡 $telemetryStatus",
-                            color = NeonCyan,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace,
-                            maxLines = 1,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "📍 $locationName",
-                            color = TextSecondary,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                        },
+                        onSyncFeeds = { engine.syncAllLiveFeeds() },
+                        onNavigateToShelter = { viewModel.setTab(AppNavTab.NAVIGATE) }
+                    )
                 }
             },
             bottomBar = {
-                // Tactical Aerospace Dock
+                // Sleek Floating Consumer / Tactical Glassmorphic Dock
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(SurfaceDark)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xF50D1622),
+                                    Color(0xFA070C12)
+                                )
+                            )
+                        )
                         .border(
                             width = 1.dp,
-                            color = BorderGlass,
-                            shape = RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    BorderBright.copy(alpha = 0.4f),
+                                    BorderGlass
+                                )
+                            ),
+                            shape = RoundedCornerShape(22.dp)
                         )
-                        .navigationBarsPadding()
-                        .padding(vertical = 8.dp)
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    // Category Selector Bar
+                    // Category Selector Pills
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -243,29 +149,31 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isCatActive) NeonCyan.copy(alpha = 0.15f) else Color.Transparent)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isCatActive) NeonCyan.copy(alpha = 0.18f) else Color.Transparent
+                                    )
                                     .border(
                                         width = 1.dp,
-                                        color = if (isCatActive) NeonCyan else Color.Transparent,
-                                        shape = RoundedCornerShape(6.dp)
+                                        color = if (isCatActive) NeonCyan.copy(alpha = 0.8f) else Color.Transparent,
+                                        shape = RoundedCornerShape(12.dp)
                                     )
                                     .clickable {
                                         viewModel.setTab(cat.getTabs().first())
                                     }
-                                    .padding(vertical = 5.dp),
+                                    .padding(vertical = 6.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Text(cat.icon, fontSize = 11.sp)
-                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(cat.icon, fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = cat.label,
                                         color = if (isCatActive) NeonCyan else TextMuted,
-                                        fontSize = 9.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = if (isCatActive) FontWeight.Black else FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
                                         letterSpacing = 0.5.sp,
@@ -279,12 +187,11 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Secondary Sub-Station Module Pills (The tabs for the active category)
+                    // Secondary Sub-Module Pills for the active category
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 10.dp),
+                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -292,18 +199,18 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                             val isSelected = (tab == currentTab)
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
+                                    .clip(RoundedCornerShape(14.dp))
                                     .background(
                                         brush = Brush.horizontalGradient(
                                             colors = if (isSelected) {
                                                 listOf(
-                                                    alertAccentColor.copy(alpha = 0.28f),
-                                                    alertAccentColor.copy(alpha = 0.12f)
+                                                    alertAccentColor.copy(alpha = 0.32f),
+                                                    alertAccentColor.copy(alpha = 0.15f)
                                                 )
                                             } else {
                                                 listOf(
-                                                    SurfaceElevated,
-                                                    SurfaceDark
+                                                    SurfaceElevated.copy(alpha = 0.7f),
+                                                    SurfaceDark.copy(alpha = 0.7f)
                                                 )
                                             }
                                         )
@@ -311,17 +218,17 @@ fun WarnlyApp(viewModel: WarnlyViewModel = viewModel()) {
                                     .border(
                                         width = 1.dp,
                                         color = if (isSelected) alertAccentColor else BorderGlass,
-                                        shape = RoundedCornerShape(6.dp)
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                     .clickable { viewModel.setTab(tab) }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .padding(horizontal = 14.dp, vertical = 7.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(tab.icon, fontSize = 12.sp)
+                                    Text(tab.icon, fontSize = 13.sp)
                                     Text(
                                         text = tab.shortTag.ifEmpty { tab.title }.uppercase(),
                                         fontSize = 11.sp,

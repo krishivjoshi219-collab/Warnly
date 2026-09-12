@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { WarnlyEngine } from '../engine/warnly-engine';
 import { COLORS, FONTS, RADII, SPACING } from '../theme';
+import { startSirenAudio, stopSirenAudio } from '../lib/warnly/siren';
 import {
   FlaskConical,
   Play,
@@ -178,8 +179,13 @@ export const SimulatorScreen: React.FC<Props> = ({ engine }) => {
               engine.siren.isPlaying && styles.hardwareBtnActiveDanger,
             ]}
             onPress={() => {
-              if (engine.siren.isPlaying) engine.siren.stopSiren();
-              else engine.siren.startSiren();
+              if (engine.siren.isPlaying) {
+                engine.siren.stopSiren();
+                stopSirenAudio();
+              } else {
+                engine.siren.startSiren();
+                startSirenAudio();
+              }
             }}
             activeOpacity={0.8}
           >

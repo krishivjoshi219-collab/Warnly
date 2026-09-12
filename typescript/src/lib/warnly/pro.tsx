@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Coords } from "./types";
+import { startSirenAudio, stopSirenAudio } from "./siren";
 
 export interface MonitoredPlace {
   id: string;
@@ -169,8 +170,14 @@ export function ProProvider({ children }: { children: ReactNode }) {
       },
       removePlace: (id) => setState((s) => ({ ...s, places: s.places.filter((p) => p.id !== id) })),
       sirenActive,
-      startSiren: () => setSirenActive(true),
-      stopSiren: () => setSirenActive(false),
+      startSiren: () => {
+        setSirenActive(true);
+        startSirenAudio();
+      },
+      stopSiren: () => {
+        setSirenActive(false);
+        stopSirenAudio();
+      },
       apiKeys: state.apiKeys ?? {},
       setApiKey: (provider, key) =>
         setState((s) => ({
