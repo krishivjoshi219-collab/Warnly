@@ -26,7 +26,8 @@ import { distanceKm, SAFETY_RADIUS_KM } from "../lib/warnly/risk";
 import type { Coords } from "../lib/warnly/types";
 import { LocationSearch } from "../components/warnly/LocationSearch";
 import { PaywallModal } from "../components/warnly/PaywallModal";
-import { COLORS, RADII, FONTS } from "../theme";
+import { COLORS, RADII, FONTS, SHADOWS, SPACING } from "../theme";
+import { FadeIn, ScreenHeader, SectionHeader, GlassCard, StatusBadge, GlowButton, PulseDot } from "../components/ui";
 
 export const ShieldScreen: React.FC = () => {
   const {

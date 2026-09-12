@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
-} from "react-native";
+  Animated,
+  Easing,
+} from 'react-native';
 import {
   Crown,
   Sparkles,
@@ -23,32 +25,32 @@ import {
   CheckCircle2,
   ChevronRight,
   BookOpen,
-} from "../components/Icons";
-import { usePro, formatDistance } from "../lib/warnly/pro";
-import { useWarnly } from "../lib/warnly/store";
-import { checkAllFeedHealth, type FeedStatus } from "../lib/warnly/feed-health";
-import { PaywallModal } from "../components/warnly/PaywallModal";
-import { GuideModal } from "../components/warnly/GuideModal";
-import { NativeEmergency } from "../lib/warnly/native-emergency";
-import { startSirenAudio, stopSirenAudio } from "../lib/warnly/siren";
-import { COLORS, RADII, FONTS } from "../theme";
+} from '../components/Icons';
+import { usePro, formatDistance } from '../lib/warnly/pro';
+import { useWarnly } from '../lib/warnly/store';
+import { checkAllFeedHealth, type FeedStatus } from '../lib/warnly/feed-health';
+import { PaywallModal } from '../components/warnly/PaywallModal';
+import { GuideModal } from '../components/warnly/GuideModal';
+import { NativeEmergency } from '../lib/warnly/native-emergency';
+import { startSirenAudio, stopSirenAudio } from '../lib/warnly/siren';
+import {
+  FadeIn,
+  GlassCard,
+  GlowButton,
+  PulseDot,
+  ScreenHeader,
+  SectionHeader,
+  StatusBadge,
+  Divider,
+} from '../components/ui';
+import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
 
 export const SettingsScreen: React.FC = () => {
   const {
-    isPro,
-    toggleProDemo,
-    openPaywall,
-    units,
-    setUnits,
-    alertRadiusKm,
-    setAlertRadiusKm,
-    startSiren,
-    stopSiren,
-    sirenActive,
-    apiKeys,
-    setApiKey,
+    isPro, toggleProDemo, openPaywall, units, setUnits,
+    alertRadiusKm, setAlertRadiusKm, startSiren, stopSiren, sirenActive,
+    apiKeys, setApiKey,
   } = usePro();
-
   const { simulateStorm, toggleSimulateStorm } = useWarnly();
   const [feeds, setFeeds] = useState<FeedStatus[]>([]);
   const [checkingFeeds, setCheckingFeeds] = useState(false);
@@ -59,14 +61,13 @@ export const SettingsScreen: React.FC = () => {
     try {
       const granted = await NativeEmergency.checkDndPermission();
       setIsDndGranted(granted);
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   };
 
   useEffect(() => {
     NativeEmergency.setupEmergencyNotificationChannel();
     checkDnd();
+    runFeedCheck();
   }, []);
 
   const runFeedCheck = async () => {
@@ -74,16 +75,9 @@ export const SettingsScreen: React.FC = () => {
     try {
       const results = await checkAllFeedHealth();
       setFeeds(results);
-    } catch {
-      /* ignore */
-    } finally {
-      setCheckingFeeds(false);
-    }
+    } catch { /* ignore */ }
+    finally { setCheckingFeeds(false); }
   };
-
-  useEffect(() => {
-    runFeedCheck();
-  }, []);
 
   const radii = [5, 10, 15, 20, 25];
 
@@ -93,462 +87,358 @@ export const SettingsScreen: React.FC = () => {
       contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Title Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerSubtitle}>
-            Safety zones, units & emergency audio
-          </Text>
-        </View>
-        <Text style={styles.brandBadge}>CONFIG</Text>
-      </View>
+      {/* ── Header ── */}
+      <FadeIn duration={300}>
+        <ScreenHeader
+          title="Settings"
+          subtitle="Safety zones, units & emergency audio"
+          badge="CONFIG"
+          badgeVariant="muted"
+        />
+      </FadeIn>
 
-      {/* Warnly Pro Subscription Section */}
-      <View style={styles.proCard}>
-        <View style={styles.proHeader}>
-          <View style={styles.crownIconBox}>
-            <Crown size={18} color={COLORS.safe} />
-          </View>
-          <View style={styles.proTitleContainer}>
-            <View style={styles.proTitleRow}>
-              <Text style={styles.proTitleText}>Warnly Pro</Text>
-              <View
-                style={[
-                  styles.proBadge,
-                  isPro ? styles.proBadgeActive : styles.proBadgeFree,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.proBadgeText,
-                    isPro ? styles.proBadgeTextActive : styles.proBadgeTextFree,
-                  ]}
-                >
-                  {isPro ? "ACTIVE" : "FREE PLAN"}
-                </Text>
-              </View>
+      {/* ── Pro Card ── */}
+      <FadeIn duration={380} delay={50}>
+        <View style={[styles.proCard, isPro && styles.proCardActive]}>
+          {/* Top edge highlight for PRO */}
+          {isPro && <View style={styles.proCardHighlight} />}
+
+          <View style={styles.proCardTop}>
+            <View style={[styles.proIconBox, isPro && { backgroundColor: COLORS.safeBg }]}>
+              <Crown size={20} color={isPro ? COLORS.safe : COLORS.textSecondary} />
             </View>
-            <Text style={styles.proSubtitleText}>
-              {isPro
-                ? "Unlimited places, priority radar, and critical siren alerts."
-                : "Upgrade to unlock unlimited Family Shield places & precision alerts."}
-            </Text>
+            <View style={styles.proCardTitles}>
+              <View style={styles.proTitleRow}>
+                <Text style={styles.proName}>Warnly Pro</Text>
+                <StatusBadge
+                  label={isPro ? 'ACTIVE' : 'FREE'}
+                  variant={isPro ? 'safe' : 'muted'}
+                  dot={isPro}
+                  pulsing={isPro}
+                />
+              </View>
+              <Text style={styles.proDesc}>
+                {isPro
+                  ? 'Unlimited places, priority radar, critical siren alerts.'
+                  : 'Upgrade to unlock unlimited Family Shield & precision alerts.'}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.proButtonsRow}>
-          {!isPro && (
+          <Divider />
+
+          <View style={styles.proActions}>
+            {!isPro && (
+              <GlowButton
+                label="Upgrade to Pro"
+                variant="safe"
+                icon={<Sparkles size={13} color={COLORS.textInverted} />}
+                onPress={() => openPaywall('Unlock all features with Warnly Pro.')}
+                style={{ flex: 1 }}
+              />
+            )}
             <TouchableOpacity
-              style={styles.upgradeBtn}
-              onPress={() => openPaywall("Unlock all features with Warnly Pro.")}
+              style={[styles.ghostBtn, !isPro && { flex: 0 }]}
+              onPress={toggleProDemo}
               activeOpacity={0.8}
             >
-              <Sparkles size={14} color="#070A0F" />
-              <Text style={styles.upgradeBtnText}>Upgrade to Pro</Text>
+              <Text style={styles.ghostBtnText}>{isPro ? 'Reset Demo' : 'Demo Mode'}</Text>
             </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={styles.demoBtn}
-            onPress={toggleProDemo}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.demoBtnText}>
-              {isPro ? "Reset Demo Pro" : "Toggle Pro Demo"}
-            </Text>
-          </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </FadeIn>
 
-      {/* Storm & Strike Simulator */}
-      <View style={styles.settingCard}>
-        <View style={styles.settingRow}>
-          <View style={styles.settingLeft}>
-            <View
-              style={[
-                styles.iconBox,
-                simulateStorm && { backgroundColor: COLORS.dangerBg },
-              ]}
-            >
-              <Zap
-                size={18}
-                color={simulateStorm ? COLORS.danger : COLORS.warning}
-              />
+      {/* ── Storm Simulator ── */}
+      <FadeIn duration={380} delay={80}>
+        <SectionHeader label="Simulator" />
+        <GlassCard
+          style={[simulateStorm && { borderColor: COLORS.dangerBorder, ...SHADOWS.glowDanger }]}
+          noPadding
+        >
+          <View style={styles.settingRow}>
+            <View style={[styles.settingIconBox, simulateStorm && { backgroundColor: COLORS.dangerBg }]}>
+              <Zap size={18} color={simulateStorm ? COLORS.danger : COLORS.warning} />
             </View>
-            <View style={styles.settingTexts}>
-              <View style={styles.titleWithBadge}>
+            <View style={styles.settingInfo}>
+              <View style={styles.settingTitleRow}>
                 <Text style={styles.settingTitle}>Storm Simulator</Text>
                 {simulateStorm && (
-                  <View style={styles.liveDemoBadge}>
-                    <Text style={styles.liveDemoBadgeText}>LIVE DEMO</Text>
-                  </View>
+                  <StatusBadge label="LIVE DEMO" variant="danger" dot pulsing />
                 )}
               </View>
               <Text style={styles.settingDesc}>
-                Simulates active thunderstorm code (95) with decaying strikes.
+                Simulates active thunderstorm (code 95) with decaying strikes.
               </Text>
             </View>
+            <Switch
+              value={simulateStorm}
+              onValueChange={toggleSimulateStorm}
+              trackColor={{ false: COLORS.border, true: COLORS.danger }}
+              thumbColor={simulateStorm ? '#FFFFFF' : COLORS.textMuted}
+            />
           </View>
+        </GlassCard>
+      </FadeIn>
 
-          <Switch
-            value={simulateStorm}
-            onValueChange={toggleSimulateStorm}
-            trackColor={{ false: COLORS.border, true: COLORS.danger }}
-            thumbColor={simulateStorm ? "#FFFFFF" : COLORS.textMuted}
-          />
-        </View>
-      </View>
-
-      {/* Measurement Units */}
-      <View style={styles.settingCard}>
-        <View style={styles.cardHeaderSmall}>
-          <Sliders size={13} color={COLORS.safe} />
-          <Text style={styles.cardHeaderSmallTitle}>UNITS OF MEASUREMENT</Text>
-        </View>
-
+      {/* ── Units ── */}
+      <FadeIn duration={380} delay={100}>
+        <SectionHeader label="Measurement Units" />
         <View style={styles.unitsRow}>
-          <TouchableOpacity
-            style={[
-              styles.unitCard,
-              units === "metric" && styles.unitCardActive,
-            ]}
-            onPress={() => setUnits("metric")}
-            activeOpacity={0.8}
-          >
-            <Text
-              style={[
-                styles.unitCardTitle,
-                units === "metric" && styles.unitCardTitleActive,
-              ]}
+          {(['metric', 'imperial'] as const).map((u) => (
+            <TouchableOpacity
+              key={u}
+              style={[styles.unitCard, units === u && styles.unitCardActive]}
+              onPress={() => setUnits(u)}
+              activeOpacity={0.8}
             >
-              Metric
-            </Text>
-            <Text style={styles.unitCardSub}>Kilometers (km) · °C · mm/hr</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.unitCard,
-              units === "imperial" && styles.unitCardActive,
-            ]}
-            onPress={() => setUnits("imperial")}
-            activeOpacity={0.8}
-          >
-            <Text
-              style={[
-                styles.unitCardTitle,
-                units === "imperial" && styles.unitCardTitleActive,
-              ]}
-            >
-              Imperial
-            </Text>
-            <Text style={styles.unitCardSub}>Miles (mi) · °F · in/hr</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Alert Monitoring Radius */}
-      <View style={styles.settingCard}>
-        <View style={styles.radiusHeaderRow}>
-          <View style={styles.cardHeaderSmall}>
-            <Radio size={13} color={COLORS.safe} />
-            <Text style={styles.cardHeaderSmallTitle}>STRIKE ALERT RING RADIUS</Text>
-          </View>
-          <Text style={styles.radiusValueText}>
-            {formatDistance(alertRadiusKm, units)}
-          </Text>
-        </View>
-        <Text style={styles.settingDesc}>
-          Strikes detected within this distance trigger immediate shelter alarms.
-        </Text>
-
-        <View style={styles.radiiRow}>
-          {radii.map((km) => {
-            const active = alertRadiusKm === km;
-            return (
-              <TouchableOpacity
-                key={km}
-                style={[styles.radiusBtn, active && styles.radiusBtnActive]}
-                onPress={() => setAlertRadiusKm(km)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.radiusBtnText,
-                    active && styles.radiusBtnTextActive,
-                  ]}
-                >
-                  {km} km
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* Emergency Siren Audio Test */}
-      <View style={styles.settingCard}>
-        <View style={styles.cardHeaderSmall}>
-          <BellRing size={13} color={COLORS.danger} />
-          <Text style={styles.cardHeaderSmallTitle}>EMERGENCY SIREN AUDIO TEST</Text>
-        </View>
-        <Text style={styles.settingDesc}>
-          Synthesizes a 760Hz/960Hz dual-frequency oscillation that penetrates background noise.
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.sirenTestBtn,
-            sirenActive && { backgroundColor: COLORS.danger, borderColor: COLORS.danger },
-          ]}
-          onPress={() => {
-            if (sirenActive) {
-              stopSiren();
-            } else {
-              startSiren();
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <Volume2 size={15} color={sirenActive ? "#FFFFFF" : COLORS.danger} />
-          <Text
-            style={[
-              styles.sirenTestBtnText,
-              sirenActive && { color: "#FFFFFF" },
-            ]}
-          >
-            {sirenActive ? "Stop Emergency Siren" : "Test Two-Tone Emergency Siren"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Critical Life-Safety & Do Not Disturb (DND) Bypass */}
-      <View style={styles.settingCard}>
-        <View style={styles.radiusHeaderRow}>
-          <View style={styles.cardHeaderSmall}>
-            <BellRing size={13} color={COLORS.safe} />
-            <Text style={styles.cardHeaderSmallTitle}>CRITICAL ALERTS & DND BYPASS</Text>
-          </View>
-          <View
-            style={[
-              styles.dndBadge,
-              { backgroundColor: isDndGranted ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)" },
-            ]}
-          >
-            <Text
-              style={[
-                styles.dndBadgeText,
-                { color: isDndGranted ? COLORS.safe : COLORS.warning },
-              ]}
-            >
-              {isDndGranted ? "DND BYPASS ACTIVE" : "PERMISSION REQUIRED"}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.settingDesc}>
-          Routes life-safety sirens through Android hardware USAGE_ALARM (STREAM_ALARM) and sets high-priority breakthrough notifications to punch through Do Not Disturb (DND) and Silent mode.
-        </Text>
-
-        <View style={styles.dndActionRow}>
-          <TouchableOpacity
-            style={[
-              styles.dndBtn,
-              isDndGranted ? styles.dndBtnGranted : styles.dndBtnRequired,
-            ]}
-            onPress={() => {
-              NativeEmergency.requestDndPermission();
-              setTimeout(checkDnd, 2000);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.dndBtnText}>
-              {isDndGranted ? "Configure System DND Access" : "Grant DND Override Access"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dndTestBtn}
-            onPress={() => {
-              NativeEmergency.postCriticalAlert(
-                "WARNLY CRITICAL TEST ALERT",
-                "Life-safety breakthrough alert verified on high-priority alarm channel."
-              );
-              startSirenAudio();
-              setTimeout(() => {
-                stopSirenAudio();
-              }, 4000);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.dndTestBtnText}>Test Alert</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* App & Offline Readiness State */}
-      <View style={styles.settingCard}>
-        <View style={styles.cardHeaderSmall}>
-          <Smartphone size={13} color={COLORS.safe} />
-          <Text style={styles.cardHeaderSmallTitle}>APP INSTALLATION & OFFLINE STATE</Text>
-        </View>
-        <View style={styles.stateRow}>
-          <Text style={styles.stateLabel}>App Architecture</Text>
-          <View style={styles.stateValueRow}>
-            <CheckCircle2 size={12} color={COLORS.safe} />
-            <Text style={styles.stateValueText}>Pure React Native Engine</Text>
-          </View>
-        </View>
-        <View style={styles.stateRow}>
-          <Text style={styles.stateLabel}>Offline Storage</Text>
-          <Text style={[styles.stateValueText, { color: COLORS.safe }]}>
-            Cached & Ready
-          </Text>
-        </View>
-      </View>
-
-      {/* Real-Time Data Feeds Live Health Monitor */}
-      <View style={styles.settingCard}>
-        <View style={styles.feedsHeader}>
-          <View style={styles.feedsHeaderLeft}>
-            <View style={styles.activityIconBox}>
-              <Activity size={16} color={COLORS.safe} />
-            </View>
-            <View>
-              <Text style={styles.settingTitle}>Real-Time Data Feeds (Live Health)</Text>
-              <Text style={styles.settingDesc}>
-                Live round-trip ping monitor for all disaster networks
+              {units === u && (
+                <View style={styles.unitCheck}>
+                  <CheckCircle2 size={12} color={COLORS.safe} />
+                </View>
+              )}
+              <Text style={[styles.unitCardTitle, units === u && { color: COLORS.safe }]}>
+                {u === 'metric' ? 'Metric' : 'Imperial'}
               </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.pingBtn}
-            onPress={runFeedCheck}
-            disabled={checkingFeeds}
-            activeOpacity={0.8}
-          >
-            {checkingFeeds ? (
-              <ActivityIndicator size="small" color={COLORS.safe} />
-            ) : (
-              <RefreshCw size={12} color={COLORS.safe} />
-            )}
-            <Text style={styles.pingBtnText}>
-              {checkingFeeds ? "Pinging…" : "Test Feeds"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Feeds List */}
-        <View style={styles.feedsList}>
-          {feeds.map((f) => (
-            <View key={f.id} style={styles.feedItem}>
-              <View style={styles.feedItemLeft}>
-                <View style={styles.feedNameRow}>
-                  <View
-                    style={[
-                      styles.feedStatusDot,
-                      {
-                        backgroundColor:
-                          f.status === "online" ? COLORS.safe : COLORS.danger,
-                      },
-                    ]}
-                  />
-                  <Text style={styles.feedName}>{f.name}</Text>
-                </View>
-                <Text style={styles.feedDesc} numberOfLines={1}>
-                  {f.description}
-                </Text>
-                {f.error && (
-                  <Text style={styles.feedError}>{f.error}</Text>
-                )}
-              </View>
-              <View style={styles.feedItemRight}>
-                <View
-                  style={[
-                    styles.feedBadge,
-                    {
-                      backgroundColor:
-                        f.status === "online" ? COLORS.safeBg : COLORS.dangerBg,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.feedBadgeText,
-                      {
-                        color:
-                          f.status === "online" ? COLORS.safe : COLORS.danger,
-                      },
-                    ]}
-                  >
-                    {f.status === "online" ? `ONLINE (${f.latencyMs}ms)` : "OFFLINE"}
-                  </Text>
-                </View>
-                {f.httpCode && (
-                  <Text style={styles.feedHttpCode}>HTTP {f.httpCode}</Text>
-                )}
-              </View>
-            </View>
+              <Text style={styles.unitCardSub}>
+                {u === 'metric' ? 'km · °C · mm/hr' : 'mi · °F · in/hr'}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </FadeIn>
 
-      {/* Enterprise Custom API Keys Form */}
-      <View style={styles.settingCard}>
-        <Text style={styles.settingTitle}>Optional Enterprise API Keys</Text>
-        <Text style={styles.settingDesc}>
-          Add your custom API key if you subscribe to dedicated commercial tiers.
-        </Text>
+      {/* ── Alert Radius ── */}
+      <FadeIn duration={380} delay={120}>
+        <SectionHeader
+          label="Strike Alert Radius"
+          right={
+            <Text style={styles.radiusValue}>{formatDistance(alertRadiusKm, units)}</Text>
+          }
+        />
+        <GlassCard noPadding>
+          <View style={styles.radiiPicker}>
+            {radii.map((km) => {
+              const active = alertRadiusKm === km;
+              return (
+                <TouchableOpacity
+                  key={km}
+                  style={[styles.radiusChip, active && styles.radiusChipActive]}
+                  onPress={() => setAlertRadiusKm(km)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.radiusChipText, active && styles.radiusChipTextActive]}>
+                    {km} km
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={styles.radiusHint}>
+            Strikes within this distance trigger immediate shelter alarms.
+          </Text>
+        </GlassCard>
+      </FadeIn>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputFieldLabel}>TOMORROW.IO API KEY</Text>
-          <TextInput
-            style={styles.keyInput}
-            value={apiKeys?.tomorrowIo ?? ""}
-            onChangeText={(t) => setApiKey("tomorrowIo", t)}
-            placeholder="Enter Tomorrow.io key for sub-minute radar"
-            placeholderTextColor={COLORS.textMuted}
-            secureTextEntry
-          />
-        </View>
+      {/* ── Siren Test ── */}
+      <FadeIn duration={380} delay={140}>
+        <SectionHeader label="Emergency Siren" />
+        <GlassCard noPadding>
+          <View style={styles.sirenCardInner}>
+            <View style={styles.sirenCardHeader}>
+              <View style={[styles.settingIconBox, { backgroundColor: COLORS.dangerBg, borderColor: COLORS.dangerBorder }]}>
+                <BellRing size={18} color={COLORS.danger} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>Two-Tone Emergency Siren</Text>
+                <Text style={styles.settingDesc}>
+                  760Hz/960Hz dual-frequency oscillation that penetrates background noise.
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.sirenBtn,
+                sirenActive && { backgroundColor: COLORS.danger, borderColor: COLORS.danger },
+              ]}
+              onPress={() => sirenActive ? stopSiren() : startSiren()}
+              activeOpacity={0.85}
+            >
+              {sirenActive && <PulseDot color="#FFFFFF" size={6} speed={600} />}
+              <Volume2 size={15} color={sirenActive ? '#FFFFFF' : COLORS.danger} />
+              <Text style={[styles.sirenBtnText, sirenActive && { color: '#FFFFFF' }]}>
+                {sirenActive ? 'Stop Emergency Siren' : 'Test Two-Tone Siren'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </GlassCard>
+      </FadeIn>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputFieldLabel}>OPENWEATHERMAP API KEY</Text>
-          <TextInput
-            style={styles.keyInput}
-            value={apiKeys?.openWeather ?? ""}
-            onChangeText={(t) => setApiKey("openWeather", t)}
-            placeholder="Enter OpenWeather OneCall 3.0 key"
-            placeholderTextColor={COLORS.textMuted}
-            secureTextEntry
-          />
-        </View>
+      {/* ── DND Bypass ── */}
+      <FadeIn duration={380} delay={160}>
+        <SectionHeader
+          label="Critical Alerts & DND Bypass"
+          right={
+            <StatusBadge
+              label={isDndGranted ? 'DND ACTIVE' : 'PERMISSION NEEDED'}
+              variant={isDndGranted ? 'safe' : 'warning'}
+              dot
+              pulsing={isDndGranted}
+            />
+          }
+        />
+        <GlassCard noPadding>
+          <View style={styles.dndCardInner}>
+            <Text style={styles.dndDesc}>
+              Routes life-safety sirens through Android USAGE_ALARM (STREAM_ALARM) and sets high-priority notifications to punch through Do Not Disturb and Silent mode.
+            </Text>
+            <View style={styles.dndActions}>
+              <TouchableOpacity
+                style={[styles.dndBtn, isDndGranted ? styles.dndBtnGranted : styles.dndBtnRequired]}
+                onPress={() => { NativeEmergency.requestDndPermission(); setTimeout(checkDnd, 2000); }}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.dndBtnText, { color: isDndGranted ? COLORS.safe : COLORS.warning }]}>
+                  {isDndGranted ? 'Configure DND Access' : 'Grant DND Override'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dndTestBtn}
+                onPress={() => {
+                  NativeEmergency.postCriticalAlert('WARNLY TEST', 'Life-safety breakthrough verified.');
+                  startSirenAudio();
+                  setTimeout(() => stopSirenAudio(), 4000);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.dndTestBtnText}>Test Alert</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </GlassCard>
+      </FadeIn>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputFieldLabel}>OPEN-METEO COMMERCIAL KEY</Text>
-          <TextInput
-            style={styles.keyInput}
-            value={apiKeys?.openMeteoCommercial ?? ""}
-            onChangeText={(t) => setApiKey("openMeteoCommercial", t)}
-            placeholder="Enter commercial API key for unlimited calls"
-            placeholderTextColor={COLORS.textMuted}
-            secureTextEntry
-          />
-        </View>
-      </View>
+      {/* ── App State ── */}
+      <FadeIn duration={380} delay={180}>
+        <SectionHeader label="Installation & Offline State" />
+        <GlassCard noPadding>
+          <View style={styles.stateCardInner}>
+            {[
+              { label: 'App Architecture', value: 'Pure React Native', ok: true },
+              { label: 'Offline Storage', value: 'Cached & Ready', ok: true },
+            ].map((row, i) => (
+              <View key={row.label} style={[styles.stateRow, i > 0 && { borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 8, marginTop: 4 }]}>
+                <Text style={styles.stateLabel}>{row.label}</Text>
+                <View style={styles.stateValueRow}>
+                  {row.ok && <CheckCircle2 size={11} color={COLORS.safe} />}
+                  <Text style={[styles.stateValue, row.ok && { color: COLORS.safe }]}>{row.value}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </GlassCard>
+      </FadeIn>
 
-      {/* Read Disaster Evacuation Protocols Button */}
-      <TouchableOpacity
-        style={styles.guideLinkCard}
-        onPress={() => setGuideOpen(true)}
-        activeOpacity={0.8}
-      >
-        <View style={styles.guideLinkLeft}>
-          <BookOpen size={16} color={COLORS.safe} />
-          <Text style={styles.guideLinkText}>Read Disaster Evacuation Protocols</Text>
-        </View>
-        <ChevronRight size={16} color={COLORS.textMuted} />
-      </TouchableOpacity>
+      {/* ── Data Feed Health ── */}
+      <FadeIn duration={380} delay={200}>
+        <SectionHeader
+          label="Real-Time Data Feeds"
+          right={
+            <TouchableOpacity
+              style={styles.pingBtn}
+              onPress={runFeedCheck}
+              disabled={checkingFeeds}
+              activeOpacity={0.8}
+            >
+              {checkingFeeds ? (
+                <ActivityIndicator size="small" color={COLORS.safe} />
+              ) : (
+                <RefreshCw size={11} color={COLORS.safe} />
+              )}
+              <Text style={styles.pingBtnText}>{checkingFeeds ? 'Pinging…' : 'Ping All'}</Text>
+            </TouchableOpacity>
+          }
+        />
+        <GlassCard noPadding>
+          <View style={styles.feedsList}>
+            {feeds.length === 0 && !checkingFeeds && (
+              <Text style={styles.feedsEmptyText}>Tap "Ping All" to check feed health</Text>
+            )}
+            {feeds.map((f, i) => (
+              <View key={f.id} style={[styles.feedItem, i < feeds.length - 1 && { borderBottomWidth: 1, borderBottomColor: COLORS.border }]}>
+                <View style={styles.feedItemLeft}>
+                  <View style={styles.feedNameRow}>
+                    <PulseDot
+                      color={f.status === 'online' ? COLORS.safe : COLORS.danger}
+                      size={6}
+                      speed={f.status === 'online' ? 2000 : 800}
+                    />
+                    <Text style={styles.feedName}>{f.name}</Text>
+                  </View>
+                  <Text style={styles.feedDesc} numberOfLines={1}>{f.description}</Text>
+                  {f.error && <Text style={styles.feedError}>{f.error}</Text>}
+                </View>
+                <View style={styles.feedItemRight}>
+                  <View style={[
+                    styles.feedBadge,
+                    { backgroundColor: f.status === 'online' ? COLORS.safeBg : COLORS.dangerBg }
+                  ]}>
+                    <Text style={[styles.feedBadgeText, { color: f.status === 'online' ? COLORS.safe : COLORS.danger }]}>
+                      {f.status === 'online' ? `${f.latencyMs}ms` : 'OFFLINE'}
+                    </Text>
+                  </View>
+                  {f.httpCode && <Text style={styles.feedCode}>HTTP {f.httpCode}</Text>}
+                </View>
+              </View>
+            ))}
+          </View>
+        </GlassCard>
+      </FadeIn>
+
+      {/* ── Enterprise API Keys ── */}
+      <FadeIn duration={380} delay={220}>
+        <SectionHeader label="Enterprise API Keys" />
+        <GlassCard noPadding>
+          <View style={styles.apiKeysInner}>
+            <Text style={styles.apiKeysDesc}>
+              Add your custom API key if you subscribe to dedicated commercial tiers.
+            </Text>
+            {[
+              { key: 'tomorrowIo' as const, label: 'TOMORROW.IO API KEY', placeholder: 'Enter Tomorrow.io key for sub-minute radar' },
+              { key: 'openWeather' as const, label: 'OPENWEATHERMAP API KEY', placeholder: 'Enter OpenWeather OneCall 3.0 key' },
+              { key: 'openMeteoCommercial' as const, label: 'OPEN-METEO COMMERCIAL KEY', placeholder: 'Enter commercial API key for unlimited calls' },
+            ].map((field) => (
+              <View key={field.key} style={styles.apiKeyGroup}>
+                <Text style={styles.apiKeyLabel}>{field.label}</Text>
+                <TextInput
+                  style={styles.apiKeyInput}
+                  value={apiKeys?.[field.key] ?? ''}
+                  onChangeText={(t) => setApiKey(field.key, t)}
+                  placeholder={field.placeholder}
+                  placeholderTextColor={COLORS.textMuted}
+                  secureTextEntry
+                />
+              </View>
+            ))}
+          </View>
+        </GlassCard>
+      </FadeIn>
+
+      {/* ── Guide Link ── */}
+      <FadeIn duration={380} delay={240}>
+        <TouchableOpacity
+          style={styles.guideLinkCard}
+          onPress={() => setGuideOpen(true)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.guideLinkLeft}>
+            <View style={[styles.settingIconBox, { backgroundColor: COLORS.safeBg, borderColor: COLORS.safeBorder }]}>
+              <BookOpen size={16} color={COLORS.safe} />
+            </View>
+            <Text style={styles.guideLinkText}>Disaster Evacuation Protocols</Text>
+          </View>
+          <ChevronRight size={14} color={COLORS.textMuted} />
+        </TouchableOpacity>
+      </FadeIn>
 
       <PaywallModal />
       <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
@@ -557,489 +447,272 @@ export const SettingsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  screen: { flex: 1, backgroundColor: COLORS.background },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 90,
+    paddingTop: 14,
+    paddingBottom: 100,
     gap: 12,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+
+  // ── Pro Card ──
+  proCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['3xl'],
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 18,
+    gap: 14,
+    ...SHADOWS.md,
+  },
+  proCardActive: {
+    borderColor: COLORS.safeBorder,
+    ...SHADOWS.glowSafe,
+  },
+  proCardHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 16,
+    right: 16,
+    height: 1,
+    backgroundColor: COLORS.safe + '40',
+    borderRadius: 1,
+  },
+  proCardTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  proIconBox: {
+    backgroundColor: COLORS.backgroundElevated,
+    borderRadius: RADII.lg,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  proCardTitles: { flex: 1 },
+  proTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 4,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: COLORS.textPrimary,
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  brandBadge: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: COLORS.safe,
-    letterSpacing: 2,
-    backgroundColor: COLORS.safeBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.sm,
+  proName: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
+  proDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 16 },
+  proActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  ghostBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: RADII.xl,
+    backgroundColor: COLORS.backgroundElevated,
     borderWidth: 1,
-    borderColor: COLORS.safeBorder,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  proCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: COLORS.safeBorder,
-    padding: 16,
-    gap: 14,
+  ghostBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
+
+  // ── Common setting row ──
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
   },
-  proHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  crownIconBox: {
-    backgroundColor: COLORS.safeBg,
+  settingIconBox: {
+    backgroundColor: COLORS.backgroundElevated,
     borderRadius: RADII.md,
-    padding: 8,
+    padding: 9,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  proTitleContainer: {
+  settingInfo: { flex: 1 },
+  settingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 2,
+  },
+  settingTitle: { fontSize: 14, fontWeight: '800', color: COLORS.textPrimary },
+  settingDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 15 },
+
+  // ── Units ──
+  unitsRow: { flexDirection: 'row', gap: 8 },
+  unitCard: {
     flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 14,
+    position: 'relative',
   },
-  proTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  unitCardActive: {
+    borderColor: COLORS.safeBorder,
+    backgroundColor: COLORS.safeBg,
+  },
+  unitCheck: { position: 'absolute', top: 10, right: 10 },
+  unitCardTitle: { fontSize: 14, fontWeight: '800', color: COLORS.textSecondary, marginBottom: 2 },
+  unitCardSub: { fontSize: 10, color: COLORS.textMuted },
+
+  // ── Radius ──
+  radiusValue: { fontSize: 13, fontWeight: '800', fontFamily: FONTS.mono, color: COLORS.safe },
+  radiiPicker: {
+    flexDirection: 'row',
+    gap: 6,
+    padding: 14,
+    paddingBottom: 8,
+  },
+  radiusChip: {
+    flex: 1,
+    backgroundColor: COLORS.backgroundElevated,
+    borderRadius: RADII.lg,
+    paddingVertical: 9,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  radiusChipActive: {
+    backgroundColor: COLORS.safe,
+    borderColor: COLORS.safe,
+    ...SHADOWS.glowSafe,
+  },
+  radiusChipText: { fontSize: 11, fontWeight: '700', color: COLORS.textSecondary },
+  radiusChipTextActive: { color: COLORS.textInverted, fontWeight: '900' },
+  radiusHint: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    lineHeight: 14,
+  },
+
+  // ── Siren ──
+  sirenCardInner: { padding: 14, gap: 12 },
+  sirenCardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  sirenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.dangerBg,
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: COLORS.dangerBorder,
+    paddingVertical: 12,
+    gap: 7,
+  },
+  sirenBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.danger,
+  },
+
+  // ── DND ──
+  dndCardInner: { padding: 14, gap: 12 },
+  dndDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 16 },
+  dndActions: { flexDirection: 'row', gap: 8 },
+  dndBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: RADII.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  dndBtnGranted: {
+    backgroundColor: 'rgba(16,185,129,0.10)',
+    borderColor: 'rgba(16,185,129,0.28)',
+  },
+  dndBtnRequired: {
+    backgroundColor: COLORS.warningBg,
+    borderColor: COLORS.warningBorder,
+  },
+  dndBtnText: { fontSize: 12, fontWeight: '800' },
+  dndTestBtn: {
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+    borderRadius: RADII.lg,
+    backgroundColor: COLORS.backgroundElevated,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dndTestBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.safe },
+
+  // ── App State ──
+  stateCardInner: { padding: 14, gap: 4 },
+  stateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  stateLabel: { fontSize: 12, color: COLORS.textSecondary },
+  stateValueRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  stateValue: { fontSize: 12, fontWeight: '700', color: COLORS.textPrimary },
+
+  // ── Feed Health ──
+  pingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: COLORS.safeBg,
+    borderRadius: RADII.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: COLORS.safeBorder,
+  },
+  pingBtnText: { fontSize: 10, fontWeight: '700', color: COLORS.safe },
+  feedsList: { padding: 12 },
+  feedsEmptyText: { fontSize: 11, color: COLORS.textMuted, textAlign: 'center', paddingVertical: 8 },
+  feedItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
     gap: 8,
   },
-  proTitleText: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: COLORS.textPrimary,
-  },
-  proBadge: {
+  feedItemLeft: { flex: 1 },
+  feedNameRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 2 },
+  feedName: { fontSize: 12, fontWeight: '800', color: COLORS.textPrimary },
+  feedDesc: { fontSize: 9, color: COLORS.textMuted },
+  feedError: { fontSize: 9, color: COLORS.danger, marginTop: 2 },
+  feedItemRight: { alignItems: 'flex-end', gap: 3 },
+  feedBadge: {
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: RADII.sm,
   },
-  proBadgeActive: {
-    backgroundColor: "rgba(16, 185, 129, 0.2)",
-  },
-  proBadgeFree: {
-    backgroundColor: COLORS.safeBg,
-  },
-  proBadgeText: {
-    fontSize: 9,
-    fontWeight: "800",
-  },
-  proBadgeTextActive: {
-    color: "#10B981",
-  },
-  proBadgeTextFree: {
-    color: COLORS.safe,
-  },
-  proSubtitleText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 3,
-    lineHeight: 15,
-  },
-  proButtonsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  upgradeBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.safe,
+  feedBadgeText: { fontSize: 9, fontWeight: '800', fontFamily: FONTS.mono },
+  feedCode: { fontSize: 8, color: COLORS.textMuted, fontFamily: FONTS.mono },
+
+  // ── API Keys ──
+  apiKeysInner: { padding: 14, gap: 12 },
+  apiKeysDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 15 },
+  apiKeyGroup: { gap: 5 },
+  apiKeyLabel: { fontSize: 9, fontWeight: '700', color: COLORS.textMuted, letterSpacing: 0.7 },
+  apiKeyInput: {
+    backgroundColor: COLORS.backgroundElevated,
     borderRadius: RADII.lg,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  upgradeBtnText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#070A0F",
-  },
-  demoBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: RADII.lg,
-    backgroundColor: COLORS.backgroundElevated,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  demoBtnText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.textSecondary,
-  },
-  settingCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 14,
-    gap: 10,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
-  },
-  iconBox: {
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.md,
-    padding: 8,
-  },
-  settingTexts: {
-    flex: 1,
-  },
-  titleWithBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  settingTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: COLORS.textPrimary,
-  },
-  liveDemoBadge: {
-    backgroundColor: COLORS.dangerBg,
-    borderRadius: RADII.sm,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  liveDemoBadgeText: {
-    fontSize: 8,
-    fontWeight: "800",
-    color: COLORS.danger,
-  },
-  settingDesc: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    lineHeight: 14,
-  },
-  cardHeaderSmall: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  cardHeaderSmallTitle: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-  },
-  unitsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  unitCard: {
-    flex: 1,
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 12,
-  },
-  unitCardActive: {
-    borderColor: COLORS.safe,
-    backgroundColor: "rgba(0, 229, 255, 0.08)",
-  },
-  unitCardTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: COLORS.textSecondary,
-  },
-  unitCardTitleActive: {
-    color: COLORS.safe,
-  },
-  unitCardSub: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  radiusHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  radiusValueText: {
-    fontSize: 13,
-    fontWeight: "800",
-    fontFamily: FONTS.mono,
-    color: COLORS.safe,
-  },
-  radiiRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  radiusBtn: {
-    flex: 1,
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  radiusBtnActive: {
-    backgroundColor: COLORS.safe,
-    borderColor: COLORS.safe,
-  },
-  radiusBtnText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: COLORS.textMuted,
-  },
-  radiusBtnTextActive: {
-    color: "#070A0F",
-  },
-  sirenTestBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.dangerBg,
-    borderRadius: RADII.lg,
-    borderWidth: 1,
-    borderColor: COLORS.dangerBorder,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  sirenTestBtnText: {
     fontSize: 12,
-    fontWeight: "800",
-    color: COLORS.danger,
-  },
-  stateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 2,
-  },
-  stateLabel: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-  stateValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  stateValueText: {
-    fontSize: 11,
-    fontWeight: "700",
     color: COLORS.textPrimary,
   },
-  feedsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  feedsHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  activityIconBox: {
-    backgroundColor: COLORS.safeBg,
-    borderRadius: RADII.md,
-    padding: 6,
-  },
-  pingBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  pingBtnText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: COLORS.safe,
-  },
-  feedsList: {
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 10,
-    gap: 8,
-  },
-  feedItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border + "40",
-  },
-  feedItemLeft: {
-    flex: 1,
-  },
-  feedNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  feedStatusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  feedName: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: COLORS.textPrimary,
-  },
-  feedDesc: {
-    fontSize: 9,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  feedError: {
-    fontSize: 9,
-    color: COLORS.danger,
-    marginTop: 2,
-  },
-  feedItemRight: {
-    alignItems: "flex-end",
-  },
-  feedBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADII.sm,
-  },
-  feedBadgeText: {
-    fontSize: 8,
-    fontWeight: "800",
-    fontFamily: FONTS.mono,
-  },
-  feedHttpCode: {
-    fontSize: 8,
-    color: COLORS.textMuted,
-    fontFamily: FONTS.mono,
-    marginTop: 2,
-  },
-  inputGroup: {
-    gap: 4,
-  },
-  inputFieldLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-  },
-  keyInput: {
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 11,
-    color: COLORS.textPrimary,
-  },
+
+  // ── Guide Link ──
   guideLinkCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.card,
+    borderRadius: RADII.xl,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  guideLinkLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  guideLinkText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: COLORS.textPrimary,
-  },
-  dndBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  dndBadgeText: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  dndActionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 10,
-  },
-  dndBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: RADII.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dndBtnGranted: {
-    backgroundColor: "rgba(16, 185, 129, 0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-  },
-  dndBtnRequired: {
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.4)",
-  },
-  dndBtnText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: COLORS.textPrimary,
-  },
-  dndTestBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: RADII.md,
-    backgroundColor: COLORS.backgroundElevated,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dndTestBtnText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.safe,
-  },
+  guideLinkLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  guideLinkText: { fontSize: 13, fontWeight: '800', color: COLORS.textPrimary },
 });

@@ -99,7 +99,82 @@ declare module 'react-native' {
     get(dimension: 'window' | 'screen'): { width: number; height: number; scale: number; fontScale: number };
   };
 
-  export const Animated: any;
+  // Animated API
+  export namespace Animated {
+    class Value {
+      constructor(value: number);
+      setValue(value: number): void;
+      addListener(callback: (state: { value: number }) => void): string;
+      removeListener(id: string): void;
+      interpolate(config: InterpolationConfigType): AnimatedInterpolation;
+    }
+    class ValueXY {
+      constructor(value?: { x: number; y: number });
+      setValue(value: { x: number; y: number }): void;
+    }
+    interface AnimatedInterpolation {
+      interpolate(config: InterpolationConfigType): AnimatedInterpolation;
+    }
+    interface InterpolationConfigType {
+      inputRange: readonly number[];
+      outputRange: readonly number[] | readonly string[];
+      extrapolate?: 'extend' | 'clamp' | 'identity';
+      extrapolateLeft?: 'extend' | 'clamp' | 'identity';
+      extrapolateRight?: 'extend' | 'clamp' | 'identity';
+    }
+    type EndResult = { finished: boolean };
+    type EndCallback = (result: EndResult) => void;
+    interface CompositeAnimation {
+      start(callback?: EndCallback): void;
+      stop(): void;
+    }
+    interface TimingAnimationConfig {
+      toValue: number | Value | AnimatedInterpolation;
+      duration?: number;
+      delay?: number;
+      easing?: (t: number) => number;
+      useNativeDriver: boolean;
+    }
+    interface SpringAnimationConfig {
+      toValue: number | Value;
+      tension?: number;
+      friction?: number;
+      velocity?: number;
+      useNativeDriver: boolean;
+    }
+    interface LoopAnimationConfig {
+      iterations?: number;
+    }
+    function timing(value: Value, config: TimingAnimationConfig): CompositeAnimation;
+    function spring(value: Value, config: SpringAnimationConfig): CompositeAnimation;
+    function loop(animation: CompositeAnimation, config?: LoopAnimationConfig): CompositeAnimation;
+    function sequence(animations: CompositeAnimation[]): CompositeAnimation;
+    function parallel(animations: CompositeAnimation[], config?: { stopTogether?: boolean }): CompositeAnimation;
+    function delay(time: number): CompositeAnimation;
+    function event(argMapping: any[], config?: any): any;
+    const View: React.FC<any>;
+    const Text: React.FC<any>;
+    const Image: React.FC<any>;
+    const ScrollView: React.FC<any>;
+  }
+
+  export const Easing: {
+    linear: (t: number) => number;
+    ease: (t: number) => number;
+    quad: (t: number) => number;
+    cubic: (t: number) => number;
+    sin: (t: number) => number;
+    exp: (t: number) => number;
+    circle: (t: number) => number;
+    elastic: (bounciness?: number) => (t: number) => number;
+    back: (s?: number) => (t: number) => number;
+    bounce: (t: number) => number;
+    bezier: (x1: number, y1: number, x2: number, y2: number) => (t: number) => number;
+    in: (easing: (t: number) => number) => (t: number) => number;
+    out: (easing: (t: number) => number) => (t: number) => number;
+    inOut: (easing: (t: number) => number) => (t: number) => number;
+  };
+
   export const NativeModules: {
     [key: string]: any;
   };

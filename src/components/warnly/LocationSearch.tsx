@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  FlatList,
-} from "react-native";
-import { Search, Navigation, X, MapPin } from "../Icons";
-import { searchLocations, type SearchResult } from "../../lib/warnly/weather";
-import type { Coords } from "../../lib/warnly/types";
-import { COLORS, RADII, FONTS } from "../../theme";
+} from 'react-native';
+import { Search, Navigation, X, MapPin } from '../Icons';
+import { searchLocations, type SearchResult } from '../../lib/warnly/weather';
+import type { Coords } from '../../lib/warnly/types';
+import { COLORS, RADII, FONTS } from '../../theme';
 
 interface Props {
   onSelectCoords: (coords: Coords) => void;
@@ -24,7 +23,7 @@ export const LocationSearch: React.FC<Props> = ({
   onUseGPS,
   locating,
 }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +35,6 @@ export const LocationSearch: React.FC<Props> = ({
       setIsOpen(false);
       return;
     }
-
     setLoading(true);
     const timer = setTimeout(() => {
       searchLocations(query).then((res) => {
@@ -45,74 +43,75 @@ export const LocationSearch: React.FC<Props> = ({
         setIsOpen(res.length > 0);
       });
     }, 350);
-
     return () => clearTimeout(timer);
   }, [query]);
 
   const handleSelect = (item: SearchResult) => {
     onSelectCoords({ lat: item.latitude, lon: item.longitude });
-    setQuery("");
+    setQuery('');
     setResults([]);
     setIsOpen(false);
   };
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.searchBar}>
-        <Search size={15} color={COLORS.textSecondary} />
+      {/* ── Search Bar ── */}
+      <View style={[styles.searchBar, isOpen && styles.searchBarOpen]}>
+        <Search size={14} color={COLORS.textSecondary} />
         <TextInput
           style={styles.input}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search any city, place or country…"
+          placeholder="Search city, place or region…"
           placeholderTextColor={COLORS.textMuted}
           autoCorrect={false}
         />
         {loading && <ActivityIndicator size="small" color={COLORS.safe} />}
         {query.length > 0 && !loading && (
           <TouchableOpacity
-            onPress={() => {
-              setQuery("");
-              setResults([]);
-              setIsOpen(false);
-            }}
+            onPress={() => { setQuery(''); setResults([]); setIsOpen(false); }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <X size={14} color={COLORS.textSecondary} />
+            <X size={13} color={COLORS.textSecondary} />
           </TouchableOpacity>
         )}
+        <View style={styles.divider} />
         <TouchableOpacity
-          style={styles.gpsButton}
-          onPress={() => {
-            onUseGPS();
-            setQuery("");
-            setIsOpen(false);
-          }}
+          style={[styles.gpsBtn, locating && styles.gpsBtnLoading]}
+          onPress={() => { onUseGPS(); setQuery(''); setIsOpen(false); }}
           disabled={locating}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Navigation size={12} color={COLORS.safe} />
-          <Text style={styles.gpsButtonText}>GPS</Text>
+          {locating ? (
+            <ActivityIndicator size="small" color={COLORS.safe} />
+          ) : (
+            <Navigation size={11} color={COLORS.safe} />
+          )}
+          <Text style={styles.gpsBtnText}>GPS</Text>
         </TouchableOpacity>
       </View>
 
+      {/* ── Dropdown Results ── */}
       {isOpen && results.length > 0 && (
         <View style={styles.dropdown}>
-          {results.map((item) => {
-            const subtitle = [item.admin1, item.country].filter(Boolean).join(", ");
+          {results.map((item, i) => {
+            const subtitle = [item.admin1, item.country].filter(Boolean).join(', ');
             return (
               <TouchableOpacity
                 key={item.id}
-                style={styles.dropdownItem}
+                style={[
+                  styles.dropdownItem,
+                  i < results.length - 1 && styles.dropdownItemBorder,
+                ]}
                 onPress={() => handleSelect(item)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
-                <MapPin size={13} color={COLORS.safe} />
-                <View style={styles.itemTextContainer}>
-                  <Text style={styles.itemTitle}>{item.name}</Text>
-                  {subtitle ? (
-                    <Text style={styles.itemSubtitle}>{subtitle}</Text>
-                  ) : null}
+                <View style={styles.dropdownItemIcon}>
+                  <MapPin size={11} color={COLORS.safe} />
+                </View>
+                <View style={styles.dropdownItemText}>
+                  <Text style={styles.dropdownItemTitle}>{item.name}</Text>
+                  {subtitle && <Text style={styles.dropdownItemSub}>{subtitle}</Text>}
                 </View>
               </TouchableOpacity>
             );
@@ -125,20 +124,24 @@ export const LocationSearch: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: "relative",
-    zIndex: 100,
-    marginBottom: 8,
+    position: 'relative',
+    zIndex: 200,
   },
   searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(18, 26, 39, 0.8)",
-    borderRadius: RADII.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 9,
+  },
+  searchBarOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderColor: COLORS.borderLight,
   },
   input: {
     flex: 1,
@@ -146,56 +149,79 @@ const styles = StyleSheet.create({
     fontSize: 13,
     padding: 0,
     margin: 0,
+    fontWeight: '500',
   },
-  gpsButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  divider: {
+    width: 1,
+    height: 16,
+    backgroundColor: COLORS.border,
+  },
+  gpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.safeBg,
-    borderRadius: RADII.md,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: RADII.lg,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     gap: 4,
     borderWidth: 1,
     borderColor: COLORS.safeBorder,
   },
-  gpsButtonText: {
-    fontSize: 11,
-    fontWeight: "700",
+  gpsBtnLoading: {
+    opacity: 0.7,
+  },
+  gpsBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
     color: COLORS.safe,
+    letterSpacing: 0.5,
   },
   dropdown: {
-    marginTop: 4,
-    backgroundColor: COLORS.card,
-    borderRadius: RADII.lg,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
+    borderTopWidth: 0,
     borderColor: COLORS.borderLight,
+    borderBottomLeftRadius: RADII.xl,
+    borderBottomRightRadius: RADII.xl,
     paddingVertical: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowRadius: 14,
+    elevation: 12,
   },
   dropdownItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border + "60",
-    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
   },
-  itemTextContainer: {
+  dropdownItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  dropdownItemIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: RADII.sm,
+    backgroundColor: COLORS.safeBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.safeBorder,
+  },
+  dropdownItemText: {
     flex: 1,
   },
-  itemTitle: {
+  dropdownItemTitle: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  itemSubtitle: {
+  dropdownItemSub: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: COLORS.textTertiary,
     marginTop: 1,
   },
 });

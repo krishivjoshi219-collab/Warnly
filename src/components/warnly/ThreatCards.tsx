@@ -1,55 +1,89 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-} from "react-native";
+  Animated,
+  Easing,
+} from 'react-native';
 import {
   Zap,
   Waves,
   Activity,
   Mountain,
   Clock,
-  ChevronRight,
-  ShieldCheck,
   Share2,
   Navigation,
-} from "../Icons";
-import { useWarnly } from "../../lib/warnly/store";
-import { useEarthquakes, useFloodRisk, floodMeta } from "../../lib/warnly/hazards";
-import { evaluateGlofRisk, type GlofRiskAssessment } from "../../lib/warnly/glof";
-import { computeEarlyWarnings, type EarlyWarningSummary } from "../../lib/warnly/early-warning";
-import { fetchNearbySafetyCamps, type SafetyCamp } from "../../lib/warnly/shelters";
-import { MassBroadcastModal } from "./MassBroadcastModal";
-import { SafetyCampsModal } from "./SafetyCampsModal";
-import { GuideModal } from "./GuideModal";
-import { COLORS, RADII, FONTS } from "../../theme";
+  ChevronRight,
+} from '../Icons';
+import { useWarnly } from '../../lib/warnly/store';
+import { useEarthquakes, useFloodRisk } from '../../lib/warnly/hazards';
+import { evaluateGlofRisk, type GlofRiskAssessment } from '../../lib/warnly/glof';
+import { computeEarlyWarnings, type EarlyWarningSummary } from '../../lib/warnly/early-warning';
+import { fetchNearbySafetyCamps, type SafetyCamp } from '../../lib/warnly/shelters';
+import { MassBroadcastModal } from './MassBroadcastModal';
+import { SafetyCampsModal } from './SafetyCampsModal';
+import { GuideModal } from './GuideModal';
+import { PulseDot, FadeIn, GlassCard, SectionHeader, StatusBadge } from '../ui';
+import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../../theme';
 
+// ─── STATUS HEADER PILL ──────────────────────────────────────────────────────
 export const StatusHeaderPill: React.FC = () => {
   const { level, probability } = useWarnly();
-  const isDanger = level === "danger";
-  const isAdvisory = level === "advisory";
+
+  const isDanger = level === 'danger';
+  const isAdvisory = level === 'advisory';
 
   const color = isDanger ? COLORS.danger : isAdvisory ? COLORS.warning : COLORS.safe;
   const bg = isDanger ? COLORS.dangerBg : isAdvisory ? COLORS.warningBg : COLORS.safeBg;
   const border = isDanger ? COLORS.dangerBorder : isAdvisory ? COLORS.warningBorder : COLORS.safeBorder;
-  const text = isDanger ? "CRITICAL THREAT ACTIVE" : isAdvisory ? "ADVISORY MONITORING" : "ALL SYSTEMS SAFE";
+  const text = isDanger
+    ? 'CRITICAL THREAT ACTIVE'
+    : isAdvisory
+    ? 'ADVISORY MONITORING'
+    : 'ALL SYSTEMS SAFE';
+
+  // Shimmer animation for the pill
+  const shimmerX = useRef(new Animated.Value(-100)).current;
+  useEffect(() => {
+    if (isDanger || isAdvisory) {
+      const shimmer = Animated.loop(
+        Animated.timing(shimmerX, {
+          toValue: 300,
+          duration: 2200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      shimmer.start();
+      return () => shimmer.stop();
+    }
+  }, [isDanger, isAdvisory]);
 
   return (
-    <View style={[styles.statusPill, { backgroundColor: bg, borderColor: border }]}>
-      <View style={[styles.pulseDot, { backgroundColor: color }]} />
-      <Text style={[styles.statusPillText, { color }]}>{text}</Text>
-      <Text style={styles.statusPillProb}>· {probability}% Risk</Text>
-    </View>
+    <FadeIn duration={350}>
+      <View style={[styles.statusPill, { backgroundColor: bg, borderColor: border }]}>
+        <PulseDot
+          color={color}
+          size={7}
+          speed={isDanger ? 900 : isAdvisory ? 1400 : 2400}
+        />
+        <Text style={[styles.pillText, { color }]}>{text}</Text>
+        <View style={[styles.pillDivider, { backgroundColor: color + '30' }]} />
+        <Text style={[styles.pillProb, { color: color + 'CC' }]}>
+          {probability}%
+        </Text>
+      </View>
+    </FadeIn>
   );
 };
 
+// ─── THREAT CARDS ────────────────────────────────────────────────────────────
 export const ThreatCards: React.FC = () => {
   const { coords, strikes, nearest, weather, level } = useWarnly();
   const [glof, setGlof] = useState<GlofRiskAssessment | null>(null);
   const [earlySummary, setEarlySummary] = useState<EarlyWarningSummary | null>(null);
-
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [campsOpen, setCampsOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -85,501 +119,413 @@ export const ThreatCards: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* 10+ Min Early Warning Highlight Banner */}
+      {/* ── Early Warning Banner ── */}
       {earlySummary?.topAlert && (
-        <View
-          style={[
-            styles.earlyAlertBanner,
-            earlySummary.hasCriticalEarlyAlert && styles.earlyAlertBannerCritical,
-          ]}
-        >
-          <View style={styles.earlyAlertTop}>
-            <View style={styles.earlyAlertLeadRow}>
-              <Clock
-                size={14}
-                color={
-                  earlySummary.hasCriticalEarlyAlert
-                    ? COLORS.danger
-                    : COLORS.warning
-                }
+        <FadeIn duration={400}>
+          <View
+            style={[
+              styles.earlyBanner,
+              earlySummary.hasCriticalEarlyAlert
+                ? styles.earlyBannerCritical
+                : styles.earlyBannerAdvisory,
+            ]}
+          >
+            {/* Top row: timer + badge */}
+            <View style={styles.earlyBannerTop}>
+              <View style={styles.earlyBannerLeadRow}>
+                <Clock
+                  size={13}
+                  color={earlySummary.hasCriticalEarlyAlert ? COLORS.danger : COLORS.warning}
+                />
+                <Text
+                  style={[
+                    styles.earlyBannerLead,
+                    { color: earlySummary.hasCriticalEarlyAlert ? COLORS.danger : COLORS.warning },
+                  ]}
+                >
+                  {earlySummary.topAlert.leadTimeDisplay}
+                </Text>
+              </View>
+              <StatusBadge
+                label={earlySummary.hasCriticalEarlyAlert ? 'CRITICAL' : 'ADVISORY'}
+                variant={earlySummary.hasCriticalEarlyAlert ? 'danger' : 'warning'}
               />
-              <Text
-                style={[
-                  styles.earlyAlertLeadText,
-                  {
-                    color: earlySummary.hasCriticalEarlyAlert
-                      ? COLORS.danger
-                      : COLORS.warning,
-                  },
-                ]}
-              >
-                {earlySummary.topAlert.leadTimeDisplay}
-              </Text>
             </View>
-            <View
-              style={[
-                styles.earlyAlertBadge,
-                {
-                  backgroundColor: earlySummary.hasCriticalEarlyAlert
-                    ? COLORS.danger
-                    : COLORS.warningBg,
-                },
-              ]}
-            >
-              <Text
+
+            <Text style={styles.earlyBannerTitle}>{earlySummary.topAlert.title}</Text>
+            <Text style={styles.earlyBannerAction}>{earlySummary.topAlert.primaryAction}</Text>
+
+            {/* Action buttons */}
+            <View style={styles.earlyBannerActions}>
+              <TouchableOpacity
                 style={[
-                  styles.earlyAlertBadgeText,
-                  {
-                    color: earlySummary.hasCriticalEarlyAlert
-                      ? "#FFFFFF"
-                      : COLORS.warning,
-                  },
+                  styles.earlyBtn,
+                  { backgroundColor: COLORS.danger },
                 ]}
+                onPress={() => setBroadcastOpen(true)}
+                activeOpacity={0.85}
               >
-                {earlySummary.hasCriticalEarlyAlert ? "CRITICAL ALERT" : "EARLY ADVISORY"}
-              </Text>
+                <Share2 size={12} color="#FFFFFF" />
+                <Text style={styles.earlyBtnTextDanger}>Broadcast SOS</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.earlyBtnGhost}
+                onPress={() => setCampsOpen(true)}
+                activeOpacity={0.85}
+              >
+                <Navigation size={12} color={COLORS.safe} />
+                <Text style={styles.earlyBtnTextGhost}>Safe Camps</Text>
+              </TouchableOpacity>
             </View>
           </View>
-
-          <Text style={styles.earlyAlertTitle}>{earlySummary.topAlert.title}</Text>
-          <Text style={styles.earlyAlertAction}>
-            {earlySummary.topAlert.primaryAction}
-          </Text>
-
-          <View style={styles.earlyAlertButtons}>
-            <TouchableOpacity
-              style={styles.earlyAlertShareBtn}
-              onPress={() => setBroadcastOpen(true)}
-              activeOpacity={0.8}
-            >
-              <Share2 size={13} color="#FFFFFF" />
-              <Text style={styles.earlyAlertShareText}>Broadcast SOS</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.earlyAlertCampBtn}
-              onPress={() => setCampsOpen(true)}
-              activeOpacity={0.8}
-            >
-              <Navigation size={13} color={COLORS.safe} />
-              <Text style={styles.earlyAlertCampText}>Safe Camps</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        </FadeIn>
       )}
 
-      {/* Multi-Hazard Threat Monitoring Cards List */}
-      <View style={styles.hazardCardsList}>
-        {/* 1. GLOF Glacial Lake Outburst Card */}
-        <TouchableOpacity
-          style={styles.threatCard}
-          onPress={() => setGuideOpen(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.threatCardHeader}>
-            <View style={styles.threatIconTitle}>
-              <View style={[styles.hazardIconBox, { backgroundColor: "rgba(0, 229, 255, 0.15)" }]}>
-                <Mountain size={16} color={COLORS.safe} />
-              </View>
-              <View>
-                <Text style={styles.threatName}>GLOF Glacial Basins</Text>
-                <Text style={styles.threatSub}>
-                  {glof?.nearestGlacialLake
-                    ? `${glof.nearestGlacialLake.lake.name} (${glof.nearestGlacialLake.distanceKm} km)`
-                    : "High Mountain Asia & Himalayan Corridors"}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.threatStatusBadge,
-                {
-                  backgroundColor:
-                    glof?.riskLevel === "warning"
-                      ? COLORS.dangerBg
-                      : glof?.riskLevel === "watch"
-                      ? COLORS.warningBg
-                      : COLORS.safeBg,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.threatStatusText,
-                  {
-                    color:
-                      glof?.riskLevel === "warning"
-                        ? COLORS.danger
-                        : glof?.riskLevel === "watch"
-                        ? COLORS.warning
-                        : COLORS.safe,
-                  },
-                ]}
-              >
-                {glof?.riskLevel?.toUpperCase() ?? "SAFE"}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+      {/* ── Section Header ── */}
+      <SectionHeader label="Live Hazard Monitor" style={{ marginTop: earlySummary?.topAlert ? 4 : 0 }} />
 
-        {/* 2. Flash Flood & River Surge Card */}
-        <TouchableOpacity
-          style={styles.threatCard}
+      {/* ── Hazard Cards Grid ── */}
+      <View style={styles.hazardGrid}>
+        {/* GLOF */}
+        <HazardCard
+          icon={<Mountain size={18} color={COLORS.safe} />}
+          iconBg="rgba(0,229,255,0.12)"
+          title="GLOF Basins"
+          subtitle={
+            glof?.nearestGlacialLake
+              ? `${glof.nearestGlacialLake.lake.name} · ${glof.nearestGlacialLake.distanceKm} km`
+              : 'Himalayan corridors'
+          }
+          status={glof?.riskLevel?.toUpperCase() ?? 'SAFE'}
+          statusVariant={
+            glof?.riskLevel === 'warning' ? 'danger' : glof?.riskLevel === 'watch' ? 'warning' : 'safe'
+          }
           onPress={() => setGuideOpen(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.threatCardHeader}>
-            <View style={styles.threatIconTitle}>
-              <View style={[styles.hazardIconBox, { backgroundColor: "rgba(56, 189, 248, 0.15)" }]}>
-                <Waves size={16} color="#38BDF8" />
-              </View>
-              <View>
-                <Text style={styles.threatName}>Flash Floods & Surges</Text>
-                <Text style={styles.threatSub}>
-                  Rain: {flood?.rainNow ?? 0} mm/hr · {flood?.label ?? "No flood risk"}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.threatStatusBadge,
-                {
-                  backgroundColor:
-                    flood?.level === "severe" || flood?.level === "high"
-                      ? COLORS.dangerBg
-                      : flood?.level === "moderate"
-                      ? COLORS.warningBg
-                      : COLORS.safeBg,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.threatStatusText,
-                  {
-                    color:
-                      flood?.level === "severe" || flood?.level === "high"
-                        ? COLORS.danger
-                        : flood?.level === "moderate"
-                        ? COLORS.warning
-                        : COLORS.safe,
-                  },
-                ]}
-              >
-                {flood?.level ? flood.level.toUpperCase() : "SAFE"}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        />
 
-        {/* 3. Lightning Convective Threat Card */}
-        <TouchableOpacity
-          style={styles.threatCard}
+        {/* Flood */}
+        <HazardCard
+          icon={<Waves size={18} color={COLORS.accentSky} />}
+          iconBg="rgba(56,189,248,0.12)"
+          title="Flash Floods"
+          subtitle={`${flood?.rainNow ?? 0} mm/hr · ${flood?.label ?? 'No flood risk'}`}
+          status={flood?.level ? flood.level.toUpperCase() : 'SAFE'}
+          statusVariant={
+            flood?.level === 'severe' || flood?.level === 'high'
+              ? 'danger'
+              : flood?.level === 'moderate'
+              ? 'warning'
+              : 'safe'
+          }
           onPress={() => setGuideOpen(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.threatCardHeader}>
-            <View style={styles.threatIconTitle}>
-              <View style={[styles.hazardIconBox, { backgroundColor: "rgba(255, 176, 32, 0.15)" }]}>
-                <Zap size={16} color={COLORS.warning} />
-              </View>
-              <View>
-                <Text style={styles.threatName}>Lightning Strikes</Text>
-                <Text style={styles.threatSub}>
-                  {strikes.length > 0
-                    ? `${strikes.length} active strikes · Nearest ${nearest?.distanceKm ?? 0} km`
-                    : "0 strikes detected in safety zone"}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.threatStatusBadge,
-                {
-                  backgroundColor:
-                    level === "danger"
-                      ? COLORS.dangerBg
-                      : level === "advisory"
-                      ? COLORS.warningBg
-                      : COLORS.safeBg,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.threatStatusText,
-                  {
-                    color:
-                      level === "danger"
-                        ? COLORS.danger
-                        : level === "advisory"
-                        ? COLORS.warning
-                        : COLORS.safe,
-                  },
-                ]}
-              >
-                {level.toUpperCase()}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        />
 
-        {/* 4. Earthquakes (Seismic) Card */}
-        <TouchableOpacity
-          style={styles.threatCard}
+        {/* Lightning */}
+        <HazardCard
+          icon={<Zap size={18} color={COLORS.warning} />}
+          iconBg="rgba(255,186,8,0.12)"
+          title="Lightning"
+          subtitle={
+            strikes.length > 0
+              ? `${strikes.length} strikes · ${nearest?.distanceKm ?? 0} km nearest`
+              : '0 strikes in zone'
+          }
+          status={level.toUpperCase()}
+          statusVariant={
+            level === 'danger' ? 'danger' : level === 'advisory' ? 'warning' : 'safe'
+          }
           onPress={() => setGuideOpen(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.threatCardHeader}>
-            <View style={styles.threatIconTitle}>
-              <View style={[styles.hazardIconBox, { backgroundColor: "rgba(255, 42, 77, 0.15)" }]}>
-                <Activity size={16} color={COLORS.danger} />
-              </View>
-              <View>
-                <Text style={styles.threatName}>Seismic Activity</Text>
-                <Text style={styles.threatSub}>
-                  {quake
-                    ? `M${quake.mag.toFixed(1)} · ${quake.distanceKm} km away (${quake.place})`
-                    : "No major seismic tremors within sensing range"}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.threatStatusBadge,
-                {
-                  backgroundColor:
-                    quake && quake.mag >= 5.5
-                      ? COLORS.dangerBg
-                      : quake && quake.mag >= 4.0
-                      ? COLORS.warningBg
-                      : COLORS.safeBg,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.threatStatusText,
-                  {
-                    color:
-                      quake && quake.mag >= 5.5
-                        ? COLORS.danger
-                        : quake && quake.mag >= 4.0
-                        ? COLORS.warning
-                        : COLORS.safe,
-                  },
-                ]}
-              >
-                {quake ? `M${quake.mag.toFixed(1)}` : "CALM"}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        />
+
+        {/* Seismic */}
+        <HazardCard
+          icon={<Activity size={18} color={COLORS.danger} />}
+          iconBg="rgba(255,51,85,0.12)"
+          title="Seismic"
+          subtitle={
+            quake
+              ? `M${quake.mag.toFixed(1)} · ${quake.distanceKm} km`
+              : 'No major tremors'
+          }
+          status={quake ? `M${quake.mag.toFixed(1)}` : 'CALM'}
+          statusVariant={
+            quake && quake.mag >= 5.5 ? 'danger' : quake && quake.mag >= 4.0 ? 'warning' : 'safe'
+          }
+          onPress={() => setGuideOpen(true)}
+        />
       </View>
 
-      {/* Modals */}
+      {/* ── Modals ── */}
       <MassBroadcastModal
         open={broadcastOpen}
         onClose={() => setBroadcastOpen(false)}
         alert={
           earlySummary?.topAlert ?? {
-            id: "home-broadcast",
-            kind: "flood",
-            severity: "warning",
-            title: "Urgent Disaster & Safety Alert",
+            id: 'home-broadcast',
+            kind: 'flood',
+            severity: 'warning',
+            title: 'Urgent Disaster & Safety Alert',
             leadTimeMinutes: 15,
-            leadTimeDisplay: "15 mins advance warning",
-            primaryAction: "Evacuate low ground & move to nearest safe camp",
+            leadTimeDisplay: '15 mins advance warning',
+            primaryAction: 'Evacuate low ground & move to nearest safe camp',
             actionSteps: [
-              "Move to high ground at least 30-50m above riverbed.",
-              "Stay away from low bridges and riverbanks.",
-              "Carry an emergency go-bag and monitor alerts.",
+              'Move to high ground at least 30-50m above riverbed.',
+              'Stay away from low bridges and riverbanks.',
+              'Carry an emergency go-bag and monitor alerts.',
             ],
-            recommendedShelterType: "high_ground",
+            recommendedShelterType: 'high_ground',
             metrics: [],
             timestamp: Date.now(),
           }
         }
-        locationName={weather?.place ?? "Your Area"}
+        locationName={weather?.place ?? 'Your Area'}
         nearestCamp={nearestCamp}
         onOpenCamps={() => {
           setBroadcastOpen(false);
           setCampsOpen(true);
         }}
       />
-
-      <SafetyCampsModal
-        open={campsOpen}
-        onClose={() => setCampsOpen(false)}
-        coords={coords}
-      />
-
-      <GuideModal
-        open={guideOpen}
-        onClose={() => setGuideOpen(false)}
-      />
+      <SafetyCampsModal open={campsOpen} onClose={() => setCampsOpen(false)} coords={coords} />
+      <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
     </View>
   );
 };
 
+// ─── HAZARD CARD ─────────────────────────────────────────────────────────────
+// Individual card in the 2×2 hazard grid
+type BadgeVariant = 'safe' | 'warning' | 'danger' | 'muted' | 'info';
+
+const BADGE_COLORS: Record<BadgeVariant, { bg: string; text: string; border: string }> = {
+  safe:    { bg: COLORS.safeBg,    text: COLORS.safe,    border: COLORS.safeBorder },
+  warning: { bg: COLORS.warningBg, text: COLORS.warning, border: COLORS.warningBorder },
+  danger:  { bg: COLORS.dangerBg,  text: COLORS.danger,  border: COLORS.dangerBorder },
+  muted:   { bg: 'rgba(255,255,255,0.05)', text: COLORS.textTertiary, border: COLORS.border },
+  info:    { bg: 'rgba(59,130,246,0.1)',  text: COLORS.accentBlue,  border: 'rgba(59,130,246,0.3)' },
+};
+
+interface HazardCardProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  statusVariant: BadgeVariant;
+  onPress: () => void;
+}
+
+const HazardCard: React.FC<HazardCardProps> = ({
+  icon,
+  iconBg,
+  title,
+  subtitle,
+  status,
+  statusVariant,
+  onPress,
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const badgeCfg = BADGE_COLORS[statusVariant];
+
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.96, duration: 80, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, tension: 300, friction: 14, useNativeDriver: true }),
+    ]).start();
+    onPress();
+  };
+
+  return (
+    <Animated.View style={[styles.hazardCardWrap, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity
+        style={[
+          styles.hazardCard,
+          statusVariant === 'danger' && { borderColor: COLORS.dangerBorder, ...SHADOWS.glowDanger },
+          statusVariant === 'warning' && { borderColor: COLORS.warningBorder, ...SHADOWS.glowWarning },
+        ]}
+        onPress={handlePress}
+        activeOpacity={1}
+      >
+        {/* Top: icon + status badge */}
+        <View style={styles.hazardCardTop}>
+          <View style={[styles.hazardIconBox, { backgroundColor: iconBg }]}>{icon}</View>
+          <View style={[styles.hazardBadge, { backgroundColor: badgeCfg.bg, borderColor: badgeCfg.border }]}>
+            <Text style={[styles.hazardBadgeText, { color: badgeCfg.text }]}>{status}</Text>
+          </View>
+        </View>
+
+        {/* Bottom: name + sub */}
+        <Text style={styles.hazardTitle}>{title}</Text>
+        <Text style={styles.hazardSub} numberOfLines={2}>{subtitle}</Text>
+
+        {/* Tap affordance */}
+        <ChevronRight size={10} color={COLORS.textMuted + '60'} style={{ marginTop: 4 }} />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+// ─── STYLES ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
+    gap: 10,
   },
+
+  // ── Status Pill ──
   statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderRadius: RADII.full,
     borderWidth: 1,
-    gap: 6,
-    marginBottom: 8,
+    gap: 7,
   },
-  pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusPillText: {
+  pillText: {
     fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
-  statusPillProb: {
+  pillDivider: {
+    width: 1,
+    height: 12,
+  },
+  pillProb: {
     fontSize: 10,
-    color: COLORS.textMuted,
-    fontWeight: "600",
+    fontWeight: '700',
+    fontFamily: FONTS.mono,
   },
-  earlyAlertBanner: {
-    backgroundColor: "rgba(255, 176, 32, 0.1)",
-    borderRadius: RADII.xl,
+
+  // ── Early Warning Banner ──
+  earlyBanner: {
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
+    padding: 16,
+    gap: 8,
+  },
+  earlyBannerAdvisory: {
+    backgroundColor: 'rgba(255,186,8,0.07)',
     borderColor: COLORS.warningBorder,
-    padding: 14,
-    gap: 8,
   },
-  earlyAlertBannerCritical: {
-    backgroundColor: COLORS.dangerBg,
+  earlyBannerCritical: {
+    backgroundColor: 'rgba(255,51,85,0.08)',
     borderColor: COLORS.dangerBorder,
+    ...SHADOWS.glowDanger,
   },
-  earlyAlertTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  earlyBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  earlyAlertLeadRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  earlyBannerLeadRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
-  earlyAlertLeadText: {
+  earlyBannerLead: {
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
-  earlyAlertBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.sm,
-  },
-  earlyAlertBadgeText: {
-    fontSize: 9,
-    fontWeight: "800",
-  },
-  earlyAlertTitle: {
-    fontSize: 14,
-    fontWeight: "800",
+  earlyBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  earlyAlertAction: {
-    fontSize: 11,
+  earlyBannerAction: {
+    fontSize: 12,
     color: COLORS.textSecondary,
-    lineHeight: 15,
+    lineHeight: 17,
   },
-  earlyAlertButtons: {
-    flexDirection: "row",
+  earlyBannerActions: {
+    flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
+    marginTop: 2,
   },
-  earlyAlertShareBtn: {
+  earlyBtn: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.danger,
-    borderRadius: RADII.md,
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: RADII.lg,
+    paddingVertical: 10,
     gap: 6,
+    ...SHADOWS.glowDanger,
   },
-  earlyAlertShareText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#FFFFFF",
+  earlyBtnTextDanger: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
-  earlyAlertCampBtn: {
+  earlyBtnGhost: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: RADII.lg,
+    paddingVertical: 10,
+    gap: 6,
     backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.md,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingVertical: 8,
-    gap: 6,
   },
-  earlyAlertCampText: {
-    fontSize: 11,
-    fontWeight: "700",
+  earlyBtnTextGhost: {
+    fontSize: 12,
+    fontWeight: '700',
     color: COLORS.safe,
   },
-  hazardCardsList: {
+
+  // ── Hazard Grid ──
+  hazardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
-  threatCard: {
-    backgroundColor: "rgba(18, 26, 39, 0.6)",
-    borderRadius: RADII.xl,
+  hazardCardWrap: {
+    width: '48%',
+  },
+  hazardCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 12,
+    padding: 14,
+    gap: 4,
   },
-  threatCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  threatIconTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
+  hazardCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
   hazardIconBox: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: RADII.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  threatName: {
+  hazardBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+  },
+  hazardBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  hazardTitle: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: -0.1,
   },
-  threatSub: {
+  hazardSub: {
     fontSize: 10,
     color: COLORS.textSecondary,
-    marginTop: 1,
-  },
-  threatStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.sm,
-  },
-  threatStatusText: {
-    fontSize: 9,
-    fontWeight: "800",
+    lineHeight: 14,
   },
 });
