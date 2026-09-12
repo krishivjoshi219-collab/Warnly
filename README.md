@@ -6,11 +6,12 @@
 
 <br/>
 
+[![Download APK](https://img.shields.io/badge/Download-Warnly%20v1.2.0%20APK%20(1--Tap)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.2.0/Warnly-v1.2.0.apk)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.2.0%20Latest-10B981?style=for-the-badge&logo=github)](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web%20Preview-00E5FF?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly)
 [![React Native](https://img.shields.io/badge/React%20Native-0.74%20(Expo%2051)-61DAFB?style=for-the-badge&logo=react)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Cloud CI/CD](https://img.shields.io/badge/GitHub%20Actions-Cloud%20APK%20Build-10B981?style=for-the-badge&logo=github-actions)](https://github.com/krishivjoshi219-collab/Warnly/actions)
-[![Hardware Verified](https://img.shields.io/badge/Hardware-Physical%20Device%20Tested-F59E0B?style=for-the-badge&logo=google-play)](docs/screenshots/hero_showcase.png)
+[![Cloud CI/CD](https://img.shields.io/badge/GitHub%20Actions-Cloud%20APK%20Build-00E5FF?style=for-the-badge&logo=github-actions)](https://github.com/krishivjoshi219-collab/Warnly/actions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-8B5CF6?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -175,15 +176,21 @@ Warnly's codebase is designed for extreme maintainability and automated distribu
 - **Native Android Engine**: Kotlin, Gradle, Android SDK 34 (`com.warnly.convective`).
 - **Cloud CI/CD Pipeline**: GitHub Actions automatically compiles, tests, and packages release APKs on 16GB RAM cloud runners—eliminating developer machine resource exhaustion.
 
-### Sideloading the Production APK
-```bash
-# 1. Download the latest compiled cloud APK artifact from GitHub Actions
-# 2. Deploy directly to your connected Android phone via ADB
-adb install -r Warnly-Production-APK.apk
+### 📱 1-Tap Instant Installation
 
-# 3. Launch the tactical console
-adb shell am start -n com.warnly.convective/.MainActivity
-```
+No developer tools or complex setup required. Anyone can install and evaluate Warnly immediately on their Android device:
+
+<div align="center">
+
+[![Direct Download APK](https://img.shields.io/badge/Direct%20Download-Warnly%20v1.2.0%20APK%20(1--Tap)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.2.0/Warnly-v1.2.0.apk)
+
+*Access release notes and checksums on the [GitHub Releases Page](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)*
+
+</div>
+
+1. **Download**: Tap the direct download button above on any Android device.
+2. **Install**: Open the downloaded `Warnly-v1.2.0.apk` file and tap install.
+3. **Launch**: Open **Warnly** to immediately access the tactical defense console.
 
 ---
 
