@@ -29,6 +29,7 @@ import { useWarnly } from "../lib/warnly/store";
 import { checkAllFeedHealth, type FeedStatus } from "../lib/warnly/feed-health";
 import { PaywallModal } from "../components/warnly/PaywallModal";
 import { GuideModal } from "../components/warnly/GuideModal";
+import { NativeEmergency } from "../lib/warnly/native-emergency";
 import { COLORS, RADII, FONTS } from "../theme";
 
 export const SettingsScreen: React.FC = () => {
@@ -49,6 +50,21 @@ export const SettingsScreen: React.FC = () => {
   const [feeds, setFeeds] = useState<FeedStatus[]>([]);
   const [checkingFeeds, setCheckingFeeds] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [isDndGranted, setIsDndGranted] = useState(false);
+
+  const checkDnd = async () => {
+    try {
+      const granted = await NativeEmergency.checkDndPermission();
+      setIsDndGranted(granted);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    NativeEmergency.setupEmergencyNotificationChannel();
+    checkDnd();
+  }, []);
 
   const runFeedCheck = async () => {
     setCheckingFeeds(true);
@@ -287,6 +303,66 @@ export const SettingsScreen: React.FC = () => {
             Test Two-Tone Emergency Siren
           </Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Critical Life-Safety & Do Not Disturb (DND) Bypass */}
+      <View style={styles.settingCard}>
+        <View style={styles.radiusHeaderRow}>
+          <View style={styles.cardHeaderSmall}>
+            <BellRing size={13} color={COLORS.safe} />
+            <Text style={styles.cardHeaderSmallTitle}>CRITICAL ALERTS & DND BYPASS</Text>
+          </View>
+          <View
+            style={[
+              styles.dndBadge,
+              { backgroundColor: isDndGranted ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.dndBadgeText,
+                { color: isDndGranted ? COLORS.safe : COLORS.warning },
+              ]}
+            >
+              {isDndGranted ? "DND BYPASS ACTIVE" : "PERMISSION REQUIRED"}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.settingDesc}>
+          Routes life-safety sirens through Android hardware USAGE_ALARM (STREAM_ALARM) and sets high-priority breakthrough notifications to punch through Do Not Disturb (DND) and Silent mode.
+        </Text>
+
+        <View style={styles.dndActionRow}>
+          <TouchableOpacity
+            style={[
+              styles.dndBtn,
+              isDndGranted ? styles.dndBtnGranted : styles.dndBtnRequired,
+            ]}
+            onPress={() => {
+              NativeEmergency.requestDndPermission();
+              setTimeout(checkDnd, 2000);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dndBtnText}>
+              {isDndGranted ? "Configure System DND Access" : "Grant DND Override Access"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.dndTestBtn}
+            onPress={() => {
+              NativeEmergency.postCriticalAlert(
+                "WARNLY CRITICAL TEST ALERT",
+                "Life-safety breakthrough alert verified on high-priority alarm channel."
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dndTestBtnText}>Test Alert</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* App & Offline Readiness State */}
@@ -890,5 +966,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     color: COLORS.textPrimary,
+  },
+  dndBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  dndBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  dndActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+  },
+  dndBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: RADII.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dndBtnGranted: {
+    backgroundColor: "rgba(16, 185, 129, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.3)",
+  },
+  dndBtnRequired: {
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.4)",
+  },
+  dndBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
+  },
+  dndTestBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: RADII.md,
+    backgroundColor: COLORS.backgroundElevated,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dndTestBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLORS.safe,
   },
 });

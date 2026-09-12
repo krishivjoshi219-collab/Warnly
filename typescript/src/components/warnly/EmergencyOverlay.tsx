@@ -25,6 +25,8 @@ import { fetchNearbySafetyCamps, type SafetyCamp } from "../../lib/warnly/shelte
 import { ShelterTimer } from "./ShelterTimer";
 import { MassBroadcastModal } from "./MassBroadcastModal";
 import { SafetyCampsModal } from "./SafetyCampsModal";
+import { startSirenAudio, stopSirenAudio } from "../../lib/warnly/siren";
+import { NativeEmergency } from "../../lib/warnly/native-emergency";
 import { COLORS, RADII, FONTS } from "../../theme";
 
 export const EmergencyOverlay: React.FC = () => {
@@ -60,6 +62,20 @@ export const EmergencyOverlay: React.FC = () => {
 
   const topAlert = earlySummary?.topAlert;
   const isCritical = level === "danger" || earlySummary?.hasCriticalEarlyAlert;
+  const title = topAlert?.title ?? "LIGHTNING DANGER DETECTED";
+  const primaryAction = topAlert?.primaryAction ?? "GET INDOORS NOW - 30/30 RULE ACTIVE";
+
+  useEffect(() => {
+    if (isCritical && !alertDismissedAt) {
+      startSirenAudio();
+      NativeEmergency.postCriticalAlert(title, primaryAction);
+      return () => {
+        stopSirenAudio();
+      };
+    } else {
+      stopSirenAudio();
+    }
+  }, [isCritical, alertDismissedAt, title, primaryAction]);
 
   if (!isCritical || alertDismissedAt) return null;
 
@@ -75,9 +91,6 @@ export const EmergencyOverlay: React.FC = () => {
         return <Zap size={24} color={COLORS.danger} />;
     }
   };
-
-  const title = topAlert?.title ?? "LIGHTNING DANGER DETECTED";
-  const primaryAction = topAlert?.primaryAction ?? "GET INDOORS NOW — 30/30 RULE ACTIVE";
   const actionSteps = topAlert?.actionSteps ?? [
     "Get indoors now — enter a fully enclosed building or hard-topped vehicle.",
     "Stay away from windows, plumbing, corded devices, and exterior walls.",

@@ -100,4 +100,7 @@ declare module 'react-native' {
   };
 
   export const Animated: any;
+  export const NativeModules: {
+    [key: string]: any;
+  };
 }

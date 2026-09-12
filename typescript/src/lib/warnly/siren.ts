@@ -1,12 +1,44 @@
-/** Two-tone emergency siren synthesized with the Web Audio API. */
+import { NativeEmergency } from "./native-emergency";
+
+/** Two-tone emergency siren synthesized with USAGE_ALARM (native DND bypass) or Web Audio API fallback. */
 let ctx: AudioContext | null = null;
 let osc: OscillatorNode | null = null;
 let gain: GainNode | null = null;
 let timer: number | null = null;
 
+function stopWebAudioSiren() {
+  if (timer != null) {
+    clearInterval(timer);
+    timer = null;
+  }
+  try {
+    if (gain && ctx) {
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+    }
+    osc?.stop((ctx?.currentTime ?? 0) + 0.12);
+  } catch {
+    /* ignore */
+  }
+  const closing = ctx;
+  osc = null;
+  gain = null;
+  ctx = null;
+  setTimeout(() => {
+    try {
+      closing?.close();
+    } catch {
+      /* ignore */
+    }
+  }, 250);
+}
+
 export function startSirenAudio() {
+  // 1. On Android hardware, route siren to STREAM_ALARM (bypasses DND and silent mode)
+  NativeEmergency.startAlarmSiren();
+
+  // 2. Web Audio fallback for browser/simulator
   if (typeof window === "undefined") return;
-  stopSirenAudio();
+  stopWebAudioSiren();
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
@@ -33,27 +65,10 @@ export function startSirenAudio() {
 }
 
 export function stopSirenAudio() {
-  if (timer != null) {
-    clearInterval(timer);
-    timer = null;
-  }
-  try {
-    if (gain && ctx) {
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
-    }
-    osc?.stop((ctx?.currentTime ?? 0) + 0.12);
-  } catch {
-    /* ignore */
-  }
-  const closing = ctx;
-  osc = null;
-  gain = null;
-  ctx = null;
-  setTimeout(() => {
-    try {
-      closing?.close();
-    } catch {
-      /* ignore */
-    }
-  }, 250);
+  // 1. Stop native hardware alarm siren
+  NativeEmergency.stopAlarmSiren();
+
+  // 2. Stop Web Audio
+  stopWebAudioSiren();
 }
+
