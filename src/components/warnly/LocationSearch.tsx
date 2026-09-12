@@ -130,10 +130,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: RADII['2xl'],
+    backgroundColor: '#0E141F',
+    borderRadius: RADII.xl,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 14,
     paddingVertical: 10,
     gap: 9,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   searchBarOpen: {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    borderColor: COLORS.borderLight,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   input: {
     flex: 1,
@@ -154,18 +154,18 @@ const styles = StyleSheet.create({
   divider: {
     width: 1,
     height: 16,
-    backgroundColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   gpsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.safeBg,
-    borderRadius: RADII.lg,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderRadius: RADII.md,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     gap: 4,
     borderWidth: 1,
-    borderColor: COLORS.safeBorder,
+    borderColor: 'rgba(16,185,129,0.22)',
   },
   gpsBtnLoading: {
     opacity: 0.7,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   gpsBtnText: {
     fontSize: 10,
     fontWeight: '800',
-    color: COLORS.safe,
+    color: '#10B981',
     letterSpacing: 0.5,
   },
   dropdown: {

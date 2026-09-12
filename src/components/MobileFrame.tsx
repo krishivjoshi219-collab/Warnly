@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform, SafeAreaView, Animated } from 'react-native';
 import { COLORS, RADII, SPACING, FONTS } from '../theme';
-import { Smartphone, Monitor, Radio } from './Icons';
+import { Smartphone, Monitor, Radio, Zap, Battery, Wifi } from './Icons';
 
 interface Props {
   children: React.ReactNode;
@@ -27,7 +27,7 @@ export const MobileFrame: React.FC<Props> = ({ children }) => {
         <View style={styles.topBarLeft}>
           {/* Brand logo */}
           <View style={styles.logoMark}>
-            <Text style={styles.logoGlyph}>⚡</Text>
+            <Zap size={14} color={COLORS.safe} />
           </View>
           <View>
             <Text style={styles.logoTitle}>WARNLY</Text>
@@ -74,10 +74,8 @@ export const MobileFrame: React.FC<Props> = ({ children }) => {
             <View style={styles.statusBar}>
               <Text style={styles.statusTime}>9:41</Text>
               <View style={styles.statusIcons}>
-                {/* Signal bars */}
-                <Text style={styles.statusIconGlyph}>▪▪▪</Text>
-                <Text style={styles.statusIconGlyph}>WiFi</Text>
-                <Text style={styles.statusIconGlyph}>🔋</Text>
+                <Wifi size={11} color={COLORS.textSecondary} />
+                <Battery size={13} color={COLORS.safe} />
               </View>
             </View>
           )}

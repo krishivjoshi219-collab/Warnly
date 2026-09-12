@@ -138,12 +138,12 @@ export const FamilyShieldScreen: React.FC<Props> = ({ engine }) => {
             <Text style={styles.inputLabel}>CATEGORY PROFILE</Text>
             <View style={styles.categoryGrid}>
               {[
-                { id: 'HOME', label: '🏠 Home' },
-                { id: 'SCHOOL', label: '🏫 School' },
-                { id: 'FARMLAND', label: '🌾 Farmland' },
-                { id: 'WORKSITE', label: '🏗️ Worksite' },
-                { id: 'ATHLETIC_FIELD', label: '⚽ Sports' },
-                { id: 'MARINA', label: '⛵ Marina' },
+                { id: 'HOME', label: 'Residence' },
+                { id: 'SCHOOL', label: 'School' },
+                { id: 'FARMLAND', label: 'Agriculture' },
+                { id: 'WORKSITE', label: 'Industrial' },
+                { id: 'ATHLETIC_FIELD', label: 'Outdoor Field' },
+                { id: 'MARINA', label: 'Maritime / Port' },
               ].map((c) => (
                 <TouchableOpacity
                   key={c.id}

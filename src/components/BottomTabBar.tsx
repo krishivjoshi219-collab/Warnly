@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Easing,
 } from 'react-native';
 import { Home, Radar, Shield, CloudSun, Settings } from './Icons';
-import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
+import { COLORS, RADII, SHADOWS } from '../theme';
 
 export type ActiveTab = 'HOME' | 'RADAR' | 'SHIELD' | 'WEATHER' | 'SETTINGS';
 
@@ -32,7 +32,7 @@ const TABS: TabConfig[] = [
   { id: 'SETTINGS', label: 'Settings', icon: Settings },
 ];
 
-// ─── Individual animated tab button ─────────────────────────────────────────
+// ─── Individual tab button ──────────────────────────────────────────────────
 const TabButton: React.FC<{
   tab: TabConfig;
   isActive: boolean;
@@ -40,46 +40,11 @@ const TabButton: React.FC<{
   onPress: () => void;
 }> = ({ tab, isActive, hasDanger, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const bgOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
-  const iconColor = useRef(new Animated.Value(isActive ? 1 : 0)).current;
-
-  // Danger pulse on the radar dot
-  const dangerPulse = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    if (tab.id === 'RADAR' && hasDanger) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(dangerPulse, { toValue: 1.6, duration: 700, useNativeDriver: true }),
-          Animated.timing(dangerPulse, { toValue: 1, duration: 700, useNativeDriver: true }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    }
-  }, [hasDanger, tab.id]);
-
-  // Animate active state transitions
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(bgOpacity, {
-        toValue: isActive ? 1 : 0,
-        tension: 280,
-        friction: 20,
-        useNativeDriver: false,
-      }),
-      Animated.spring(iconColor, {
-        toValue: isActive ? 1 : 0,
-        tension: 280,
-        friction: 20,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [isActive]);
 
   const handlePress = () => {
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 0.88,
+        toValue: 0.9,
         duration: 80,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
@@ -95,68 +60,33 @@ const TabButton: React.FC<{
   };
 
   const Icon = tab.icon;
-
-  // Interpolated colors for smooth transition
-  const activeIconColor = iconColor.interpolate({
-    inputRange: [0, 1],
-    outputRange: [COLORS.textMuted + 'BB', COLORS.safe],
-  });
-
-  const activeBg = bgOpacity.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(0,229,255,0)', 'rgba(0,229,255,0.10)'],
-  });
-
-  const activeBorderColor = bgOpacity.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(0,229,255,0)', 'rgba(0,229,255,0.18)'],
-  });
+  const activeColor = '#FFFFFF';
+  const inactiveColor = '#64748B';
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
       <TouchableOpacity
         onPress={handlePress}
-        activeOpacity={1}
+        activeOpacity={0.8}
         style={styles.tabPressable}
       >
-        <Animated.View
-          style={[
-            styles.tabInner,
-            {
-              backgroundColor: activeBg,
-              borderColor: activeBorderColor,
-            },
-          ]}
-        >
-          {/* Icon container with danger dot */}
+        <View style={[styles.tabInner, isActive && styles.tabInnerActive]}>
           <View style={styles.iconWrap}>
-            <Icon size={20} color={isActive ? COLORS.safe : COLORS.textMuted + 'BB'} />
-            {tab.id === 'RADAR' && hasDanger && (
-              <Animated.View
-                style={[
-                  styles.dangerBadge,
-                  { transform: [{ scale: dangerPulse }] },
-                ]}
-              />
-            )}
+            <Icon size={19} color={isActive ? activeColor : inactiveColor} />
+            {tab.id === 'RADAR' && hasDanger && <View style={styles.dangerBadge} />}
           </View>
-
-          {/* Label with opacity transition */}
-          <Animated.Text
+          <Text
             style={[
               styles.tabLabel,
               {
-                color: iconColor.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [COLORS.textMuted + '80', COLORS.safeText],
-                }),
+                color: isActive ? activeColor : inactiveColor,
                 fontWeight: isActive ? '700' : '500',
               },
             ]}
           >
             {tab.label}
-          </Animated.Text>
-        </Animated.View>
+          </Text>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -166,9 +96,6 @@ const TabButton: React.FC<{
 export const BottomTabBar: React.FC<Props> = ({ activeTab, onTabChange, hasDanger }) => {
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
-      {/* Fade from transparent to full bg at bottom */}
-      <View style={styles.gradientFade} pointerEvents="none" />
-
       <View style={styles.barContainer}>
         {TABS.map((tab) => (
           <TabButton
@@ -192,29 +119,21 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 200,
   },
-  gradientFade: {
-    height: 32,
-    // A multi-stop simulated gradient using layered views
-    backgroundColor: 'transparent',
-  },
   barContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 12,
-    marginBottom: 14,
-    backgroundColor: 'rgba(8,16,28,0.92)',
+    marginBottom: 12,
+    backgroundColor: '#090F1B',
     borderRadius: RADII['3xl'],
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 5,
-    // Upward glow
+    borderColor: 'rgba(255,255,255,0.09)',
+    padding: 4,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 0,
-    elevation: 0,
-    // Strong drop shadow below
-    ...SHADOWS.xl,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   tabPressable: {
     flex: 1,
@@ -224,26 +143,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 7,
     borderRadius: RADII['2xl'],
-    borderWidth: 1,
     gap: 3,
+  },
+  tabInnerActive: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
   iconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
   },
   dangerBadge: {
     position: 'absolute',
     top: -1,
     right: -1,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: COLORS.danger,
-    borderWidth: 1.5,
-    borderColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: '#090F1B',
   },
   tabLabel: {
     fontSize: 10,

@@ -158,24 +158,20 @@ export const ThreatCards: React.FC = () => {
             {/* Action buttons */}
             <View style={styles.earlyBannerActions}>
               <TouchableOpacity
-                style={[
-                  styles.earlyBtn,
-                  { backgroundColor: COLORS.danger },
-                ]}
-                onPress={() => setBroadcastOpen(true)}
-                activeOpacity={0.85}
-              >
-                <Share2 size={12} color="#FFFFFF" />
-                <Text style={styles.earlyBtnTextDanger}>Broadcast SOS</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 style={styles.earlyBtnGhost}
                 onPress={() => setCampsOpen(true)}
                 activeOpacity={0.85}
               >
                 <Navigation size={12} color={COLORS.safe} />
-                <Text style={styles.earlyBtnTextGhost}>Safe Camps</Text>
+                <Text style={styles.earlyBtnTextGhost}>Nearby Safe Camps</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.earlyBtnGhost}
+                onPress={() => setGuideOpen(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.earlyBtnTextGhost}>Safety Protocols</Text>
               </TouchableOpacity>
             </View>
           </View>

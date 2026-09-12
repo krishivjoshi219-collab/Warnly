@@ -1,8 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
 import { gridProbability, riskLevel, SAFETY_RADIUS_KM } from "./risk";
 import type { Coords, RiskLevel, Strike, WeatherSnapshot } from "./types";
-import { fetchWeather } from "./weather";
 import { fetchRealLightningStrikes, clearSimulatedStrikes } from "./lightning";
+import {
+  ResilientBackendEngine,
+  type UnifiedBackendSnapshot,
+  type BackendConnectionState,
+} from "./resilient-backend";
+import type { DopplerRadarSummary } from "./doppler-vector";
+import type { BarometricAnalysis } from "./barometric-surge";
 
 interface WarnlyState {
   coords: Coords | null;
@@ -23,6 +29,11 @@ interface WarnlyState {
   shelterUntil: number | null;
   simulateStorm: boolean;
   toggleSimulateStorm: () => void;
+  // ── Incredible Strong Backend State ──
+  connectionState: BackendConnectionState;
+  backendSnapshot: UnifiedBackendSnapshot | null;
+  doppler: DopplerRadarSummary | null;
+  barometer: BarometricAnalysis | null;
 }
 
 const Ctx = createContext<WarnlyState | null>(null);
@@ -72,6 +83,10 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const [strikes, setStrikes] = useState<Strike[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // Backend resilience state
+  const [backendSnapshot, setBackendSnapshot] = useState<UnifiedBackendSnapshot | null>(null);
+  const [connectionState, setConnectionState] = useState<BackendConnectionState>('ONLINE_REALTIME');
 
   // Fallback to IP-based location if browser GPS fails or is denied
   const fallbackToIpLocation = async () => {
@@ -130,13 +145,17 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const loadData = useCallback(async (c: Coords) => {
     setIsLoading(true);
     try {
-      const wx = await fetchWeather(c.lat, c.lon);
-      setWeather(wx);
+      // Ingest through the Resilient Multi-Tier Backend
+      const snapshot = await ResilientBackendEngine.getAtmosphericTelemetry(c);
+      setBackendSnapshot(snapshot);
+      setConnectionState(snapshot.connectionState);
+      setWeather(snapshot.weather);
+
       const st = await fetchRealLightningStrikes(
         c,
-        wx?.cape ?? 0,
-        wx?.precipProbability ?? 0,
-        wx?.weatherCode ?? 0,
+        snapshot.weather.cape,
+        snapshot.weather.precipProbability,
+        snapshot.weather.weatherCode,
         simulateStorm
       );
       setStrikes(st);
@@ -158,10 +177,14 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     if (!coords) return;
     loadData(coords);
 
-    // Weather refresh every 3 minutes
+    // Weather refresh every 3 minutes via resilient backend
     const wxInterval = setInterval(() => {
-      fetchWeather(coords.lat, coords.lon)
-        .then((wx) => setWeather(wx))
+      ResilientBackendEngine.getAtmosphericTelemetry(coords)
+        .then((snap) => {
+          setBackendSnapshot(snap);
+          setConnectionState(snap.connectionState);
+          setWeather(snap.weather);
+        })
         .catch(() => {});
     }, 3 * 60 * 1000);
 
@@ -242,6 +265,10 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
         if (!next) clearSimulatedStrikes();
         return next;
       }),
+    connectionState,
+    backendSnapshot,
+    doppler: backendSnapshot?.doppler ?? null,
+    barometer: backendSnapshot?.barometer ?? null,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

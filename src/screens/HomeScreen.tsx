@@ -22,6 +22,7 @@ import {
   Share2,
   BookOpen,
   Sparkles,
+  Target,
 } from '../components/Icons';
 import { useWarnly } from '../lib/warnly/store';
 import { levelMeta, SAFETY_RADIUS_KM } from '../lib/warnly/risk';
@@ -29,6 +30,12 @@ import { weatherCodeInfo } from '../lib/warnly/weather';
 import { StatusHeaderPill, ThreatCards } from '../components/warnly/ThreatCards';
 import { RiskMeter } from '../components/warnly/RiskMeter';
 import { LocationSearch } from '../components/warnly/LocationSearch';
+import { DopplerVectorCard } from '../components/warnly/DopplerVectorCard';
+import { TacticalTimelineCard } from '../components/warnly/TacticalTimelineCard';
+import { FlashToBangModal } from '../components/warnly/FlashToBangModal';
+import { TopographicEscapeCard } from '../components/warnly/TopographicEscapeCard';
+import { WhisperMeshCard } from '../components/warnly/WhisperMeshCard';
+import { SurvivorBeaconCard } from '../components/warnly/SurvivorBeaconCard';
 import { SafetyCampsModal } from '../components/warnly/SafetyCampsModal';
 import { MassBroadcastModal } from '../components/warnly/MassBroadcastModal';
 import { GuideModal } from '../components/warnly/GuideModal';
@@ -62,11 +69,15 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
     requestLocation,
     locating,
     coords,
+    doppler,
+    barometer,
+    connectionState,
   } = useWarnly();
 
   const [campsOpen, setCampsOpen] = useState(false);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [rangerOpen, setRangerOpen] = useState(false);
 
   const meta = levelMeta[level];
   const levelColor =
@@ -103,151 +114,227 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
       contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Screen Header ── */}
-      <FadeIn duration={300}>
-        <ScreenHeader
-          title="Risk Dashboard"
-          subtitle="Real-time lightning & hazard intelligence"
-          badge="WARNLY"
-          badgeVariant="safe"
-          right={
-            <TouchableOpacity
-              style={styles.refreshBtn}
-              onPress={handleRefresh}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              activeOpacity={0.7}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={COLORS.safe} />
-              ) : (
-                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                  <RefreshCw size={15} color={COLORS.textSecondary} />
-                </Animated.View>
-              )}
-            </TouchableOpacity>
-          }
-        />
+      {/* ── Screen Top Bar (Aviation & Weather Console Header) ── */}
+      <FadeIn duration={250}>
+        <View style={styles.topHeader}>
+          <View style={styles.topHeaderLeft}>
+            <View style={styles.systemStatusRow}>
+              <View
+                style={[
+                  styles.livePulseDot,
+                  {
+                    backgroundColor:
+                      level === 'danger'
+                        ? COLORS.danger
+                        : level === 'advisory'
+                        ? COLORS.warning
+                        : '#10B981',
+                  },
+                ]}
+              />
+              <Text style={styles.systemStatusText}>
+                {level === 'danger'
+                  ? 'ACTIVE SEVERE WEATHER WATCH'
+                  : level === 'advisory'
+                  ? 'ELEVATED CONVECTIVE SURGE'
+                  : 'SYSTEM OPERATIONAL'}
+              </Text>
+            </View>
+            <Text style={styles.appTitle}>Warnly Radar</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={handleRefresh}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#10B981" />
+            ) : (
+              <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                <RefreshCw size={15} color="#94A3B8" />
+              </Animated.View>
+            )}
+          </TouchableOpacity>
+        </View>
       </FadeIn>
 
-      {/* ── Live Status Pill ── */}
-      <FadeIn duration={350} delay={50}>
-        <StatusHeaderPill />
-      </FadeIn>
-
-      {/* ── Location Search ── */}
+      {/* ── Location Search (Integrated & Compact) ── */}
       <LocationSearch
         onSelectCoords={setCustomCoords}
         onUseGPS={requestLocation}
         locating={locating}
       />
 
-      {/* ── Quick Action Strip ── */}
-      <FadeIn duration={350} delay={100}>
-        <View style={styles.quickStrip}>
-          <QuickAction
-            icon={<ShieldCheck size={15} color={COLORS.safe} />}
-            label="Safe Camps"
-            sub="High Ground"
-            accent={COLORS.safe}
-            onPress={() => setCampsOpen(true)}
+      {/* ── Primary Atmospheric Risk Console ── */}
+      <FadeIn duration={350} delay={60}>
+        <View style={styles.riskCard}>
+          {/* Subtle semantic top accent line */}
+          <View
+            style={[
+              styles.riskCardTopEdge,
+              {
+                backgroundColor:
+                  level === 'danger'
+                    ? COLORS.danger
+                    : level === 'advisory'
+                    ? COLORS.warning
+                    : '#10B981',
+              },
+            ]}
           />
-          <QuickAction
-            icon={<Share2 size={15} color={COLORS.danger} />}
-            label="Broadcast SOS"
-            sub="WhatsApp/SMS"
-            accent={COLORS.danger}
-            onPress={() => setBroadcastOpen(true)}
-          />
-          <QuickAction
-            icon={<BookOpen size={15} color={COLORS.accentSky} />}
-            label="GLOF Guide"
-            sub="Protocols"
-            accent={COLORS.accentSky}
-            onPress={() => setGuideOpen(true)}
-          />
-        </View>
-      </FadeIn>
 
-      {/* ── Main Risk Card ── */}
-      <FadeIn duration={400} delay={120}>
-        <View
-          style={[
-            styles.riskCard,
-            {
-              borderColor: levelColor + '30',
-            },
-            level === 'danger' && SHADOWS.glowDanger,
-            level === 'advisory' && SHADOWS.glowWarning,
-            level === 'safe' && SHADOWS.glowSafe,
-          ]}
-        >
-          {/* Subtle top-edge highlight */}
-          <View style={[styles.riskCardTopEdge, { backgroundColor: levelColor + '35' }]} />
-
-          {/* Card header: icon + location + level */}
-          <View style={styles.riskCardHeader}>
-            <View style={styles.riskCardHeaderLeft}>
-              {/* Status icon */}
-              <View style={[styles.riskIconBox, { backgroundColor: levelColor + '18' }]}>
-                {level === 'danger' ? (
-                  <Zap size={20} color={COLORS.danger} />
-                ) : level === 'advisory' ? (
-                  <AlertTriangle size={20} color={COLORS.warning} />
-                ) : (
-                  <CheckCircle2 size={20} color={COLORS.safe} />
-                )}
-              </View>
-
-              <View style={styles.riskCardTitles}>
-                <Text style={[styles.riskLevelLabel, { color: levelColor }]}>{meta.label}</Text>
-                {/* Location sub-row */}
-                {weather && (
-                  <View style={styles.locationRow}>
-                    <MapPin size={10} color={COLORS.textMuted} />
-                    <Text style={styles.locationText} numberOfLines={1}>
-                      {weather.place} ·{' '}
-                      {new Date(weather.updatedAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </Text>
-                  </View>
-                )}
-              </View>
+          {/* Card Meta Bar */}
+          <View style={styles.riskCardMeta}>
+            <View style={styles.riskCardMetaLeft}>
+              <Text style={styles.assessmentLabel}>CONVECTIVE THREAT ASSESSMENT</Text>
+              {weather && (
+                <View style={styles.locationRow}>
+                  <MapPin size={11} color="#64748B" />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {weather.place} ·{' '}
+                    {new Date(weather.updatedAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Risk Meter gauge */}
+          {/* Precision Calibrated Gauge */}
           <RiskMeter probability={probability} level={level} caption={meta.sub} />
 
-          {/* Stats strip */}
-          <Divider style={{ marginVertical: 0 }} />
+          {/* Integrated Telemetry HUD Strip */}
           <View style={styles.statsStrip}>
             <MetricTile
-              label="CAPE"
+              label="CAPE INSTABILITY"
               value={weather ? String(Math.round(weather.cape)) : '—'}
               unit="J/kg"
-              accent={COLORS.warning}
+              accent={weather && weather.cape > 1500 ? COLORS.warning : '#FFFFFF'}
               style={styles.statsTile}
             />
             <View style={styles.statsDivider} />
             <MetricTile
-              label="LI INDEX"
+              label="LIFTED INDEX"
               value={weather ? weather.liftedIndex.toFixed(1) : '—'}
               unit="K"
-              accent={COLORS.accentSky}
+              accent={weather && weather.liftedIndex < -3 ? COLORS.warning : '#FFFFFF'}
               style={styles.statsTile}
             />
             <View style={styles.statsDivider} />
             <MetricTile
-              label="NEAREST ⚡"
-              value={nearest ? String(nearest.distanceKm) : 'None'}
-              unit={nearest ? ' km' : ''}
-              accent={nearest ? COLORS.danger : COLORS.safe}
+              label="LIGHTNING ACTIVITY"
+              value={nearest ? `${nearest.distanceKm} km` : '0 Strikes'}
+              unit=""
+              accent={nearest ? COLORS.danger : '#FFFFFF'}
               style={styles.statsTile}
             />
           </View>
         </View>
+      </FadeIn>
+
+      {/* ── Pre-Impact Tactical Action Timeline (Synced with Doppler ETA) ── */}
+      <FadeIn duration={350} delay={75}>
+        <TacticalTimelineCard etaMinutes={doppler?.cells[0]?.etaMinutes ?? null} />
+      </FadeIn>
+
+      {/* ── Tactical Action Strip ── */}
+      <FadeIn duration={350} delay={90}>
+        <View style={styles.tacticalActionStrip}>
+          <TouchableOpacity
+            style={styles.tacticalActionItem}
+            onPress={() => setCampsOpen(true)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.tacticalActionIconWrap}>
+              <ShieldCheck size={16} color="#10B981" />
+            </View>
+            <View style={styles.tacticalActionTextWrap}>
+              <Text style={styles.tacticalActionTitle}>Safe Camps</Text>
+              <Text style={styles.tacticalActionSub}>3 Stations</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.tacticalActionDivider} />
+
+          <TouchableOpacity
+            style={styles.tacticalActionItem}
+            onPress={() => setRangerOpen(true)}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.tacticalActionIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+              <Target size={16} color={COLORS.warning} />
+            </View>
+            <View style={styles.tacticalActionTextWrap}>
+              <Text style={[styles.tacticalActionTitle, { color: COLORS.warning }]}>Range Strike</Text>
+              <Text style={styles.tacticalActionSub}>Sound Speed</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.tacticalActionDivider} />
+
+          <TouchableOpacity
+            style={styles.tacticalActionItem}
+            onPress={() => setBroadcastOpen(true)}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.tacticalActionIconWrap, styles.tacticalActionIconSos]}>
+              <Share2 size={16} color={COLORS.danger} />
+            </View>
+            <View style={styles.tacticalActionTextWrap}>
+              <Text style={[styles.tacticalActionTitle, { color: COLORS.danger }]}>Mesh SOS</Text>
+              <Text style={styles.tacticalActionSub}>P2P Beacon</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.tacticalActionDivider} />
+
+          <TouchableOpacity
+            style={styles.tacticalActionItem}
+            onPress={() => setGuideOpen(true)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.tacticalActionIconWrap}>
+              <BookOpen size={16} color="#38BDF8" />
+            </View>
+            <View style={styles.tacticalActionTextWrap}>
+              <Text style={styles.tacticalActionTitle}>Evac Guide</Text>
+              <Text style={styles.tacticalActionSub}>Protocols</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </FadeIn>
+
+      {/* ── Live Doppler Convective Vectors & Barometric Tendency ── */}
+      <FadeIn duration={400} delay={120}>
+        <DopplerVectorCard
+          doppler={doppler}
+          barometer={barometer}
+          onOpenRadar={() => onNavigateRadar && onNavigateRadar()}
+        />
+      </FadeIn>
+
+      {/* ── Topographic Flash-Flood Escape Corridors ── */}
+      <FadeIn duration={400} delay={130}>
+        <TopographicEscapeCard
+          latitude={coords?.lat ?? 30.3165}
+          longitude={coords?.lon ?? 78.0322}
+          elevationMeters={1620}
+          rainAccumulationMm={weather ? Math.round(weather.humidity * 0.5) : 35}
+          pressureDeltaHpa={barometer?.delta1hHpa ?? -1.4}
+        />
+      </FadeIn>
+
+      {/* ── Zero-Infrastructure WhisperMesh Network ── */}
+      <FadeIn duration={400} delay={140}>
+        <WhisperMeshCard />
+      </FadeIn>
+
+      {/* ── Disaster Blackbox & Survivor Beacon ── */}
+      <FadeIn duration={400} delay={150}>
+        <SurvivorBeaconCard batteryPercent={78} />
       </FadeIn>
 
       {/* ── Multi-Hazard Threat Cards ── */}
@@ -419,6 +506,11 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
         }}
       />
       <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
+      <FlashToBangModal
+        visible={rangerOpen}
+        onClose={() => setRangerOpen(false)}
+        ambientTemperatureCelsius={weather ? Math.round(weather.temperature) : 22}
+      />
     </ScrollView>
   );
 };
@@ -473,175 +565,182 @@ const AnimatedRing: React.FC<{
   );
 };
 
-// ─── QUICK ACTION CHIP ───────────────────────────────────────────────────────
-const QuickAction: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  sub: string;
-  accent: string;
-  onPress: () => void;
-}> = ({ icon, label, sub, accent, onPress }) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 0.94, duration: 80, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, tension: 300, friction: 14, useNativeDriver: true }),
-    ]).start();
-    onPress();
-  };
-
-  return (
-    <Animated.View style={[styles.quickActionWrap, { transform: [{ scale }] }]}>
-      <TouchableOpacity
-        style={[styles.quickAction, { borderColor: accent + '25' }]}
-        onPress={handlePress}
-        activeOpacity={1}
-      >
-        <View style={[styles.quickActionIcon, { backgroundColor: accent + '14' }]}>{icon}</View>
-        <Text style={styles.quickActionLabel}>{label}</Text>
-        <Text style={styles.quickActionSub}>{sub}</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#070A0F', // Pure Obsidian Dark
   },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 16,
     paddingBottom: 135,
     gap: 12,
   },
+  // ── Console Top Bar ──
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 2,
+  },
+  topHeaderLeft: {
+    gap: 3,
+  },
+  systemStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  livePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  systemStatusText: {
+    fontSize: 9,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    letterSpacing: 1.2,
+    color: COLORS.textTertiary,
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
   refreshBtn: {
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: '#111824',
     borderRadius: RADII.full,
     padding: 8,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    width: 34,
-    height: 34,
+    borderColor: 'rgba(255,255,255,0.08)',
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  // ── Quick Strip ──
-  quickStrip: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  quickActionWrap: {
-    flex: 1,
-  },
-  quickAction: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII['2xl'],
-    borderWidth: 1,
-    paddingVertical: 13,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 5,
-    ...SHADOWS.sm,
-  },
-  quickActionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: RADII.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
-  quickActionSub: {
-    fontSize: 9.5,
-    color: COLORS.textTertiary,
-    textAlign: 'center',
   },
 
   // ── Risk Card ──
   riskCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII['3xl'],
+    backgroundColor: '#0C131F',
+    borderRadius: RADII['2xl'],
     borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
-    ...SHADOWS.md,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 2,
   },
   riskCardTopEdge: {
-    height: 1.5,
-    marginHorizontal: 16,
-    marginTop: 1,
-    borderRadius: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
   },
-  riskCardHeader: {
+  riskCardMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 4,
   },
-  riskCardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
+  riskCardMetaLeft: {
+    gap: 3,
   },
-  riskIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: RADII.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  riskCardTitles: {
-    flex: 1,
-  },
-  riskLevelLabel: {
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0.3,
+  assessmentLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    letterSpacing: 1.2,
+    color: '#64748B',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 2,
+    marginTop: 1,
   },
   locationText: {
-    fontSize: 10,
-    color: COLORS.textTertiary,
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+
+  // ── Tactical Action Strip ──
+  tacticalActionStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0C131F',
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+  },
+  tacticalActionItem: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  tacticalActionDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
+  tacticalActionIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tacticalActionIconSos: {
+    backgroundColor: 'rgba(239,68,68,0.08)',
+  },
+  tacticalActionTextWrap: {
+    gap: 1,
+  },
+  tacticalActionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#F8FAFC',
+  },
+  tacticalActionSub: {
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: '#64748B',
   },
 
   // ── Stats strip ──
   statsStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.07)',
+    marginTop: 12,
     paddingVertical: 12,
-    backgroundColor: 'rgba(12,20,34,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    marginHorizontal: -16,
+    paddingHorizontal: 12,
   },
   statsTile: {
     flex: 1,
     backgroundColor: 'transparent',
     borderWidth: 0,
-    paddingVertical: 2,
+    paddingVertical: 0,
     paddingHorizontal: 2,
     alignItems: 'center',
   },
   statsDivider: {
     width: 1,
-    height: 32,
-    backgroundColor: COLORS.border,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.07)',
     marginHorizontal: 4,
   },
 

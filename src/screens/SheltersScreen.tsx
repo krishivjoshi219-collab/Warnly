@@ -61,10 +61,10 @@ export const SheltersScreen: React.FC<Props> = ({ engine }) => {
       >
         {[
           { id: 'ALL', label: 'All Shelters' },
-          { id: 'CONCRETE_BUNKER', label: '🛡️ Concrete Bunkers' },
-          { id: 'SUBTERRANEAN_METRO', label: '🚇 Subterranean Metro' },
-          { id: 'COMMUNITY_CIVIL_SHELTER', label: '🏛️ Civil Defense' },
-          { id: 'REINFORCED_SCHOOL', label: '🏫 Faraday Halls' },
+          { id: 'CONCRETE_BUNKER', label: 'Reinforced Bunkers' },
+          { id: 'SUBTERRANEAN_METRO', label: 'Subterranean Metro' },
+          { id: 'COMMUNITY_CIVIL_SHELTER', label: 'Civil Defense' },
+          { id: 'REINFORCED_SCHOOL', label: 'Faraday Halls' },
         ].map((f) => (
           <TouchableOpacity
             key={f.id}
