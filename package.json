@@ -11,6 +11,7 @@
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon",
     "dev": "vite",
     "build": "tsc && vite build",
+    "buil": "npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
