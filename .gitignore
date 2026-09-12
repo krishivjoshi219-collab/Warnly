@@ -32,7 +32,6 @@ WhatsApp Image*
 *.jpg
 *.pdf
 
-# Local reference folders
-first_code/
-first_code
-
+# Local build artifacts and downloads
+github-build/
+*.zip
