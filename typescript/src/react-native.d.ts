@@ -52,6 +52,8 @@ declare module 'react-native' {
     placeholder?: string;
     placeholderTextColor?: string;
     keyboardType?: string;
+    autoCorrect?: boolean;
+    secureTextEntry?: boolean;
     [key: string]: any;
   }
 
@@ -71,6 +73,15 @@ declare module 'react-native' {
   export const ScrollView: React.FC<ScrollViewProps>;
   export const TextInput: React.FC<TextInputProps>;
   export const Modal: React.FC<ModalProps>;
+  export const ActivityIndicator: React.FC<any>;
+  export const FlatList: React.FC<any>;
+  export const Switch: React.FC<any>;
+  export const Share: {
+    share(content: { message: string; title?: string; url?: string }): Promise<any>;
+  };
+  export const Linking: {
+    openURL(url: string): Promise<any>;
+  };
   export const SafeAreaView: React.FC<ViewProps>;
   export const StatusBar: React.FC<any>;
 

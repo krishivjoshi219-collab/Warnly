@@ -30,3 +30,7 @@ yarn-error.log*
 # Screenshots and media
 WhatsApp Image*
 *.jpeg
+
+# Local reference folders
+first_code/
+first_code

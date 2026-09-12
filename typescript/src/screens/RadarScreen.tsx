@@ -1,444 +1,582 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-} from 'react-native';
-import { WarnlyEngine } from '../engine/warnly-engine';
-import { GeodesicRadar } from '../components/GeodesicRadar';
-import { DynamicIsland } from '../components/DynamicIsland';
-import { AlertLevel, DemographicProfileId } from '../types/convective';
-import { COLORS, FONTS, RADII, SPACING } from '../theme';
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import {
   Zap,
-  Volume2,
-  VolumeX,
-  Radio,
-  Flame,
-  AlertOctagon,
-  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Mountain,
+  Waves,
+  Activity,
   Layers,
-} from '../components/Icons';
+  MapPin,
+  CheckCircle2,
+} from "../components/Icons";
+import { useWarnly } from "../lib/warnly/store";
+import { strikeAgeColor, SAFETY_RADIUS_KM } from "../lib/warnly/risk";
+import { useEarthquakes, useFloodRisk, quakeColor, type Quake } from "../lib/warnly/hazards";
+import { fetchNearbySafetyCamps, type SafetyCamp } from "../lib/warnly/shelters";
+import { CRITICAL_GLACIAL_LAKES, type GlacialLakeBasin } from "../lib/warnly/glof";
+import { LocationSearch } from "../components/warnly/LocationSearch";
+import { COLORS, RADII, FONTS } from "../theme";
 
-interface Props {
-  engine: WarnlyEngine;
-}
+const STRIKE_LEGEND = [
+  { label: "0–5m Active", age: 3 },
+  { label: "5–15m Recent", age: 10 },
+  { label: "15–30m Aging", age: 25 },
+];
 
-export const RadarScreen: React.FC<Props> = ({ engine }) => {
-  const isDanger = engine.alertLevel === AlertLevel.DANGER;
-  const isAdvisory = engine.alertLevel === AlertLevel.ADVISORY;
-  const isWatch = engine.alertLevel === AlertLevel.WATCH;
+const QUAKE_LEGEND = [
+  { label: "< M4.5", color: "#eab308" },
+  { label: "M4.5–5.9", color: "#f59e0b" },
+  { label: "M6.0+ Strong", color: "#ef4444" },
+];
 
-  const timerFormatted = `${Math.floor(engine.timerRemainingSeconds / 60)
-    .toString()
-    .padStart(2, '0')}:${(engine.timerRemainingSeconds % 60)
-    .toString()
-    .padStart(2, '0')}`;
+export const RadarScreen: React.FC = () => {
+  const {
+    strikes,
+    level,
+    weather,
+    coords,
+    setCustomCoords,
+    requestLocation,
+    locating,
+  } = useWarnly();
 
-  const [activeProfile, setActiveProfile] = useState<DemographicProfileId>('general');
+  const [showLightning, setShowLightning] = useState(true);
+  const [showFlood, setShowFlood] = useState(true);
+  const [showQuakes, setShowQuakes] = useState(true);
+  const [showShelters, setShowShelters] = useState(true);
+  const [showGlof, setShowGlof] = useState(true);
+  const [camps, setCamps] = useState<SafetyCamp[]>([]);
 
-  const handleProfileSelect = (id: DemographicProfileId) => {
-    setActiveProfile(id);
-    engine.setDemographicProfile(id);
-  };
+  const quakesQ = useEarthquakes(coords);
+  const floodQ = useFloodRisk(coords);
+  const quakes = quakesQ.data ?? [];
+  const flood = floodQ.data ?? null;
+
+  useEffect(() => {
+    if (!coords) return;
+    fetchNearbySafetyCamps(coords).then((res) => setCamps(res));
+  }, [coords?.lat, coords?.lon]);
+
+  const breaches = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
+  const scopeSize = Math.min(360, Dimensions.get("window").width - 32);
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
+      style={styles.screen}
+      contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* iOS Live Activity / Dynamic Island Mockup Banner */}
-      <DynamicIsland
-        preview={engine.getNotificationPreview()}
-        alertLevel={engine.alertLevel}
-        nearestStrikeKm={engine.nearestStrikeKm}
-        timerFormatted={timerFormatted}
-        isTimerRunning={engine.isTimerRunning}
-        onPressExpand={() => {
-          if (isDanger) engine.showEmergencyModal();
-        }}
-      />
-
-      {/* Target Demographic Profile Selector Pill Bar */}
-      <View style={styles.profileBar}>
-        <View style={styles.profileBarHeader}>
-          <Layers size={13} color={COLORS.textMuted} />
-          <Text style={styles.profileBarTitle}>DEMOGRAPHIC PROFILE SAFETY RULES</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.profileChipsRow}
-        >
-          {(
-            [
-              { id: 'general', label: 'Civilian Shield' },
-              { id: 'agriculture', label: '🌾 Agriculture' },
-              { id: 'construction', label: '🏗️ OSHA 10-mi' },
-              { id: 'athletics', label: '⚽ Athletics 30-30' },
-              { id: 'maritime', label: '⛵ Maritime' },
-            ] as const
-          ).map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.profileChip,
-                activeProfile === item.id && styles.profileChipActive,
-              ]}
-              onPress={() => handleProfileSelect(item.id)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.profileChipText,
-                  activeProfile === item.id && styles.profileChipTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Primary Geodesic Defense Radar Scope */}
-      <GeodesicRadar
-        strikes={engine.strikes}
-        alertLevel={engine.alertLevel}
-        userLat={engine.userLatitude}
-        userLon={engine.userLongitude}
-        stormSpeedKmh={engine.telemetry.stormSpeedKmh}
-        stormBearingDeg={engine.telemetry.stormBearingDegrees}
-        leadTimeMinutes={engine.telemetry.advectionLeadTimeMin}
-      />
-
-      {/* Critical Quick Actions Bar */}
-      <View style={styles.quickActionsGrid}>
-        {/* Siren Toggle */}
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            engine.siren.isPlaying && styles.actionButtonDanger,
-          ]}
-          onPress={() => {
-            if (engine.siren.isPlaying) {
-              engine.siren.stopSiren();
-            } else {
-              engine.siren.startSiren();
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <Volume2
-            size={18}
-            color={engine.siren.isPlaying ? '#FFFFFF' : COLORS.textPrimary}
-          />
-          <View>
-            <Text style={styles.actionBtnTitle}>880Hz Bi-Tonal Siren</Text>
-            <Text style={styles.actionBtnSub}>
-              {engine.siren.isPlaying ? 'ACTIVE • TAP TO STOP' : 'Software Audio DAC'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Optical SOS Strobe Toggle */}
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            engine.strobe.isRunning && styles.actionButtonWarning,
-          ]}
-          onPress={() => {
-            if (engine.strobe.isRunning) {
-              engine.strobe.stop();
-            } else {
-              engine.strobe.start();
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <Flame
-            size={18}
-            color={engine.strobe.isRunning ? '#000000' : COLORS.warning}
-          />
-          <View>
-            <Text
-              style={[
-                styles.actionBtnTitle,
-                engine.strobe.isRunning && { color: '#000000' },
-              ]}
-            >
-              Morse SOS Strobe
-            </Text>
-            <Text
-              style={[
-                styles.actionBtnSub,
-                engine.strobe.isRunning && { color: '#222222' },
-              ]}
-            >
-              {engine.strobe.isRunning ? 'FLASHING ... --- ...' : 'Screen & Torch'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Active Strikes Feed Summary */}
-      <View style={styles.feedCard}>
-        <View style={styles.feedHeader}>
-          <View style={styles.feedHeaderLeft}>
-            <Radio size={14} color={COLORS.safe} />
-            <Text style={styles.feedTitle}>REAL-TIME CONVECTIVE TELEMETRY FEED</Text>
-          </View>
-          <Text style={styles.strikeCountTag}>
-            {engine.strikes.length} STRIKES TRACKED
+      {/* Title Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Multi-Hazard Radar</Text>
+          <Text style={styles.headerSubtitle}>
+            Strikes, Doppler radar, GLOF basins & safety camps
           </Text>
         </View>
+        <Text style={styles.brandBadge}>RADAR</Text>
+      </View>
 
-        {engine.strikes.length === 0 ? (
-          <View style={styles.emptyFeed}>
-            <Shield size={24} color={COLORS.safe} />
-            <Text style={styles.emptyFeedTitle}>Perimeter Clear</Text>
-            <Text style={styles.emptyFeedSub}>
-              No cloud-to-ground or in-cloud strikes within the 15 km geodesic safety perimeter.
-            </Text>
-          </View>
-        ) : (
-          engine.strikes.slice(0, 4).map((s) => {
-            const ageMins = Math.round((Date.now() - s.timestamp) / (60 * 1000));
-            const isInsideDanger = s.distanceKm <= 10.0;
+      {/* Location Search Bar */}
+      <LocationSearch
+        onSelectCoords={setCustomCoords}
+        onUseGPS={requestLocation}
+        locating={locating}
+      />
+
+      {/* Layer Filter Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsBar}
+      >
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            showLightning && {
+              backgroundColor: "rgba(255, 176, 32, 0.15)",
+              borderColor: COLORS.warning,
+            },
+          ]}
+          onPress={() => setShowLightning((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Zap size={13} color={showLightning ? COLORS.warning : COLORS.textMuted} />
+          <Text
+            style={[
+              styles.chipText,
+              showLightning && { color: COLORS.warning },
+            ]}
+          >
+            Lightning ({strikes.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            showShelters && {
+              backgroundColor: COLORS.safeBg,
+              borderColor: COLORS.safe,
+            },
+          ]}
+          onPress={() => setShowShelters((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <ShieldCheck size={13} color={showShelters ? COLORS.safe : COLORS.textMuted} />
+          <Text
+            style={[
+              styles.chipText,
+              showShelters && { color: COLORS.safe },
+            ]}
+          >
+            Safe Camps ({camps.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            showGlof && {
+              backgroundColor: "rgba(0, 229, 255, 0.15)",
+              borderColor: COLORS.safe,
+            },
+          ]}
+          onPress={() => setShowGlof((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Mountain size={13} color={showGlof ? COLORS.safe : COLORS.textMuted} />
+          <Text
+            style={[
+              styles.chipText,
+              showGlof && { color: COLORS.safe },
+            ]}
+          >
+            GLOF Lakes ({CRITICAL_GLACIAL_LAKES.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            showFlood && {
+              backgroundColor: "rgba(56, 189, 248, 0.15)",
+              borderColor: "#38BDF8",
+            },
+          ]}
+          onPress={() => setShowFlood((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Waves size={13} color={showFlood ? "#38BDF8" : COLORS.textMuted} />
+          <Text
+            style={[
+              styles.chipText,
+              showFlood && { color: "#38BDF8" },
+            ]}
+          >
+            Floods {flood ? `· ${flood.label}` : ""}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            showQuakes && {
+              backgroundColor: "rgba(255, 42, 77, 0.15)",
+              borderColor: COLORS.danger,
+            },
+          ]}
+          onPress={() => setShowQuakes((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Activity size={13} color={showQuakes ? COLORS.danger : COLORS.textMuted} />
+          <Text
+            style={[
+              styles.chipText,
+              showQuakes && { color: COLORS.danger },
+            ]}
+          >
+            Quakes ({quakes.length})
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Geodesic Polar Radar Scope */}
+      <View style={[styles.scopeContainer, { width: scopeSize, height: scopeSize }]}>
+        {/* 25 km Outer Detection Ring */}
+        <View style={[styles.rangeRing, { width: scopeSize * 0.94, height: scopeSize * 0.94, borderRadius: (scopeSize * 0.94) / 2 }]}>
+          <Text style={styles.rangeLabel}>25 km</Text>
+        </View>
+
+        {/* 15 km Outer Safety Ring */}
+        <View style={[styles.rangeRing, { width: scopeSize * 0.68, height: scopeSize * 0.68, borderRadius: (scopeSize * 0.68) / 2, borderStyle: "dashed" }]}>
+          <Text style={styles.rangeLabel}>15 km</Text>
+        </View>
+
+        {/* 10 km Critical Safety Ring */}
+        <View
+          style={[
+            styles.rangeRing,
+            {
+              width: scopeSize * 0.44,
+              height: scopeSize * 0.44,
+              borderRadius: (scopeSize * 0.44) / 2,
+              borderColor: breaches.length > 0 ? COLORS.danger : "rgba(255, 42, 77, 0.4)",
+              borderWidth: 1.5,
+            },
+          ]}
+        >
+          <Text style={[styles.rangeLabel, { color: COLORS.danger }]}>10 km</Text>
+        </View>
+
+        {/* Crosshair Axes */}
+        <View style={styles.crosshairX} />
+        <View style={styles.crosshairY} />
+
+        {/* Center User Pin */}
+        <View style={styles.centerMarker}>
+          <View style={styles.centerDot} />
+          <Text style={styles.centerText}>YOU</Text>
+        </View>
+
+        {/* Render Strikes */}
+        {showLightning &&
+          strikes.map((s) => {
+            const rad = ((s.bearingDeg - 90) * Math.PI) / 180;
+            const distRatio = Math.min(1, s.distanceKm / 25);
+            const radius = (scopeSize * 0.94 * 0.5) * distRatio;
+            const x = radius * Math.cos(rad);
+            const y = radius * Math.sin(rad);
+            const dotColor = strikeAgeColor(s.ageMin);
 
             return (
               <View
                 key={s.id}
                 style={[
-                  styles.strikeRow,
-                  isInsideDanger && styles.strikeRowDanger,
+                  styles.strikeMarker,
+                  {
+                    transform: [{ translateX: x }, { translateY: y }],
+                    backgroundColor: dotColor,
+                    shadowColor: dotColor,
+                  },
                 ]}
               >
-                <View style={styles.strikeRowLeft}>
-                  <View
-                    style={[
-                      styles.strikeDot,
-                      {
-                        backgroundColor: isInsideDanger
-                          ? COLORS.danger
-                          : COLORS.warning,
-                      },
-                    ]}
-                  />
-                  <View>
-                    <Text style={styles.strikeIdText}>{s.id}</Text>
-                    <Text style={styles.strikeMetaText}>
-                      {s.provider} • {s.type === 'CG' ? 'Cloud-Ground' : 'In-Cloud'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.strikeRowRight}>
-                  <Text
-                    style={[
-                      styles.strikeDistText,
-                      { color: isInsideDanger ? COLORS.danger : COLORS.textPrimary },
-                    ]}
-                  >
-                    {s.distanceKm.toFixed(1)} km
-                  </Text>
-                  <Text style={styles.strikeAgeText}>
-                    {ageMins === 0 ? 'Just now' : `${ageMins}m ago`} • {s.intensityKa} kA
-                  </Text>
-                </View>
+                <Text style={styles.strikeMarkerText}>?</Text>
               </View>
             );
-          })
+          })}
+
+        {/* Render Nearby Safe Camps */}
+        {showShelters &&
+          camps.slice(0, 5).map((c) => {
+            const rad = ((c.bearingDeg - 90) * Math.PI) / 180;
+            const distRatio = Math.min(1, c.distanceKm / 25);
+            const radius = (scopeSize * 0.94 * 0.5) * distRatio;
+            const x = radius * Math.cos(rad);
+            const y = radius * Math.sin(rad);
+
+            return (
+              <View
+                key={c.id}
+                style={[
+                  styles.campMarker,
+                  {
+                    transform: [{ translateX: x }, { translateY: y }],
+                  },
+                ]}
+              >
+                <Text style={styles.campMarkerText}>?</Text>
+              </View>
+            );
+          })}
+      </View>
+
+      {/* Dynamic Legends Card */}
+      <View style={styles.legendsCard}>
+        {showLightning && (
+          <View style={styles.legendSection}>
+            <View style={styles.legendHeaderRow}>
+              <Zap size={12} color={COLORS.warning} />
+              <Text style={styles.legendSectionTitle}>LIGHTNING STRIKE DECAY</Text>
+            </View>
+            <View style={styles.legendItemsRow}>
+              {STRIKE_LEGEND.map((l) => (
+                <View key={l.label} style={styles.legendItem}>
+                  <View
+                    style={[
+                      styles.legendDot,
+                      { backgroundColor: strikeAgeColor(l.age) },
+                    ]}
+                  />
+                  <Text style={styles.legendItemText}>{l.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         )}
+
+        {showQuakes && (
+          <View style={[styles.legendSection, showLightning && styles.legendBorderTop]}>
+            <View style={styles.legendHeaderRow}>
+              <Activity size={12} color={COLORS.danger} />
+              <Text style={styles.legendSectionTitle}>SEISMIC MAGNITUDE (USGS M2.5+)</Text>
+            </View>
+            <View style={styles.legendItemsRow}>
+              {QUAKE_LEGEND.map((q) => (
+                <View key={q.label} style={styles.legendItem}>
+                  <View
+                    style={[styles.legendDot, { backgroundColor: q.color }]}
+                  />
+                  <Text style={styles.legendItemText}>{q.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* Safety Zone Alert Summary Card */}
+      <View style={styles.statusSummaryCard}>
+        {breaches.length > 0 ? (
+          <ShieldAlert size={22} color={COLORS.danger} />
+        ) : (
+          <ShieldCheck size={22} color={COLORS.safe} />
+        )}
+        <View style={styles.statusSummaryTexts}>
+          <Text style={styles.statusSummaryTitle}>
+            {breaches.length > 0
+              ? `${breaches.length} strike(s) inside your 10 km safety ring`
+              : "10 km Safety Ring Clear"}
+          </Text>
+          <Text style={styles.statusSummarySub}>
+            {breaches.length > 0
+              ? "Immediate danger: Move into enclosed shelter and avoid metal structures."
+              : "No electrical storm strikes currently detected inside 10 km."}
+          </Text>
+        </View>
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  scrollContent: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-    paddingBottom: 80,
+  screenContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 90,
+    gap: 12,
   },
-  profileBar: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.sm,
-    marginBottom: SPACING.md,
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
-  profileBarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: COLORS.textPrimary,
   },
-  profileBarTitle: {
-    fontSize: 9,
-    fontWeight: '800',
+  headerSubtitle: {
+    fontSize: 11,
     color: COLORS.textMuted,
-    letterSpacing: 0.5,
+    marginTop: 2,
   },
-  profileChipsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  profileChip: {
-    backgroundColor: '#0B1018',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  brandBadge: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: COLORS.safe,
+    letterSpacing: 2,
+    backgroundColor: COLORS.safeBg,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: RADII.sm,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.safeBorder,
   },
-  profileChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: COLORS.safe,
+  chipsBar: {
+    gap: 6,
+    paddingVertical: 2,
   },
-  profileChipText: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
-  profileChipTextActive: {
-    color: COLORS.safe,
-    fontWeight: '800',
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: COLORS.card,
-    borderRadius: RADII.lg,
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.backgroundElevated,
+    borderRadius: RADII.full,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: SPACING.sm,
-  },
-  actionButtonDanger: {
-    backgroundColor: COLORS.danger,
-    borderColor: COLORS.danger,
-  },
-  actionButtonWarning: {
-    backgroundColor: COLORS.warning,
-    borderColor: COLORS.warning,
-  },
-  actionBtnTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  actionBtnSub: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  feedCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  feedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  feedHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 6,
   },
-  feedTitle: {
-    fontSize: 10,
-    fontWeight: '800',
+  chipText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLORS.textSecondary,
+  },
+  scopeContainer: {
+    alignSelf: "center",
+    backgroundColor: "rgba(11, 18, 30, 0.95)",
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    overflow: "hidden",
+    marginVertical: 4,
+  },
+  rangeRing: {
+    position: "absolute",
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.25)",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  rangeLabel: {
+    fontSize: 9,
+    fontFamily: FONTS.mono,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  crosshairX: {
+    position: "absolute",
+    width: "100%",
+    height: 1,
+    backgroundColor: "rgba(30, 45, 68, 0.4)",
+  },
+  crosshairY: {
+    position: "absolute",
+    height: "100%",
+    width: 1,
+    backgroundColor: "rgba(30, 45, 68, 0.4)",
+  },
+  centerMarker: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.safe,
+  },
+  centerText: {
+    fontSize: 8,
+    fontWeight: "900",
+    color: COLORS.safe,
+    marginTop: 2,
+  },
+  strikeMarker: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  strikeMarkerText: {
+    fontSize: 9,
+  },
+  campMarker: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: COLORS.safeGreen,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  campMarkerText: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  legendsCard: {
+    backgroundColor: "rgba(18, 26, 39, 0.6)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 14,
+    gap: 10,
+  },
+  legendSection: {
+    gap: 6,
+  },
+  legendBorderTop: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border + "80",
+    paddingTop: 8,
+  },
+  legendHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendSectionTitle: {
+    fontSize: 9,
+    fontWeight: "800",
     color: COLORS.textMuted,
     letterSpacing: 0.5,
   },
-  strikeCountTag: {
-    fontFamily: FONTS.mono,
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.safe,
+  legendItemsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  emptyFeed: {
-    alignItems: 'center',
-    paddingVertical: SPACING.lg,
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
-  emptyFeedTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  emptyFeedSub: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    maxWidth: 260,
-  },
-  strikeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#090E17',
-    borderRadius: RADII.md,
-    padding: SPACING.sm,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: '#141E2D',
-  },
-  strikeRowDanger: {
-    borderColor: 'rgba(255, 42, 77, 0.3)',
-    backgroundColor: '#120508',
-  },
-  strikeRowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  strikeDot: {
+  legendDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  strikeIdText: {
-    fontFamily: FONTS.mono,
-    fontSize: 12,
-    fontWeight: '800',
+  legendItemText: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+  statusSummaryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(18, 26, 39, 0.6)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 14,
+    gap: 12,
+  },
+  statusSummaryTexts: {
+    flex: 1,
+  },
+  statusSummaryTitle: {
+    fontSize: 13,
+    fontWeight: "800",
     color: COLORS.textPrimary,
   },
-  strikeMetaText: {
-    fontSize: 9,
+  statusSummarySub: {
+    fontSize: 11,
     color: COLORS.textMuted,
-  },
-  strikeRowRight: {
-    alignItems: 'flex-end',
-  },
-  strikeDistText: {
-    fontFamily: FONTS.mono,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  strikeAgeText: {
-    fontSize: 10,
-    color: COLORS.textMuted,
+    marginTop: 2,
+    lineHeight: 15,
   },
 });
