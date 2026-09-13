@@ -7,8 +7,8 @@
 <br/>
 
 [![Live Console](https://img.shields.io/badge/Live%20Console-warnly--k.workers.dev-00E5FF?style=for-the-badge&logo=cloudflare)](https://warnly-k.krishivjoshi219.workers.dev)
-[![Download APK](https://img.shields.io/badge/Download-Warnly%20v1.2.0%20APK%20(1--Tap)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.2.0/Warnly-v1.2.0.apk)
-[![GitHub Release](https://img.shields.io/badge/Release-v1.2.0%20Latest-10B981?style=for-the-badge&logo=github)](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-Warnly%20v3.2.0%20APK%20(1--Tap)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v3.2.0/Warnly-v3.2.0.apk)
+[![GitHub Release](https://img.shields.io/badge/Release-v3.2.0%20Latest-10B981?style=for-the-badge&logo=github)](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web%20Preview-00E5FF?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly)
 [![React Native](https://img.shields.io/badge/React%20Native-0.74%20(Expo%2051)-61DAFB?style=for-the-badge&logo=react)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -184,14 +184,14 @@ Judges and evaluators can interact with Warnly immediately through either channe
 <div align="center">
 
 [![Launch Live Console](https://img.shields.io/badge/Launch%20Live%20Console-warnly--k.workers.dev-00E5FF?style=for-the-badge&logo=cloudflare)](https://warnly-k.krishivjoshi219.workers.dev)
-[![Direct Download APK](https://img.shields.io/badge/Direct%20Download-Warnly%20v1.2.0%20APK%20(Android)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.2.0/Warnly-v1.2.0.apk)
+[![Direct Download APK](https://img.shields.io/badge/Direct%20Download-Warnly%20v3.2.0%20APK%20(Android)-FF0055?style=for-the-badge&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v3.2.0/Warnly-v3.2.0.apk)
 
 *Deployed globally on Cloudflare Edge • Release assets on [GitHub Releases](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)*
 
 </div>
 
 - **Option A (Instant Browser Evaluation)**: Click [**Launch Live Console**](https://warnly-k.krishivjoshi219.workers.dev) to test the full tactical HUD, radar sweep, and offline scenario engines directly in any browser.
-- **Option B (Native Android Device)**: Tap [**Direct Download APK**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v1.2.0/Warnly-v1.2.0.apk) on any Android phone to install with 1 tap.
+- **Option B (Native Android Device)**: Tap [**Direct Download APK**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v3.2.0/Warnly-v3.2.0.apk) on any Android phone to install with 1 tap.
 
 ---
 
