@@ -1,7 +1,7 @@
 {
   "name": "warnly-disaster-resilience-ts",
   "private": true,
-  "version": "3.2.0",
+  "version": "3.3.0",
   "license": "Apache-2.0",
   "main": "index.js",
   "scripts": {
