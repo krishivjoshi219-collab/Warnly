@@ -57,3 +57,14 @@ export interface WeatherSnapshot {
   hourly: { time: string; temp: number; cape: number; precipProb: number; precip: number }[];
   minutely15: Minutely15Forecast[];
 }
+
+export interface SurvivalSnapshot {
+  directive: string;
+  doNot: string[];
+  fallback: string;
+  evacAdvice: string;
+  custody: string;
+  airAdvice: string;
+  careSteps: string[];
+  calmNext: string;
+}

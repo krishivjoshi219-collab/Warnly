@@ -164,4 +164,14 @@ export class WhisperMeshEngine {
   }
 }
 
+export type CustodyStage = 'STORED_LOCAL' | 'RELAYED' | 'GATEWAY_OK' | 'DESK_OK' | 'DISPATCHED';
+
+export function custodyLabel(stage: CustodyStage, hops = 0): string {
+  if (stage === 'STORED_LOCAL') return 'Saved locally — not yet transmitted';
+  if (stage === 'RELAYED') return `Relayed via ${hops} peer(s) — awaiting gateway`;
+  if (stage === 'GATEWAY_OK') return 'Gateway acknowledged';
+  if (stage === 'DESK_OK') return 'Desk accepted — awaiting dispatcher';
+  return 'Responder dispatched (signed)';
+}
+
 export const globalWhisperMesh = new WhisperMeshEngine();

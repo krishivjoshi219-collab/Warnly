@@ -51,7 +51,7 @@ const renderWeatherIcon = (iconName: string, size = 32, color = '#FFFFFF') => {
 };
 
 export const WeatherScreen: React.FC = () => {
-  const { weather, isLoading, error, setCustomCoords, requestLocation, locating } = useWarnly();
+  const { weather, isLoading, error, setCustomCoords, requestLocation, locating, survival } = useWarnly();
   const { units, setUnits } = usePro();
 
   const isImp = units === 'imperial';
@@ -197,6 +197,15 @@ export const WeatherScreen: React.FC = () => {
                 )}
               </View>
             </GlassCard>
+          </FadeIn>
+
+          {/* ── Native air + flood survival ── */}
+          <FadeIn duration={380} delay={125}>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricCardLabel}>SURVIVAL AIR</Text>
+              <Text style={styles.metricCardValue}>{survival.air}</Text>
+              <Text style={styles.metricCardHint}>{survival.flood}</Text>
+            </View>
           </FadeIn>
 
           {/* ── 4-Metric Grid ── */}

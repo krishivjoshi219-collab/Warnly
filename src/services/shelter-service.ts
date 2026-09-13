@@ -114,6 +114,28 @@ export class ShelterService {
       .sort((a, b) => a.distanceKm - b.distanceKm);
   }
 
+  public findIndoorRefuge(nodes: Array<{ id: string; kind: string; accessible: boolean }>, edges: Array<{ from: string; to: string; blocked?: boolean }>, fromId: string): string[] {
+    const adj = new Map<string, string[]>();
+    for (const e of edges) {
+      if (e.blocked) continue;
+      if (!adj.has(e.from)) adj.set(e.from, []);
+      adj.get(e.from)!.push(e.to);
+    }
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const prev = new Map<string, string | null>([[fromId, null]]);
+    const q: string[] = [fromId];
+    let found: string | null = null;
+    while (q.length) {
+      const cur = q.shift()!;
+      if (byId.get(cur)?.kind === 'REFUGE' && byId.get(cur)?.accessible) { found = cur; break; }
+      for (const n of adj.get(cur) ?? []) { if (prev.has(n)) continue; prev.set(n, cur); q.push(n); }
+    }
+    if (!found) return [];
+    const path: string[] = []; let c: string | null | undefined = found;
+    while (c) { path.unshift(c); c = prev.get(c); }
+    return path;
+  }
+
   /**
    * Generates step-by-step offline tactical walking directions to chosen shelter.
    */

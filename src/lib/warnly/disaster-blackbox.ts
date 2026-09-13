@@ -95,4 +95,9 @@ export class DisasterBlackboxEngine {
   }
 }
 
+export function reserveEstimate(batteryMah: number, pct: number, drainMa: number): { standardH: number; reserveH: number } {
+  const usable = (batteryMah * pct) / 100;
+  return { standardH: Math.round((usable / Math.max(1, drainMa)) * 10) / 10, reserveH: Math.round(Math.min(120, (usable * 0.9) / 12) * 10) / 10 };
+}
+
 export const globalBlackbox = new DisasterBlackboxEngine();

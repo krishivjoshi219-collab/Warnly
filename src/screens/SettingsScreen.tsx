@@ -46,6 +46,7 @@ import {
 import { COLORS, RADII, FONTS, SHADOWS, SPACING, SAFE_TOP_PADDING } from '../theme';
 
 export const SettingsScreen: React.FC = () => {
+  const { survival } = useWarnly();
   const {
     isPro, toggleProDemo, openPaywall, units, setUnits,
     alertRadiusKm, setAlertRadiusKm, startSiren, stopSiren, sirenActive,
@@ -313,6 +314,18 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={styles.dndTestBtnText}>Test Alert</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </GlassCard>
+      </FadeIn>
+
+      {/* ── Native reserve + calm ── */}
+      <FadeIn duration={380} delay={175}>
+        <SectionHeader label="Survival Reserve" />
+        <GlassCard noPadding>
+          <View style={styles.stateCardInner}>
+            <Text style={styles.stateLabel}>{survival.reserve}</Text>
+            <Text style={styles.stateLabel}>{survival.evac}</Text>
+            <Text style={styles.stateLabel}>{survival.calm}</Text>
           </View>
         </GlassCard>
       </FadeIn>

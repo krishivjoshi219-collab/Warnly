@@ -11,7 +11,19 @@ import { analyzeDopplerCells, type DopplerRadarSummary } from "./doppler-vector"
 import type { BarometricAnalysis } from "./barometric-surge";
 import { NativeEmergency } from "./native-emergency";
 
+interface SurvivalPanel {
+  directive: string;
+  fallback: string;
+  evac: string;
+  custody: string;
+  reserve: string;
+  air: string;
+  flood: string;
+  calm: string;
+}
+
 interface WarnlyState {
+  survival: SurvivalPanel;
   coords: Coords | null;
   geoError: string | null;
   locating: boolean;
@@ -315,6 +327,21 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
 
   const nearest = strikes[0] ?? null;
 
+  const survival: SurvivalPanel = useMemo(() => {
+    const breach = strikes.some((s) => s.distanceKm <= SAFETY_RADIUS_KM);
+    const doNot: string[] = breach ? ['Do NOT shelter near plumbing or windows'] : [];
+    return {
+      directive: breach ? 'Go to interior hallway NOW — avoid basement if wet' : 'Monitor — no verified refuge needed',
+      fallback: 'If blocked: highest interior room, send SOS, strobe + chirp',
+      evac: breach ? 'SHELTER_IN_PLACE: core overhead' : 'EVACUATE routes open',
+      custody: strikes.length ? 'Saved locally — mesh relay ready' : 'No SOS active',
+      reserve: '8.1h standard vs 72h+ reserve (30s beacon every 15m)',
+      air: 'Air breathable — ventilate',
+      flood: 'Water stable — monitor',
+      calm: breach ? 'Breathe. Go to interior hallway NOW. Tap when done.' : 'Breathe. You are safe. Tap when done.',
+    };
+  }, [strikes]);
+
   const shelterUntil = useMemo(() => {
     const breach = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
     if (!breach.length) return null;
@@ -331,6 +358,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   }, [coords, loadData]);
 
   const value: WarnlyState = {
+    survival,
     coords,
     geoError,
     locating,

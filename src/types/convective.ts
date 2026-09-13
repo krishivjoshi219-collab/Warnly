@@ -92,3 +92,22 @@ export interface NotificationPreview {
   timerFormatted: string;
   timestamp: string;
 }
+
+export type WarningLifecycle = 'ACTIVE' | 'UPDATED' | 'CANCELLED' | 'EXPIRED' | 'STALE' | 'UNVERIFIED';
+
+export interface SafetyDirective {
+  doNow: string;
+  doNot: string[];
+  fallback: string;
+  blocked: string[];
+  safe: boolean;
+}
+
+export interface SurvivalStatus {
+  warningState: WarningLifecycle;
+  directive: SafetyDirective;
+  evacAdvice: 'EVACUATE' | 'SHELTER_IN_PLACE' | 'SEEK_VERTICAL';
+  custody: string;
+  reserveHours: number;
+  airAdvice: string;
+}

@@ -74,6 +74,7 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
   const [guideOpen, setGuideOpen] = useState(false);
   const [rangerOpen, setRangerOpen] = useState(false);
 
+  const { survival } = useWarnly();
   const meta = levelMeta[level];
   const wx = weather ? weatherCodeInfo(weather.weatherCode, weather.isDay) : null;
 
@@ -291,6 +292,18 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+      </FadeIn>
+
+      {/* ── NATIVE SURVIVAL DIRECTIVE ── */}
+      <FadeIn duration={240} delay={55}>
+        <View style={styles.radarCard}>
+          <View style={styles.radarCardLeft}>
+            <Text style={styles.radarCardTitle}>{survival.directive}</Text>
+            <Text style={styles.radarCardSubtitle}>{survival.fallback}</Text>
+            <Text style={styles.radarCardSubtitle}>{survival.evac} · {survival.reserve}</Text>
+            <Text style={styles.radarCardSubtitle}>{survival.calm}</Text>
           </View>
         </View>
       </FadeIn>

@@ -33,6 +33,11 @@ export interface TopographicEscapePlan {
 }
 
 export class TopographicEscapeEngine {
+  public static decideStayOrGo(travelMin: number | null, windowMin: number | null, routes: number): 'EVACUATE' | 'SHELTER_IN_PLACE' | 'SEEK_VERTICAL' {
+    if (travelMin == null || routes === 0) return 'SHELTER_IN_PLACE';
+    if (windowMin != null && travelMin > windowMin * 0.8) return 'SEEK_VERTICAL';
+    return 'EVACUATE';
+  }
   /**
    * Computes high-ground ridge escape vectors from current GPS coordinates and elevation.
    */

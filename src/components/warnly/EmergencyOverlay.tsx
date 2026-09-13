@@ -60,6 +60,7 @@ export const EmergencyOverlay: React.FC = () => {
     });
   }, [coords?.lat, coords?.lon, strikes, floodQ.data, quakesQ.data, weather]);
 
+  const { survival } = useWarnly();
   const topAlert = earlySummary?.topAlert;
   const isCritical = level === "danger" || earlySummary?.hasCriticalEarlyAlert;
   const title = topAlert?.title ?? "LIGHTNING DANGER DETECTED";
@@ -145,6 +146,13 @@ export const EmergencyOverlay: React.FC = () => {
                   <Navigation size={13} color={COLORS.safe} />
                   <Text style={styles.campsBtnText}>Nearest Safe Camp</Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* Native survival directive */}
+              <View style={styles.primaryActionBox}>
+                <Text style={styles.primaryActionLabel}>DO THIS NOW</Text>
+                <Text style={styles.primaryActionText}>{survival.directive}</Text>
+                <Text style={styles.subtitle}>{survival.fallback} · {survival.custody}</Text>
               </View>
 
               {/* Primary Action Box */}

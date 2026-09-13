@@ -13,7 +13,9 @@ import {
   LightningStrike,
   MonitoredZone,
   NotificationPreview,
+  SafetyDirective,
 } from '../types/convective';
+import { compileSafety, evaluateEvacuation, custodyText, reserveHours, clearAirPlan, floodEscape, calmInstruction } from '../lib/warnly/survival-core';
 import { GeodesicPhysics } from '../physics/geodesics';
 import { AdvectionEngine, AdvectionVectorResult } from '../physics/advection';
 import { AcousticBeaconSynthesizer } from '../audio/acoustic-beacon';
@@ -105,6 +107,7 @@ export const DEMOGRAPHIC_PROFILES: Record<DemographicProfileId, DemographicProfi
   },
 };
 
+type CustodyLike = string;
 export type EngineSubscriber = () => void;
 
 export class WarnlyEngine {
@@ -148,6 +151,54 @@ export class WarnlyEngine {
 
   // Active scenario simulator label
   public activeScenario: string = 'Calm Atmospheric Baseline';
+
+  // Native survival core (always on, offline-first)
+  public basementFlooded = false;
+  public custody: CustodyLike = 'STORED_LOCAL';
+  public airQualityIndex = 42;
+  public floodDepthCm = 0;
+  public floodRiseCmPerMin = 0;
+
+  public getSafetyDirective(): SafetyDirective {
+    const breach = this.nearestStrikeKm != null && this.nearestStrikeKm <= 10;
+    return compileSafety({
+      shelterDownstairs: breach ? true : 'unknown',
+      basementFlooded: this.basementFlooded ? true : false,
+      floodRising: this.floodDepthCm > 10 ? true : 'unknown',
+      lightningNear: breach ? true : false,
+      hasHallway: true,
+      hasUpperFloor: true,
+    });
+  }
+
+  public getEvacAdvice(): string {
+    const r = evaluateEvacuation(
+      [{ from: 'HOME', to: 'RIDGE', lengthKm: 2.1, isBridge: true }, { from: 'HOME', to: 'VALLEY', lengthKm: 3.4 }],
+      'HOME', 'RIDGE', this.floodRiseCmPerMin / 100, 0.5, 28
+    );
+    return `${r.advice}: ${r.reason}`;
+  }
+
+  public getReserveLine(): string {
+    const p = reserveHours(4000, 62, 320);
+    return `${p.standard}h standard vs ${p.reserve}h reserve`;
+  }
+
+  public getAirLine(): string {
+    return clearAirPlan(this.airQualityIndex, true).advice;
+  }
+
+  public getFloodLine(): string {
+    return floodEscape(this.floodRiseCmPerMin, this.floodDepthCm, 12).advice;
+  }
+
+  public getCalmNext(): string {
+    return calmInstruction(this.getSafetyDirective().doNow);
+  }
+
+  public getCustodyLine(): string {
+    return custodyText(this.custody as never, 1);
+  }
 
   // Subscriptions
   private subscribers: EngineSubscriber[] = [];

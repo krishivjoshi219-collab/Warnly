@@ -42,7 +42,7 @@ export const ShieldScreen: React.FC = () => {
     units,
   } = usePro();
 
-  const { coords, weather, strikes, level } = useWarnly();
+  const { coords, weather, strikes, level, survival } = useWarnly();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [label, setLabel] = useState("");
@@ -303,6 +303,13 @@ export const ShieldScreen: React.FC = () => {
           })}
         </View>
       )}
+
+      {/* Native family pact + care */}
+      <View style={styles.sirenCard}>
+        <Text style={styles.sirenTitle}>FAMILY PACT · {survival.custody}</Text>
+        <Text style={styles.sirenSubtitle}>{survival.directive} — {survival.fallback}</Text>
+        <Text style={styles.sirenSubtitle}>{survival.reserve} · {survival.calm}</Text>
+      </View>
 
       {/* Emergency Siren Broadcast Card */}
       <View style={styles.sirenCard}>

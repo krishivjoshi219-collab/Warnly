@@ -92,6 +92,16 @@ export class TelemetryService {
     return this.lastTelemetry;
   }
 
+  public analyzePressureFront(traceHpa: number[]): { detected: boolean; surgeHpa: number } {
+    if (traceHpa.length < 10) return { detected: false, surgeHpa: 0 };
+    const sorted = [...traceHpa].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const clean = traceHpa.map((v) => (Math.abs(v - median) > 3 ? median : v));
+    const base = clean.slice(0, clean.length - 5).reduce((a, b) => a + b, 0) / Math.max(1, clean.length - 5);
+    const surge = Math.max(...clean.slice(-5)) - base;
+    return { detected: surge > 0.8, surgeHpa: Math.round(surge * 100) / 100 };
+  }
+
   /**
    * Generates realistic tactical strike feeds simulating NOAA GOES GLM & Vaisala GLD360
    * around a specified storm cell centroid.

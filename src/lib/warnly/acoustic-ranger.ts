@@ -88,6 +88,11 @@ export class AcousticRangerEngine {
     return result;
   }
 
+  public static rangeFromEcho(deltaSec: number, tempC = 20): number {
+    const c = 331.3 + 0.606 * tempC;
+    return Math.max(0, (c / 2) * deltaSec);
+  }
+
   public reset(): void {
     this.flashTimestamp = null;
   }

@@ -100,6 +100,10 @@ export class ZoneService {
     this.zones = this.zones.filter((z) => z.id !== id);
   }
 
+  public pactOverdue(checkinWindowMin: number, lastSeen: Record<string, number>, now = Date.now()): string[] {
+    return this.zones.filter((z) => now - (lastSeen[z.id] ?? 0) > checkinWindowMin * 60 * 1000).map((z) => z.id);
+  }
+
   /**
    * Re-evaluates all zones against active lightning strikes in real-time.
    */

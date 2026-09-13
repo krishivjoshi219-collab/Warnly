@@ -78,6 +78,7 @@ export const RadarScreen: React.FC = () => {
     fetchNearbySafetyCamps(coords).then((res) => setCamps(res));
   }, [coords?.lat, coords?.lon]);
 
+  const { survival } = useWarnly();
   const breaches = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
   const mapWidth = Math.max(280, Dimensions.get('window').width - 32);
 
@@ -327,6 +328,16 @@ export const RadarScreen: React.FC = () => {
             )}
           </View>
         </GlassCard>
+      </FadeIn>
+
+      {/* ── Native evacuation + air + flood ── */}
+      <FadeIn duration={350} delay={170}>
+        <View style={styles.safetyCard}>
+          <View style={styles.safetyTexts}>
+            <Text style={styles.safetyTitle}>{survival.evac}</Text>
+            <Text style={styles.safetySub}>{survival.air} · {survival.flood} · {survival.custody}</Text>
+          </View>
+        </View>
       </FadeIn>
 
       {/* ── Safety Zone Alert ── */}

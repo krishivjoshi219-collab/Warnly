@@ -190,4 +190,10 @@ export class TacticalTimelineEngine {
   }
 }
 
+export function directiveForPhase(phaseId: string, basementFlooded: boolean): { doNow: string; doNot: string[]; fallback: string } {
+  if (basementFlooded) return { doNow: 'Avoid basement — use interior hallway on high ground', doNot: ['Do NOT go to basement'], fallback: 'If hallway blocked: highest interior room, signal SOS' };
+  if (phaseId === 'T_MINUS_02') return { doNow: 'Shelter now — avoid plumbing and wiring', doNot: ['Do NOT go outdoors'], fallback: 'If caught outside: crouch, minimize ground contact' };
+  return { doNow: 'Harden perimeter — secure loose items', doNot: [], fallback: 'Re-evaluate on next radar sweep' };
+}
+
 export const globalTacticalTimeline = new TacticalTimelineEngine();
