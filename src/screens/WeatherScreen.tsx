@@ -34,9 +34,9 @@ import {
   SectionHeader,
   Divider,
 } from '../components/ui';
-import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
+import { COLORS, RADII, FONTS, SHADOWS, SPACING, SAFE_TOP_PADDING } from '../theme';
 
-const renderWeatherIcon = (iconName: string, size = 32, color = COLORS.safe) => {
+const renderWeatherIcon = (iconName: string, size = 32, color = '#FFFFFF') => {
   switch (iconName) {
     case 'sun': return <Sun size={size} color={color} />;
     case 'cloud-sun': return <CloudSun size={size} color={color} />;
@@ -329,8 +329,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 135,
+    paddingTop: SAFE_TOP_PADDING,
+    paddingBottom: 110,
     gap: 12,
   },
   loadingBox: {
@@ -358,10 +358,10 @@ const styles = StyleSheet.create({
     top: 14,
     right: 14,
     flexDirection: 'row',
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: RADII.full,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     padding: 2,
     zIndex: 10,
   },
@@ -370,9 +370,9 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: RADII.full,
   },
-  unitBtnActive: { backgroundColor: COLORS.safe },
-  unitBtnText: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted },
-  unitBtnTextActive: { color: COLORS.textInverted },
+  unitBtnActive: { backgroundColor: '#FFFFFF' },
+  unitBtnText: { fontSize: 11, fontWeight: '700', color: COLORS.textTertiary },
+  unitBtnTextActive: { color: '#000000' },
 
   heroContent: {
     padding: 22,

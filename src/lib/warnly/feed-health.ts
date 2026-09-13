@@ -38,7 +38,7 @@ export const MONITORED_FEEDS: Omit<FeedStatus, "status" | "latencyMs" | "lastChe
   {
     id: "osm-emergency",
     name: "OpenStreetMap Emergency Geocoder",
-    url: "https://nominatim.openstreetmap.org/search?format=json&q=hospital&limit=1",
+    url: "https://nominatim.openstreetmap.org/status.php?format=json",
     description: "Live emergency shelters, assembly fields & trauma centers",
   },
   {
@@ -62,7 +62,10 @@ export async function checkFeedHealth(feed: typeof MONITORED_FEEDS[number]): Pro
     const res = await fetch(feed.url, {
       method: "GET",
       signal: controller.signal,
-      headers: { "User-Agent": "WarnlyFeedChecker/1.0" },
+      headers: {
+        "User-Agent": "WarnlyEmergencyDisasterApp/1.1 (https://github.com/krishivjoshi219-collab/Warnly; team@warnly.app)",
+        "Accept": "application/json",
+      },
     });
 
     clearTimeout(timeoutId);

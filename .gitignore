@@ -35,3 +35,10 @@ WhatsApp Image*
 # Local build artifacts and downloads
 github-build/
 *.zip
+
+# Temporary testing, scratch and backup files
+first_code/
+test_*.png
+test_*.jpg
+*.tmp
+

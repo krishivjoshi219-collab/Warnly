@@ -1,7 +1,19 @@
 import { NativeModules, Platform } from "react-native";
 
+// Safe access for React Native runtime
+const PermissionsAndroid = (require("react-native") as any)?.PermissionsAndroid;
+
 function getModule() {
   return NativeModules.WarnlyEmergencyModule;
+}
+
+export interface HardwareLocationResult {
+  latitude: number;
+  longitude: number;
+  altitude?: number;
+  accuracy?: number;
+  timestamp?: number;
+  provider?: string;
 }
 
 export interface EmergencyModuleInterface {
@@ -12,6 +24,11 @@ export interface EmergencyModuleInterface {
   requestDndPermission: () => void;
   setupEmergencyNotificationChannel: () => void;
   postCriticalAlert: (title: string, message: string) => void;
+  // True Hardware GPS Location integration (zero internet disaster resilient)
+  checkLocationPermission: () => Promise<boolean>;
+  requestHardwareLocationPermission: () => Promise<boolean>;
+  getHardwareLocation: () => Promise<HardwareLocationResult>;
+  openLocationSettings: () => void;
 }
 
 export const NativeEmergency: EmergencyModuleInterface = {
@@ -87,4 +104,64 @@ export const NativeEmergency: EmergencyModuleInterface = {
       }
     }
   },
+
+  checkLocationPermission: async (): Promise<boolean> => {
+    if (Platform.OS === "android") {
+      try {
+        const mod = getModule();
+        if (mod?.checkLocationPermission) {
+          return await mod.checkLocationPermission();
+        }
+        return await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  requestHardwareLocationPermission: async (): Promise<boolean> => {
+    if (Platform.OS === "android") {
+      try {
+        const res = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: "Warnly Hardware GPS Access",
+            message:
+              "Warnly requires hardware satellite GPS to calculate lightning strike distance, safe shelter bearings, and convective flash flood risks offline during severe emergencies.",
+            buttonNeutral: "Ask Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "Allow Hardware GPS",
+          }
+        );
+        return res === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn("[NativeEmergency] request location error:", err);
+        return false;
+      }
+    }
+    return true;
+  },
+
+  getHardwareLocation: async (): Promise<HardwareLocationResult> => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.getHardwareLocation) {
+      return await mod.getHardwareLocation();
+    }
+    throw new Error("Hardware location service not yet bound in running runtime");
+  },
+
+  openLocationSettings: () => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.openLocationSettings) {
+      try {
+        mod.openLocationSettings();
+      } catch {
+        /* fallback */
+      }
+    }
+  },
 };
+

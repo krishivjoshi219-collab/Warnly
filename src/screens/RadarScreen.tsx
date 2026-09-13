@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Animated,
-  Easing,
+  Linking,
 } from 'react-native';
 import {
   Zap,
@@ -16,19 +15,21 @@ import {
   Mountain,
   Waves,
   Activity,
-  MapPin,
-  CheckCircle2,
   Radar,
   Navigation,
+  MapPin,
+  Phone,
 } from '../components/Icons';
 import { useWarnly } from '../lib/warnly/store';
 import { strikeAgeColor, SAFETY_RADIUS_KM } from '../lib/warnly/risk';
-import { useEarthquakes, useFloodRisk, type Quake } from '../lib/warnly/hazards';
+import { useEarthquakes, useFloodRisk } from '../lib/warnly/hazards';
 import { fetchNearbySafetyCamps, type SafetyCamp } from '../lib/warnly/shelters';
 import { CRITICAL_GLACIAL_LAKES } from '../lib/warnly/glof';
 import { LocationSearch } from '../components/warnly/LocationSearch';
-import { FadeIn, GlassCard, PulseDot, ScreenHeader, SectionHeader, StatusBadge } from '../components/ui';
-import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
+import { LiveOpenStreetMap } from '../components/warnly/LiveOpenStreetMap';
+import { LocationPermissionModal } from '../components/warnly/LocationPermissionModal';
+import { FadeIn, GlassCard, ScreenHeader, SectionHeader } from '../components/ui';
+import { COLORS, RADII, FONTS, SHADOWS, SAFE_TOP_PADDING } from '../theme';
 
 const STRIKE_LEGEND = [
   { label: '0–5m Active', age: 3 },
@@ -50,6 +51,9 @@ export const RadarScreen: React.FC = () => {
     coords,
     setCustomCoords,
     requestLocation,
+    requestHardwareLocation,
+    showLocationPrompt,
+    setShowLocationPrompt,
     locating,
     doppler,
   } = useWarnly();
@@ -75,7 +79,7 @@ export const RadarScreen: React.FC = () => {
   }, [coords?.lat, coords?.lon]);
 
   const breaches = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
-  const scopeSize = Math.min(340, Dimensions.get('window').width - 32);
+  const mapWidth = Dimensions.get('window').width - 32;
 
   return (
     <ScrollView
@@ -141,166 +145,31 @@ export const RadarScreen: React.FC = () => {
         </ScrollView>
       </FadeIn>
 
-      {/* ── Radar Scope ── */}
-      <FadeIn duration={450} delay={100}>
-        <View style={[styles.scopeOuter, { width: scopeSize, height: scopeSize }]}>
-          {/* Animated sweep line */}
-          <SweepLine scopeSize={scopeSize} />
-
-          {/* Range rings */}
-          {[0.94, 0.68, 0.44].map((r, i) => {
-            const size = scopeSize * r;
-            const isCritical = i === 2;
-            return (
-              <View
-                key={i}
-                style={[
-                  styles.rangeRing,
-                  {
-                    width: size,
-                    height: size,
-                    borderRadius: size / 2,
-                    borderColor:
-                      isCritical && breaches.length > 0
-                        ? COLORS.danger + '90'
-                        : i === 1
-                        ? COLORS.safe + '20'
-                        : COLORS.safe + '30',
-                    borderStyle: i === 1 ? 'dashed' : 'solid',
-                    borderWidth: isCritical ? 1.5 : 1,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.rangeLabel,
-                    { color: isCritical ? COLORS.danger + '90' : COLORS.textMuted },
-                  ]}
-                >
-                  {i === 0 ? '25 km' : i === 1 ? '15 km' : '10 km'}
-                </Text>
-              </View>
-            );
-          })}
-
-          {/* Crosshairs */}
-          <View style={styles.crosshairH} />
-          <View style={styles.crosshairV} />
-
-          {/* Center You pin */}
-          <View style={styles.centerPin}>
-            <PulseDot color={COLORS.safe} size={10} speed={2000} />
-            <Text style={styles.centerPinLabel}>YOU</Text>
+      {/* ── Real Live Multi-Hazard Radar Map (Hero) ── */}
+      {coords ? (
+        <FadeIn duration={450} delay={80}>
+          <LiveOpenStreetMap
+            coords={coords}
+            width={mapWidth}
+            height={390}
+            strikes={showLightning ? strikes : []}
+            camps={showShelters ? camps : []}
+            doppler={showDoppler ? doppler : null}
+            onRecenter={requestLocation}
+            onSelectLocation={setCustomCoords}
+          />
+        </FadeIn>
+      ) : (
+        <FadeIn duration={300}>
+          <View style={styles.noLocationCard}>
+            <MapPin size={24} color={COLORS.safe} />
+            <Text style={styles.noLocationTitle}>No Location Selected</Text>
+            <Text style={styles.noLocationSub}>
+              Search any city or location above, or tap GPS to activate live radar.
+            </Text>
           </View>
-
-          {/* Strike markers */}
-          {showLightning &&
-            strikes.map((s) => {
-              const rad = ((s.bearingDeg - 90) * Math.PI) / 180;
-              const distRatio = Math.min(1, s.distanceKm / 25);
-              const radius = (scopeSize * 0.94 * 0.5) * distRatio;
-              const x = radius * Math.cos(rad);
-              const y = radius * Math.sin(rad);
-              const dotColor = strikeAgeColor(s.ageMin);
-              return (
-                <View
-                  key={s.id}
-                  style={[
-                    styles.strikeMarker,
-                    {
-                      transform: [{ translateX: x }, { translateY: y }],
-                      backgroundColor: dotColor,
-                      shadowColor: dotColor,
-                    },
-                  ]}
-                >
-                  <Zap size={9} color="#070A0F" />
-                </View>
-              );
-            })}
-
-          {/* Sonic Shockwave Wavefront Ring (expanding outward at 343 m/s) */}
-          {showShockwave && strikes.length > 0 && (() => {
-            const s = strikes[0];
-            const rad = ((s.bearingDeg - 90) * Math.PI) / 180;
-            const distRatio = Math.min(1, s.distanceKm / 25);
-            const radius = (scopeSize * 0.94 * 0.5) * distRatio;
-            const x = radius * Math.cos(rad);
-            const y = radius * Math.sin(rad);
-            return <SonicShockwaveRing key="shockwave" x={x} y={y} maxRadius={scopeSize * 0.42} />;
-          })()}
-
-          {/* Topographic High-Ground Escape Ridge Waypoint */}
-          {showEscape && (() => {
-            const escapeBearing = 42;
-            const rad = ((escapeBearing - 90) * Math.PI) / 180;
-            const radius = (scopeSize * 0.94 * 0.5) * 0.48;
-            const x = radius * Math.cos(rad);
-            const y = radius * Math.sin(rad);
-            return (
-              <View
-                key="escape-ridge"
-                style={[
-                  styles.escapeMarker,
-                  { transform: [{ translateX: x }, { translateY: y }] },
-                ]}
-              >
-                <Mountain size={11} color="#10B981" />
-                <Text style={styles.escapeMarkerLabel}>+95m RIDGE</Text>
-              </View>
-            );
-          })()}
-
-          {/* Camp markers */}
-          {showShelters &&
-            camps.slice(0, 5).map((c) => {
-              const rad = ((c.bearingDeg - 90) * Math.PI) / 180;
-              const distRatio = Math.min(1, c.distanceKm / 25);
-              const radius = (scopeSize * 0.94 * 0.5) * distRatio;
-              const x = radius * Math.cos(rad);
-              const y = radius * Math.sin(rad);
-              return (
-                <View
-                  key={c.id}
-                  style={[
-                    styles.campMarker,
-                    { transform: [{ translateX: x }, { translateY: y }] },
-                  ]}
-                >
-                  <ShieldCheck size={11} color="#FFFFFF" />
-                </View>
-              );
-            })}
-
-          {/* Doppler Storm Cell Blips */}
-          {showDoppler &&
-            doppler?.cells.map((cell) => {
-              const rad = ((cell.bearingDeg - 90) * Math.PI) / 180;
-              const distRatio = Math.min(1, cell.distanceKm / 25);
-              const radius = (scopeSize * 0.94 * 0.5) * distRatio;
-              const x = radius * Math.cos(rad);
-              const y = radius * Math.sin(rad);
-              const cellColor = cell.severity === 'EXTREME' ? COLORS.danger : '#F59E0B';
-              return (
-                <View
-                  key={cell.id}
-                  style={[
-                    styles.dopplerMarker,
-                    {
-                      transform: [{ translateX: x }, { translateY: y }],
-                      borderColor: cellColor,
-                    },
-                  ]}
-                >
-                  <View style={[styles.dopplerCore, { backgroundColor: cellColor }]} />
-                  <Text style={[styles.dopplerMarkerLabel, { color: cellColor }]}>
-                    {cell.id}
-                  </Text>
-                </View>
-              );
-            })}
-        </View>
-      </FadeIn>
+        </FadeIn>
+      )}
 
       {/* ── Doppler Storm Cell Advection Tracker ── */}
       {showDoppler && doppler && doppler.cellCount > 0 && (
@@ -338,6 +207,90 @@ export const RadarScreen: React.FC = () => {
                 </View>
               </View>
             ))}
+          </View>
+        </FadeIn>
+      )}
+
+      {/* ── Nearest Safe Shelters & Evacuation Camps ── */}
+      {showShelters && camps.length > 0 && (
+        <FadeIn duration={400} delay={140}>
+          <View style={styles.sheltersCard}>
+            <View style={styles.sheltersHeader}>
+              <View style={styles.shelterHeaderBadge}>
+                <ShieldCheck size={14} color="#10B981" />
+              </View>
+              <View>
+                <Text style={styles.sheltersTitle}>NEAREST SAFE CAMPS & DISASTER SHELTERS</Text>
+                <Text style={styles.sheltersSubtitle}>
+                  {camps.length} verified safe refuges near your location
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.shelterList}>
+              {camps.slice(0, 5).map((camp) => (
+                <View key={camp.id} style={styles.shelterItem}>
+                  <View style={styles.shelterItemTop}>
+                    <View style={styles.shelterBadgeWrap}>
+                      <Text style={styles.shelterCategoryBadge}>
+                        {camp.category === 'hospital'
+                          ? 'TRAUMA HOSPITAL'
+                          : camp.category === 'high_ground'
+                          ? 'HIGH GROUND'
+                          : camp.category === 'assembly_field'
+                          ? 'OPEN ASSEMBLY'
+                          : 'CIVIL BUNKER'}
+                      </Text>
+                      {camp.elevationGainM > 0 && (
+                        <Text style={styles.shelterElevationBadge}>
+                          +{camp.elevationGainM}m elevation
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.shelterDistValue}>
+                      {camp.distanceKm.toFixed(1)} km
+                    </Text>
+                  </View>
+
+                  <Text style={styles.shelterName}>{camp.name}</Text>
+                  <Text style={styles.shelterAddress} numberOfLines={1}>
+                    {camp.address}
+                  </Text>
+
+                  <View style={styles.shelterFooter}>
+                    <Text style={styles.shelterEta}>
+                      ~{camp.walkingTimeMin}m walk · ~{camp.drivingTimeMin}m drive
+                    </Text>
+
+                    <View style={styles.shelterActionRow}>
+                      {camp.emergencyPhone && (
+                        <TouchableOpacity
+                          style={styles.callBtn}
+                          onPress={() => Linking.openURL(`tel:${camp.emergencyPhone!.replace(/[^0-9+]/g, '')}`)}
+                          activeOpacity={0.8}
+                        >
+                          <Phone size={11} color="#38BDF8" />
+                          <Text style={styles.callBtnText}>Call</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={styles.navBtn}
+                        onPress={() => {
+                          const url =
+                            camp.navigationUrl ||
+                            `https://www.google.com/maps/dir/?api=1&destination=${camp.lat},${camp.lon}`;
+                          Linking.openURL(url);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Navigation size={11} color="#FFFFFF" />
+                        <Text style={styles.navBtnText}>Navigate</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
           </View>
         </FadeIn>
       )}
@@ -405,104 +358,16 @@ export const RadarScreen: React.FC = () => {
           </View>
         </View>
       </FadeIn>
-    </ScrollView>
-  );
-};
 
-// ─── SONIC SHOCKWAVE EXPANSION RING (343 m/s) ──────────────────────────────
-const SonicShockwaveRing: React.FC<{
-  x: number;
-  y: number;
-  maxRadius: number;
-}> = ({ x, y, maxRadius }) => {
-  const scale = useRef(new Animated.Value(0.08)).current;
-  const opacity = useRef(new Animated.Value(0.9)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.parallel([
-        Animated.timing(scale, {
-          toValue: 1,
-          duration: 2500,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 2500,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, []);
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        width: maxRadius * 2,
-        height: maxRadius * 2,
-        borderRadius: maxRadius,
-        borderWidth: 1.5,
-        borderColor: '#F59E0B',
-        borderStyle: 'dashed',
-        transform: [
-          { translateX: x - maxRadius },
-          { translateY: y - maxRadius },
-          { scale },
-        ],
-        opacity,
-      }}
-    />
-  );
-};
-
-// ─── ANIMATED RADAR SWEEP ─────────────────────────────────────────────────────
-const SweepLine: React.FC<{ scopeSize: number }> = ({ scopeSize }) => {
-  const rotate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const sweep = Animated.loop(
-      Animated.timing(rotate, {
-        toValue: 1,
-        duration: 3000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-    sweep.start();
-    return () => sweep.stop();
-  }, []);
-
-  const rotateDeg = rotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        styles.sweepContainer,
-        {
-          width: scopeSize,
-          height: scopeSize,
-          transform: [{ rotate: rotateDeg }],
-        },
-      ]}
-    >
-      {/* Sweep cone: a 90-degree wedge rendered with border trick */}
-      <View style={styles.sweepLine} />
-      <View
-        style={[
-          styles.sweepFade,
-          { width: scopeSize / 2, height: scopeSize / 2 },
-        ]}
+      {/* ── Hardware Location Permission & Offline Disaster Modal ── */}
+      <LocationPermissionModal
+        visible={showLocationPrompt}
+        onClose={() => setShowLocationPrompt(false)}
+        onSelectCoords={setCustomCoords}
+        onRequestHardwareGPS={requestHardwareLocation}
+        locating={locating}
       />
-    </Animated.View>
+    </ScrollView>
   );
 };
 
@@ -510,11 +375,33 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: SAFE_TOP_PADDING,
     paddingBottom: 135,
     gap: 12,
   },
 
+  noLocationCard: {
+    backgroundColor: '#0C131F',
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  noLocationTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#F8FAFC',
+  },
+  noLocationSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 17,
+  },
+
+  // ── Filter Chips ──
   chipsBar: {
     gap: 8,
     paddingVertical: 4,
@@ -523,7 +410,7 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: COLORS.card,
     borderRadius: RADII.full,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -536,101 +423,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // ── Scope ──
-  scopeOuter: {
-    alignSelf: 'center',
-    backgroundColor: 'rgba(8,18,32,0.98)',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    ...SHADOWS.lg,
-  },
-  rangeRing: {
-    position: 'absolute',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    paddingTop: 6,
-    paddingLeft: 8,
-  },
-  rangeLabel: {
-    fontSize: 8,
-    fontFamily: FONTS.mono,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  crosshairH: {
-    position: 'absolute',
-    width: '90%',
-    height: 1,
-    backgroundColor: 'rgba(0,229,255,0.06)',
-  },
-  crosshairV: {
-    position: 'absolute',
-    height: '90%',
-    width: 1,
-    backgroundColor: 'rgba(0,229,255,0.06)',
-  },
-  centerPin: {
-    alignItems: 'center',
-    gap: 3,
-  },
-  centerPinLabel: {
-    fontSize: 7,
-    fontWeight: '900',
-    color: COLORS.safe,
-    letterSpacing: 1,
-  },
-  strikeMarker: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  strikeMarkerText: { fontSize: 10 },
-  campMarker: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#0C1A14',
-    borderWidth: 1.5,
-    borderColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  campMarkerText: { fontSize: 10 },
-  dopplerMarker: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(12,19,31,0.9)',
-  },
-  dopplerCore: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  dopplerMarkerLabel: {
-    position: 'absolute',
-    bottom: -11,
-    fontSize: 7.5,
-    fontFamily: FONTS.mono,
-    fontWeight: '800',
-  },
+  // ── Doppler Advection ──
   dopplerTableCard: {
     backgroundColor: '#0C131F',
     borderRadius: RADII.xl,
@@ -695,28 +488,144 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.mono,
   },
 
-  // ── Sweep ──
-  sweepContainer: {
-    position: 'absolute',
+  // ── Nearest Safe Camps List ──
+  sheltersCard: {
+    backgroundColor: '#091512',
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.22)',
+    padding: 14,
+    gap: 12,
+  },
+  sheltersHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  shelterHeaderBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sweepLine: {
-    position: 'absolute',
-    width: '50%',
-    height: 1,
-    backgroundColor: COLORS.safe + '60',
-    right: '50%',
-    top: '50%',
-    transformOrigin: 'right center',
+  sheltersTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    letterSpacing: 1.1,
+    color: '#10B981',
   },
-  sweepFade: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-    borderLeftWidth: 0,
+  sheltersSubtitle: {
+    fontSize: 10,
+    color: '#6EE7B7',
+    marginTop: 1,
+  },
+  shelterList: {
+    gap: 10,
+  },
+  shelterItem: {
+    backgroundColor: '#0D201A',
+    borderRadius: RADII.lg,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.14)',
+    gap: 6,
+  },
+  shelterItemTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  shelterBadgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  shelterCategoryBadge: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    color: '#34D399',
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  shelterElevationBadge: {
+    fontSize: 8.5,
+    fontWeight: '700',
+    fontFamily: FONTS.mono,
+    color: '#38BDF8',
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  shelterDistValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    color: '#FFFFFF',
+  },
+  shelterName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  shelterAddress: {
+    fontSize: 10.5,
+    color: '#94A3B8',
+  },
+  shelterFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    paddingTop: 8,
+    marginTop: 2,
+  },
+  shelterEta: {
+    fontSize: 10,
+    color: '#6EE7B7',
+    fontWeight: '600',
+  },
+  shelterActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  callBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderRadius: RADII.md,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  callBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#38BDF8',
+  },
+  navBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#059669',
+    borderRadius: RADII.md,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  navBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 
   // ── Legends ──
@@ -770,23 +679,5 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 3,
     lineHeight: 15,
-  },
-  escapeMarker: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.18)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#10B981',
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-  },
-  escapeMarkerLabel: {
-    fontSize: 7.5,
-    fontWeight: '800',
-    fontFamily: FONTS.mono,
-    color: '#10B981',
-    marginTop: 1,
   },
 });

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, Animated, Easing } from "react-native";
 import { WarnlyProvider, useWarnly } from "./lib/warnly/store";
 import { ProProvider } from "./lib/warnly/pro";
 import { MobileFrame } from "./components/MobileFrame";
@@ -15,11 +15,30 @@ import { COLORS } from "./theme";
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("HOME");
   const { level } = useWarnly();
+  const screenFade = useRef(new Animated.Value(1)).current;
+
+  const handleTabChange = (nextTab: ActiveTab) => {
+    if (nextTab === activeTab) return;
+    Animated.timing(screenFade, {
+      toValue: 0.15,
+      duration: 70,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setActiveTab(nextTab);
+      Animated.timing(screenFade, {
+        toValue: 1,
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const renderScreen = () => {
     switch (activeTab) {
       case "HOME":
-        return <HomeScreen onNavigateRadar={() => setActiveTab("RADAR")} />;
+        return <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />;
       case "RADAR":
         return <RadarScreen />;
       case "SHIELD":
@@ -29,16 +48,18 @@ const MainApp: React.FC = () => {
       case "SETTINGS":
         return <SettingsScreen />;
       default:
-        return <HomeScreen onNavigateRadar={() => setActiveTab("RADAR")} />;
+        return <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />;
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.screenWrapper}>{renderScreen()}</View>
+      <Animated.View style={[styles.screenWrapper, { opacity: screenFade }]}>
+        {renderScreen()}
+      </Animated.View>
       <BottomTabBar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         hasDanger={level === "danger"}
       />
       <EmergencyOverlay />

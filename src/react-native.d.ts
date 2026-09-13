@@ -82,12 +82,21 @@ declare module 'react-native' {
   export const Linking: {
     openURL(url: string): Promise<any>;
   };
+  export interface ImageProps extends ViewProps {
+    source?: any;
+    resizeMode?: 'cover' | 'contain' | 'stretch' | 'repeat' | 'center';
+    [key: string]: any;
+  }
+
+  export const Image: React.FC<ImageProps>;
   export const SafeAreaView: React.FC<ViewProps>;
   export const StatusBar: React.FC<any>;
 
   export const StyleSheet: {
     create<T extends Record<string, ViewStyle | TextStyle | ImageStyle>>(styles: T): T;
     flatten<T>(style: StyleProp<T>): T;
+    absoluteFillObject: ViewStyle;
+    absoluteFill: ViewStyle;
   };
 
   export const Platform: {

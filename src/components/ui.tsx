@@ -1,122 +1,78 @@
-/**
- * Warnly Shared UI Primitives
- * Reusable building blocks for consistent, premium UI across all screens.
- * All animations use React Native's Animated API — zero external deps.
- */
-
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  TouchableOpacity,
   StyleSheet,
   Animated,
   Easing,
-  TouchableOpacity,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
-import { COLORS, RADII, SPACING, FONTS, SHADOWS, TYPE } from '../theme';
+import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
 
-// ─── PULSE DOT ──────────────────────────────────────────────────────────────
-// Animated breathing dot for live status indicators.
+// ─── PULSE DOT ─────────────────────────────────────────────────────────────────
+// Gentle breathing live indicator
 interface PulseDotProps {
   color?: string;
   size?: number;
-  speed?: number; // ms per cycle
+  speed?: number;
 }
-
 export const PulseDot: React.FC<PulseDotProps> = ({
   color = COLORS.safe,
-  size = 8,
-  speed = 1600,
+  size = 7,
+  speed = 2000,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(0.9)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const pulse = Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(scale, {
-            toValue: 1.45,
-            duration: speed * 0.5,
-            easing: Easing.out(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0.25,
-            duration: speed * 0.5,
-            easing: Easing.out(Easing.sin),
-            useNativeDriver: true,
-          }),
+          Animated.timing(scale, { toValue: 1.5, duration: speed / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.3, duration: speed / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale, {
-            toValue: 1,
-            duration: speed * 0.5,
-            easing: Easing.in(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0.9,
-            duration: speed * 0.5,
-            easing: Easing.in(Easing.sin),
-            useNativeDriver: true,
-          }),
+          Animated.timing(scale, { toValue: 1, duration: speed / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 1, duration: speed / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ]),
       ])
     );
-    pulse.start();
-    return () => pulse.stop();
-  }, [speed]);
+    anim.start();
+    return () => anim.stop();
+  }, []);
 
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      {/* Outer glow ring */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          width: size * 2,
-          height: size * 2,
-          borderRadius: size,
-          backgroundColor: color,
-          transform: [{ scale }],
-          opacity,
-        }}
-      />
-      {/* Core dot */}
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-        }}
-      />
-    </View>
+    <Animated.View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        transform: [{ scale }],
+        opacity,
+      }}
+    />
   );
 };
 
-// ─── FADE IN VIEW ────────────────────────────────────────────────────────────
-// Smooth entrance animation for any content.
+// ─── FADE IN ───────────────────────────────────────────────────────────────────
 interface FadeInProps {
-  children: ReactNode;
-  delay?: number;
+  children: React.ReactNode;
   duration?: number;
-  style?: ViewStyle;
+  delay?: number;
+  fromY?: number;
 }
-
 export const FadeIn: React.FC<FadeInProps> = ({
   children,
+  duration = 280,
   delay = 0,
-  duration = 300,
-  style,
+  fromY = 10,
 }) => {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(10)).current;
+  const translateY = useRef(new Animated.Value(fromY)).current;
 
   useEffect(() => {
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
         duration,
@@ -131,400 +87,411 @@ export const FadeIn: React.FC<FadeInProps> = ({
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   return (
-    <Animated.View style={[{ opacity, transform: [{ translateY }] }, style]}>
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
       {children}
     </Animated.View>
   );
 };
 
-// ─── GLASS CARD ──────────────────────────────────────────────────────────────
-// The base card primitive — glassy, elevated, premium border.
-interface GlassCardProps {
-  children: ReactNode;
-  style?: ViewStyle;
-  accentColor?: string;
-  elevated?: boolean;
-  noPadding?: boolean;
-}
+// ─── TOUCH SCALE ────────────────────────────────────────────────────────────────
+// Apple-style spring scale response for high-touch cards and buttons
+export const TouchScale: React.FC<{
+  children: React.ReactNode;
+  onPress?: () => void;
+  style?: any;
+  activeScale?: number;
+  disabled?: boolean;
+}> = ({
+  children,
+  onPress,
+  style,
+  activeScale = 0.97,
+  disabled = false,
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
 
-export const GlassCard: React.FC<GlassCardProps> = ({
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: activeScale,
+      tension: 250,
+      friction: 14,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      tension: 250,
+      friction: 14,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  if (!onPress) {
+    return <View style={style}>{children}</View>;
+  }
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.92}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      style={style}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+// ─── CARD ──────────────────────────────────────────────────────────────────────
+// Clean, rounded card — the atomic unit of the design system
+interface CardProps {
+  children: React.ReactNode;
+  style?: any;
+  noPadding?: boolean;
+  variant?: 'default' | 'danger' | 'warning' | 'safe' | 'primary';
+  onPress?: () => void;
+}
+export const Card: React.FC<CardProps> = ({
   children,
   style,
-  accentColor,
-  elevated = false,
   noPadding = false,
+  variant = 'default',
+  onPress,
 }) => {
-  return (
-    <View
-      style={[
-        styles.glassCard,
-        elevated && styles.glassCardElevated,
-        accentColor && {
-          borderColor: accentColor + '30',
-          shadowColor: accentColor,
-          shadowOpacity: 0.15,
-          shadowRadius: 20,
-          elevation: 8,
-        },
-        !noPadding && styles.glassCardPadding,
-        style,
-      ]}
-    >
-      {/* Subtle top-edge highlight for depth illusion */}
-      <View style={styles.glassTopEdge} />
+  const borderColor =
+    variant === 'danger'  ? COLORS.dangerBorder  :
+    variant === 'warning' ? COLORS.warningBorder :
+    variant === 'safe'    ? COLORS.safeBorder    :
+    variant === 'primary' ? COLORS.primaryBorder :
+    COLORS.border;
+
+  const shadow =
+    variant === 'danger'  ? SHADOWS.glowDanger  :
+    variant === 'warning' ? SHADOWS.glowWarning  :
+    variant === 'safe'    ? SHADOWS.glowSafe     :
+    variant === 'primary' ? SHADOWS.glowPrimary  :
+    SHADOWS.sm;
+
+  const inner = (
+    <View style={[
+      styles.card,
+      !noPadding && styles.cardPadded,
+      { borderColor },
+      shadow,
+      style,
+    ]}>
       {children}
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <TouchScale onPress={onPress}>
+        {inner}
+      </TouchScale>
+    );
+  }
+
+  return inner;
+};
+
+// Keep GlassCard as alias for backward compat
+export const GlassCard = Card;
+
+// ─── STATUS BADGE ─────────────────────────────────────────────────────────────
+interface StatusBadgeProps {
+  label: string;
+  variant?: 'safe' | 'warning' | 'danger' | 'muted' | 'info' | 'primary';
+  dot?: boolean;
+  pulsing?: boolean;
+  small?: boolean;
+}
+export const StatusBadge: React.FC<StatusBadgeProps> = ({
+  label, variant = 'muted', dot = false, pulsing = false, small = false,
+}) => {
+  const colors = {
+    safe:    { bg: COLORS.safeBg,    border: COLORS.safeBorder,    text: COLORS.safeText,    dot: COLORS.safe    },
+    warning: { bg: COLORS.warningBg, border: COLORS.warningBorder,  text: COLORS.warning,     dot: COLORS.warning },
+    danger:  { bg: COLORS.dangerBg,  border: COLORS.dangerBorder,   text: COLORS.dangerLight, dot: COLORS.danger  },
+    muted:   { bg: 'rgba(255,255,255,0.05)', border: COLORS.border, text: COLORS.textTertiary, dot: COLORS.textMuted },
+    info:    { bg: COLORS.primaryBg, border: COLORS.primaryBorder,  text: COLORS.primaryLight, dot: COLORS.primary },
+    primary: { bg: COLORS.primaryBg, border: COLORS.primaryBorder,  text: COLORS.primaryLight, dot: COLORS.primary },
+  }[variant];
+
+  return (
+    <View style={[
+      styles.badge,
+      small && styles.badgeSmall,
+      { backgroundColor: colors.bg, borderColor: colors.border },
+    ]}>
+      {dot && (
+        <View style={{ marginRight: 5 }}>
+          <PulseDot color={colors.dot} size={5} speed={pulsing ? 1400 : 999999} />
+        </View>
+      )}
+      <Text style={[styles.badgeText, small && styles.badgeTextSmall, { color: colors.text }]}>
+        {label}
+      </Text>
     </View>
   );
 };
 
 // ─── SECTION HEADER ───────────────────────────────────────────────────────────
-// Screen section labels — creates visual hierarchy without nested cards.
 interface SectionHeaderProps {
   label: string;
-  right?: ReactNode;
-  style?: ViewStyle;
+  right?: React.ReactNode;
+  style?: any;
 }
-
 export const SectionHeader: React.FC<SectionHeaderProps> = ({ label, right, style }) => (
   <View style={[styles.sectionHeader, style]}>
-    <Text style={styles.sectionLabel}>{label}</Text>
-    {right}
+    <Text style={styles.sectionHeaderText}>{label.toUpperCase()}</Text>
+    {right && <View>{right}</View>}
   </View>
 );
 
-// ─── STATUS BADGE ────────────────────────────────────────────────────────────
-type BadgeVariant = 'safe' | 'warning' | 'danger' | 'muted' | 'info';
-
-interface StatusBadgeProps {
-  label: string;
-  variant?: BadgeVariant;
-  dot?: boolean;
-  pulsing?: boolean;
+// ─── SCREEN HEADER ────────────────────────────────────────────────────────────
+interface ScreenHeaderProps {
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  badgeVariant?: 'safe' | 'warning' | 'danger' | 'muted' | 'info' | 'primary';
+  right?: React.ReactNode;
 }
-
-const BADGE_VARIANTS: Record<BadgeVariant, { bg: string; text: string; border: string }> = {
-  safe:    { bg: COLORS.safeBg,    text: COLORS.safe,    border: COLORS.safeBorder },
-  warning: { bg: COLORS.warningBg, text: COLORS.warning, border: COLORS.warningBorder },
-  danger:  { bg: COLORS.dangerBg,  text: COLORS.danger,  border: COLORS.dangerBorder },
-  muted:   { bg: 'rgba(255,255,255,0.05)', text: COLORS.textTertiary, border: COLORS.border },
-  info:    { bg: 'rgba(59,130,246,0.1)', text: COLORS.accentBlue, border: 'rgba(59,130,246,0.3)' },
-};
-
-export const StatusBadge: React.FC<StatusBadgeProps> = ({
-  label,
-  variant = 'muted',
-  dot = false,
-  pulsing = false,
-}) => {
-  const { bg, text, border } = BADGE_VARIANTS[variant];
-  return (
-    <View style={[styles.badge, { backgroundColor: bg, borderColor: border }]}>
-      {dot && <PulseDot color={text} size={5} speed={pulsing ? 1600 : 99999} />}
-      <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
+export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
+  title, subtitle, badge, badgeVariant = 'muted', right,
+}) => (
+  <View style={styles.screenHeader}>
+    <View style={styles.screenHeaderLeft}>
+      {badge && (
+        <StatusBadge label={badge} variant={badgeVariant} small />
+      )}
+      <Text style={styles.screenHeaderTitle}>{title}</Text>
+      {subtitle && (
+        <Text style={styles.screenHeaderSubtitle}>{subtitle}</Text>
+      )}
     </View>
-  );
-};
+    {right && <View>{right}</View>}
+  </View>
+);
 
-// ─── METRIC TILE ────────────────────────────────────────────────────────────
-// Small data tile — used in stats rows and grids.
+// ─── METRIC TILE ──────────────────────────────────────────────────────────────
 interface MetricTileProps {
   label: string;
   value: string;
   unit?: string;
   accent?: string;
-  style?: ViewStyle;
+  style?: any;
+  size?: 'sm' | 'md';
 }
-
 export const MetricTile: React.FC<MetricTileProps> = ({
-  label,
-  value,
-  unit,
-  accent = COLORS.textPrimary,
-  style,
+  label, value, unit, accent = COLORS.textPrimary, style, size = 'md',
 }) => (
   <View style={[styles.metricTile, style]}>
     <Text style={styles.metricTileLabel}>{label}</Text>
-    <View style={styles.metricTileValueRow}>
-      <Text style={[styles.metricTileValue, { color: accent }]}>{value}</Text>
-      {unit && <Text style={styles.metricTileUnit}>{unit}</Text>}
-    </View>
+    <Text style={[
+      size === 'sm' ? styles.metricTileValueSm : styles.metricTileValue,
+      { color: accent },
+    ]}>
+      {value}
+      {unit ? <Text style={styles.metricTileUnit}> {unit}</Text> : null}
+    </Text>
   </View>
 );
 
-// ─── GLOW BUTTON ────────────────────────────────────────────────────────────
-// Premium CTA button with colored glow shadow.
+// ─── GLOW BUTTON ──────────────────────────────────────────────────────────────
 interface GlowButtonProps {
   label: string;
-  onPress: () => void;
-  variant?: 'safe' | 'danger' | 'ghost' | 'warning';
-  icon?: ReactNode;
+  onPress?: () => void;
+  variant?: 'primary' | 'safe' | 'danger' | 'warning' | 'ghost';
+  icon?: React.ReactNode;
+  style?: any;
   disabled?: boolean;
-  style?: ViewStyle;
-  small?: boolean;
+  size?: 'sm' | 'md';
 }
-
 export const GlowButton: React.FC<GlowButtonProps> = ({
-  label,
-  onPress,
-  variant = 'safe',
-  icon,
-  disabled = false,
-  style,
-  small = false,
+  label, onPress, variant = 'primary', icon, style, disabled, size = 'md',
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 0.96, duration: 80, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 150, easing: Easing.out(Easing.back(2)), useNativeDriver: true }),
-    ]).start();
-    onPress();
+  const handlePressIn = () => {
+    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true, tension: 300, friction: 10 }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }).start();
   };
 
-  const bgMap = {
-    safe:    COLORS.safe,
-    danger:  COLORS.danger,
-    warning: COLORS.warning,
-    ghost:   'transparent',
-  };
-  const textMap = {
-    safe:    COLORS.textInverted,
-    danger:  '#FFFFFF',
-    warning: COLORS.textInverted,
-    ghost:   COLORS.textSecondary,
-  };
-  const borderMap = {
-    safe:    COLORS.safe,
-    danger:  COLORS.danger,
-    warning: COLORS.warning,
-    ghost:   COLORS.border,
-  };
-  const glowMap = {
-    safe:    SHADOWS.glowSafe,
-    danger:  SHADOWS.glowDanger,
-    warning: SHADOWS.glowWarning,
-    ghost:   {},
-  };
+  const colors = {
+    primary: { bg: COLORS.primary,  text: '#000000', shadow: SHADOWS.glowPrimary },
+    safe:    { bg: COLORS.safe,     text: '#FFFFFF', shadow: SHADOWS.glowSafe    },
+    danger:  { bg: COLORS.danger,   text: '#FFFFFF', shadow: SHADOWS.glowDanger  },
+    warning: { bg: COLORS.warning,  text: '#000000', shadow: SHADOWS.glowWarning  },
+    ghost:   { bg: 'transparent',   text: COLORS.textSecondary, shadow: SHADOWS.sm },
+  }[variant];
 
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, style]}>
-      <TouchableOpacity
-        onPress={handlePress}
-        activeOpacity={0.9}
-        disabled={disabled}
-        style={[
-          styles.glowBtn,
-          small && styles.glowBtnSmall,
-          {
-            backgroundColor: bgMap[variant],
-            borderColor: borderMap[variant],
-          },
-          variant !== 'ghost' && glowMap[variant],
-          disabled && styles.glowBtnDisabled,
-        ]}
-      >
-        {icon && <View style={styles.glowBtnIcon}>{icon}</View>}
-        <Text style={[styles.glowBtnText, { color: textMap[variant] }, small && styles.glowBtnTextSmall]}>
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      disabled={disabled}
+      style={style}
+    >
+      <Animated.View style={[
+        styles.glowBtn,
+        size === 'sm' && styles.glowBtnSm,
+        { backgroundColor: colors.bg },
+        variant !== 'ghost' && colors.shadow,
+        disabled && styles.glowBtnDisabled,
+        { transform: [{ scale }] },
+      ]}>
+        {icon && <View style={{ marginRight: 6 }}>{icon}</View>}
+        <Text style={[styles.glowBtnText, size === 'sm' && styles.glowBtnTextSm, { color: colors.text }]}>
           {label}
         </Text>
-      </TouchableOpacity>
-    </Animated.View>
+      </Animated.View>
+    </TouchableOpacity>
   );
 };
 
-// ─── DIVIDER ────────────────────────────────────────────────────────────────
-export const Divider: React.FC<{ style?: ViewStyle }> = ({ style }) => (
+// ─── DIVIDER ──────────────────────────────────────────────────────────────────
+export const Divider: React.FC<{ style?: any }> = ({ style }) => (
   <View style={[styles.divider, style]} />
 );
 
-// ─── SCREEN HEADER ──────────────────────────────────────────────────────────
-interface ScreenHeaderProps {
-  title: string;
-  subtitle?: string;
-  badge?: string;
-  badgeVariant?: BadgeVariant;
-  right?: ReactNode;
-}
-
-export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
-  title,
-  subtitle,
-  badge,
-  badgeVariant = 'safe',
-  right,
-}) => (
-  <View style={styles.screenHeader}>
-    <View style={styles.screenHeaderLeft}>
-      <Text style={styles.screenHeaderTitle}>{title}</Text>
-      {subtitle && <Text style={styles.screenHeaderSubtitle}>{subtitle}</Text>}
-    </View>
-    <View style={styles.screenHeaderRight}>
-      {badge && <StatusBadge label={badge} variant={badgeVariant} />}
-      {right}
-    </View>
-  </View>
-);
-
-// ─── STYLES ──────────────────────────────────────────────────────────────────
+// ─── STYLES ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  glassCard: {
+  card: {
     backgroundColor: COLORS.card,
     borderRadius: RADII['2xl'],
     borderWidth: 1,
-    borderColor: COLORS.border,
     overflow: 'hidden',
-    ...SHADOWS.md,
   },
-  glassCardElevated: {
-    backgroundColor: COLORS.surfaceRaised,
-    ...SHADOWS.lg,
+  cardPadded: {
+    padding: 16,
   },
-  glassCardPadding: {
-    padding: SPACING.lg,
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: RADII.full,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
   },
-  glassTopEdge: {
-    position: 'absolute',
-    top: 0,
-    left: 16,
-    right: 16,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 1,
+  badgeSmall: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
-
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  badgeTextSmall: {
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 2,
-    marginBottom: SPACING.xs,
+    marginBottom: 8,
   },
-  sectionLabel: {
+  sectionHeaderText: {
     fontSize: 10,
     fontWeight: '700',
+    letterSpacing: 1,
     color: COLORS.textMuted,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
   },
-
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.full,
-    borderWidth: 1,
-  },
-  badgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-
-  metricTile: {
-    backgroundColor: COLORS.backgroundElevated,
-    borderRadius: RADII.lg,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  metricTileLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  metricTileValueRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  metricTileValue: {
-    fontSize: 16,
-    fontWeight: '900',
-    fontFamily: FONTS.mono,
-    lineHeight: 20,
-  },
-  metricTileUnit: {
-    fontSize: 9,
-    fontWeight: '600',
-    color: COLORS.textTertiary,
-    marginBottom: 2,
-  },
-
-  glowBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: RADII.xl,
-    paddingVertical: 13,
-    paddingHorizontal: 20,
-    gap: 7,
-  },
-  glowBtnSmall: {
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: RADII.lg,
-  },
-  glowBtnDisabled: {
-    opacity: 0.45,
-  },
-  glowBtnIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glowBtnText: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  glowBtnTextSmall: {
-    fontSize: 12,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: SPACING.md,
-  },
-
   screenHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingBottom: SPACING.xs,
+    marginBottom: 4,
   },
   screenHeaderLeft: {
-    flex: 1,
+    gap: 4,
   },
   screenHeaderTitle: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '700',
     color: COLORS.textPrimary,
     letterSpacing: -0.5,
-    lineHeight: 32,
   },
   screenHeaderSubtitle: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-    marginTop: 3,
-    fontWeight: '500',
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
   },
-  screenHeaderRight: {
+  metricTile: {
+    flex: 1,
+    gap: 3,
+  },
+  metricTileLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+  },
+  metricTileValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    fontFamily: FONTS.mono,
+    letterSpacing: -0.5,
+  },
+  metricTileValueSm: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: FONTS.mono,
+  },
+  metricTileUnit: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  glowBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingTop: 4,
+    justifyContent: 'center',
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: RADII.xl,
+    gap: 6,
+  },
+  glowBtnSm: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: RADII.lg,
+  },
+  glowBtnDisabled: {
+    opacity: 0.5,
+  },
+  glowBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  glowBtnTextSm: {
+    fontSize: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 12,
   },
 });

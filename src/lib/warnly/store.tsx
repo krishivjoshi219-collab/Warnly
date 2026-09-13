@@ -9,12 +9,16 @@ import {
 } from "./resilient-backend";
 import type { DopplerRadarSummary } from "./doppler-vector";
 import type { BarometricAnalysis } from "./barometric-surge";
+import { NativeEmergency } from "./native-emergency";
 
 interface WarnlyState {
   coords: Coords | null;
   geoError: string | null;
   locating: boolean;
   requestLocation: () => void;
+  requestHardwareLocation: () => Promise<void>;
+  showLocationPrompt: boolean;
+  setShowLocationPrompt: (show: boolean) => void;
   setCustomCoords: (coords: Coords) => void;
   weather: WeatherSnapshot | undefined;
   isLoading: boolean;
@@ -37,8 +41,6 @@ interface WarnlyState {
 }
 
 const Ctx = createContext<WarnlyState | null>(null);
-
-const FALLBACK: Coords = { lat: 27.7172, lon: 85.324 }; // Kathmandu Valley default
 
 // Safe memory storage fallback for native React Native
 const memoryStore: Record<string, string> = {};
@@ -72,7 +74,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-    return FALLBACK;
+    return null;
   });
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -88,7 +90,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const [backendSnapshot, setBackendSnapshot] = useState<UnifiedBackendSnapshot | null>(null);
   const [connectionState, setConnectionState] = useState<BackendConnectionState>('ONLINE_REALTIME');
 
-  // Fallback to IP-based location if browser GPS fails or is denied
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
+  // Fallback to high-accuracy IP location if satellite GPS is unavailable
   const fallbackToIpLocation = async () => {
     try {
       const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
@@ -109,31 +113,94 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-    setCoords((prev) => prev ?? FALLBACK);
-    setGeoError("Using default location. Search your city above to get exact local weather.");
+
+    try {
+      const res = await fetch("http://ip-api.com/json");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.lat && data.lon) {
+          const ipCoords = {
+            lat: parseFloat(data.lat),
+            lon: parseFloat(data.lon),
+          };
+          setCoords(ipCoords);
+          setStorageItem("warnly:coords", JSON.stringify(ipCoords));
+          setGeoError(null);
+          setLocating(false);
+          return;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    setGeoError("Location unavailable. Please search your city or enable GPS.");
     setLocating(false);
   };
 
-  const requestLocation = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      fallbackToIpLocation();
+  /**
+   * Real hardware GPS interrogation with true satellite reception (zero-internet disaster resilient)
+   */
+  const requestHardwareLocation = useCallback(async () => {
+    setLocating(true);
+    setGeoError(null);
+
+    // 1. Interrogate Android Native Location Permissions
+    try {
+      const hasPerm = await NativeEmergency.checkLocationPermission();
+      if (!hasPerm) {
+        const granted = await NativeEmergency.requestHardwareLocationPermission();
+        if (!granted) {
+          setGeoError("Hardware GPS permission denied. Please search your city or area.");
+          setLocating(false);
+          setShowLocationPrompt(true);
+          return;
+        }
+      }
+
+      // 2. Direct hardware GPS satellite query via Android LocationManager
+      try {
+        const hwLoc = await NativeEmergency.getHardwareLocation();
+        if (hwLoc && hwLoc.latitude && hwLoc.longitude) {
+          const newCoords = { lat: hwLoc.latitude, lon: hwLoc.longitude };
+          setCoords(newCoords);
+          setStorageItem("warnly:coords", JSON.stringify(newCoords));
+          setGeoError(null);
+          setLocating(false);
+          return;
+        }
+      } catch (_hwErr) {
+        /* hardware gps waiting for satellite fix */
+      }
+    } catch (_err) {
+      /* permission check fallback */
+    }
+
+    // 3. Fallback to standard geolocation if available in runtime
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+          setCoords(newCoords);
+          setStorageItem("warnly:coords", JSON.stringify(newCoords));
+          setGeoError(null);
+          setLocating(false);
+        },
+        () => {
+          fallbackToIpLocation();
+        },
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
+      );
       return;
     }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const newCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setCoords(newCoords);
-        setStorageItem("warnly:coords", JSON.stringify(newCoords));
-        setGeoError(null);
-        setLocating(false);
-      },
-      () => {
-        fallbackToIpLocation();
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5 * 60 * 1000 },
-    );
+
+    // 4. Fallback to IP geolocation
+    await fallbackToIpLocation();
   }, []);
+
+  const requestLocation = useCallback(() => {
+    requestHardwareLocation();
+  }, [requestHardwareLocation]);
 
   const setCustomCoords = useCallback((newCoords: Coords) => {
     setCoords(newCoords);
@@ -246,6 +313,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     geoError,
     locating,
     requestLocation,
+    requestHardwareLocation,
+    showLocationPrompt,
+    setShowLocationPrompt,
     setCustomCoords,
     weather,
     isLoading,

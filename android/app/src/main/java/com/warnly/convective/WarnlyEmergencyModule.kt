@@ -1,22 +1,33 @@
 package com.warnly.convective
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import androidx.core.content.ContextCompat
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.WritableMap
 import kotlin.math.sin
 
 class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
@@ -267,5 +278,184 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
 
         Log.i(TAG, "Posting critical notification: $title - $message")
         nm.notify(NOTIFICATION_ID, builder.build())
+    }
+
+    /**
+     * Checks if ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION has been granted by user.
+     */
+    @ReactMethod
+    fun checkLocationPermission(promise: Promise) {
+        try {
+            val hasFine = ContextCompat.checkSelfPermission(
+                reactApplicationContext,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(
+                reactApplicationContext,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            promise.resolve(hasFine || hasCoarse)
+        } catch (e: Exception) {
+            promise.reject("PERM_CHECK_ERR", e.message)
+        }
+    }
+
+    /**
+     * Opens Android System Settings directly to Location Settings
+     */
+    @ReactMethod
+    fun openLocationSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactApplicationContext.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not open location settings", e)
+        }
+    }
+
+    /**
+     * Obtains true offline hardware GPS coordinates via Android LocationManager.
+     * Integrates directly with satellite GPS chips (GPS_PROVIDER) and cellular hardware (NETWORK_PROVIDER).
+     * Works 100% offline with zero internet access during severe disaster infrastructure failures.
+     */
+    @ReactMethod
+    fun getHardwareLocation(promise: Promise) {
+        val lm = reactApplicationContext.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        if (lm == null) {
+            promise.reject("NO_LOCATION_SERVICE", "Hardware LocationManager service unavailable")
+            return
+        }
+
+        val hasFine = ContextCompat.checkSelfPermission(
+            reactApplicationContext,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            reactApplicationContext,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFine && !hasCoarse) {
+            promise.reject("PERMISSION_DENIED", "ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION permission required")
+            return
+        }
+
+        val isGpsEnabled = try { lm.isProviderEnabled(LocationManager.GPS_PROVIDER) } catch (e: Exception) { false }
+        val isNetworkEnabled = try { lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) } catch (e: Exception) { false }
+
+        if (!isGpsEnabled && !isNetworkEnabled) {
+            promise.reject("LOCATION_DISABLED", "Device GPS and Location Services are disabled. Please enable Location.")
+            return
+        }
+
+        // 1. Fast check for best recent cached hardware location
+        var bestLocation: Location? = null
+        try {
+            if (isGpsEnabled) {
+                val gpsLoc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (gpsLoc != null) {
+                    bestLocation = gpsLoc
+                }
+            }
+            if (isNetworkEnabled) {
+                val netLoc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                if (netLoc != null) {
+                    if (bestLocation == null || netLoc.time > bestLocation.time) {
+                        bestLocation = netLoc
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            promise.reject("SECURITY_EXCEPTION", e.message)
+            return
+        }
+
+        // If cached hardware location is fresh (< 2 minutes old), return immediately
+        val twoMinAgo = System.currentTimeMillis() - 2 * 60 * 1000
+        if (bestLocation != null && bestLocation.time > twoMinAgo) {
+            val map = Arguments.createMap().apply {
+                putDouble("latitude", bestLocation.latitude)
+                putDouble("longitude", bestLocation.longitude)
+                putDouble("altitude", bestLocation.altitude)
+                putDouble("accuracy", bestLocation.accuracy.toDouble())
+                putDouble("timestamp", bestLocation.time.toDouble())
+                putString("provider", bestLocation.provider ?: "hardware_gps")
+            }
+            promise.resolve(map)
+            return
+        }
+
+        // 2. Request live hardware GPS satellite fix
+        val mainHandler = Handler(Looper.getMainLooper())
+        var resolved = false
+
+        val listener = object : LocationListener {
+            override fun onLocationChanged(loc: Location) {
+                if (resolved) return
+                resolved = true
+                try {
+                    lm.removeUpdates(this)
+                } catch (ignored: Exception) {}
+                val map = Arguments.createMap().apply {
+                    putDouble("latitude", loc.latitude)
+                    putDouble("longitude", loc.longitude)
+                    putDouble("altitude", loc.altitude)
+                    putDouble("accuracy", loc.accuracy.toDouble())
+                    putDouble("timestamp", loc.time.toDouble())
+                    putString("provider", loc.provider ?: "satellite_gps")
+                }
+                promise.resolve(map)
+            }
+            @Deprecated("Deprecated in Java")
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+            override fun onProviderEnabled(provider: String) {}
+            override fun onProviderDisabled(provider: String) {}
+        }
+
+        // 8-second safety timeout: fall back to last known location or reject
+        mainHandler.postDelayed({
+            if (!resolved) {
+                resolved = true
+                try {
+                    lm.removeUpdates(listener)
+                } catch (ignored: Exception) {}
+                if (bestLocation != null) {
+                    val map = Arguments.createMap().apply {
+                        putDouble("latitude", bestLocation.latitude)
+                        putDouble("longitude", bestLocation.longitude)
+                        putDouble("altitude", bestLocation.altitude)
+                        putDouble("accuracy", bestLocation.accuracy.toDouble())
+                        putDouble("timestamp", bestLocation.time.toDouble())
+                        putString("provider", "${bestLocation.provider ?: "hardware"}_cached")
+                    }
+                    promise.resolve(map)
+                } else {
+                    promise.reject("TIMEOUT", "Hardware GPS timed out waiting for satellite fix")
+                }
+            }
+        }, 8000)
+
+        mainHandler.post {
+            try {
+                if (isGpsEnabled) {
+                    lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 1.0f, listener, Looper.getMainLooper())
+                }
+                if (isNetworkEnabled) {
+                    lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 1.0f, listener, Looper.getMainLooper())
+                }
+            } catch (e: SecurityException) {
+                if (!resolved) {
+                    resolved = true
+                    promise.reject("SECURITY_EXCEPTION", e.message)
+                }
+            } catch (e: Exception) {
+                if (!resolved) {
+                    resolved = true
+                    promise.reject("GPS_REQUEST_ERR", e.message)
+                }
+            }
+        }
     }
 }

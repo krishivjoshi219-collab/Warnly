@@ -38,13 +38,55 @@ export const weatherCodeInfo = (code: number, isDay = true): { label: string; ic
 
 export async function searchLocations(query: string): Promise<SearchResult[]> {
   if (!query || query.trim().length < 2) return [];
+  const cleanQ = query.trim();
+
+  // Normalize common transliteration/spelling typos
+  const typoMap: Record<string, string> = {
+    kathmadu: 'kathmandu',
+    katmandu: 'kathmandu',
+    ktm: 'kathmandu',
+    delih: 'delhi',
+    mubmai: 'mumbai',
+    pokra: 'pokhara',
+    pkh: 'pokhara',
+    ny: 'new york',
+    nyc: 'new york',
+  };
+
+  const normalizedQ = typoMap[cleanQ.toLowerCase()] ?? cleanQ;
+
   try {
-    const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=6&language=en&format=json`,
+    let res = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(normalizedQ)}&count=6&language=en&format=json`,
     );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.results ?? [];
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        return data.results;
+      }
+    }
+
+    // Resilient fallback: OpenStreetMap Nominatim for any global language or place
+    const nomRes = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(normalizedQ)}&limit=6`,
+      { headers: { 'User-Agent': 'WarnlyEmergencyApp/1.1 (team@warnly.app)' } }
+    );
+    if (nomRes.ok) {
+      const nomData = (await nomRes.json()) as any[];
+      return nomData.map((n: any, idx: number) => {
+        const parts = (n.display_name || '').split(',');
+        return {
+          id: n.place_id || idx + 100000,
+          name: n.name || parts[0] || 'Location',
+          latitude: parseFloat(n.lat),
+          longitude: parseFloat(n.lon),
+          country: parts.slice(-1)[0]?.trim(),
+          admin1: parts.slice(-2, -1)[0]?.trim(),
+        };
+      });
+    }
+
+    return [];
   } catch {
     return [];
   }
@@ -57,8 +99,9 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
     );
     if (!res.ok) throw new Error("geocode failed");
     const j = (await res.json()) as { city?: string; locality?: string; countryName?: string; principalSubdivision?: string };
-    const name = j.city || j.locality || j.principalSubdivision;
-    return [name, j.countryName].filter(Boolean).join(", ") || `${lat.toFixed(2)}\u00B0, ${lon.toFixed(2)}\u00B0`;
+    const locality = j.locality || j.city || j.principalSubdivision;
+    const region = j.principalSubdivision && j.principalSubdivision !== locality ? j.principalSubdivision : j.countryName;
+    return [locality, region].filter(Boolean).join(", ") || `${lat.toFixed(2)}\u00B0, ${lon.toFixed(2)}\u00B0`;
   } catch {
     return `${lat.toFixed(2)}\u00B0, ${lon.toFixed(2)}\u00B0`;
   }
@@ -67,40 +110,41 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherSnapshot> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,cloud_cover` +
-    `&hourly=temperature_2m,precipitation_probability,precipitation,cape,lifted_index` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,cloud_cover,uv_index` +
+    `&hourly=temperature_2m,precipitation_probability,precipitation,cape,lifted_index,uv_index` +
     `&minutely_15=precipitation` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max` +
-    `&forecast_days=7&timezone=auto`;
+    `&forecast_days=7&timezone=auto&timeformat=unixtime`;
 
   const [res, place] = await Promise.all([fetch(url), reverseGeocode(lat, lon)]);
   if (!res.ok) throw new Error("Weather service unavailable");
   const d = (await res.json()) as any;
 
-  const times: string[] = d.hourly?.time ?? [];
-  const now = Date.now();
-  let idx = times.findIndex((t) => new Date(t).getTime() >= now - 30 * 60 * 1000);
+  const times: number[] = d.hourly?.time ?? [];
+  const nowSec = Math.floor(Date.now() / 1000);
+  let idx = times.findIndex((t) => t >= nowSec - 1800);
   if (idx < 0) idx = 0;
 
   const hourly = times.slice(idx, idx + 12).map((t, i) => ({
-    time: t,
+    time: new Date(t * 1000).toISOString(),
     temp: d.hourly.temperature_2m?.[idx + i] ?? 0,
     cape: d.hourly.cape?.[idx + i] ?? 0,
     precipProb: d.hourly.precipitation_probability?.[idx + i] ?? 0,
     precip: d.hourly.precipitation?.[idx + i] ?? 0,
   }));
 
-  const minutelyTimes: string[] = d.minutely_15?.time ?? [];
-  let minIdx = minutelyTimes.findIndex((t) => new Date(t).getTime() >= now - 10 * 60 * 1000);
+  const minutelyTimes: number[] = d.minutely_15?.time ?? [];
+  let minIdx = minutelyTimes.findIndex((t) => t >= nowSec - 600);
   if (minIdx < 0) minIdx = 0;
 
   const minutely15 = minutelyTimes.slice(minIdx, minIdx + 8).map((t, i) => ({
-    time: t,
+    time: new Date(t * 1000).toISOString(),
     precip: d.minutely_15?.precipitation?.[minIdx + i] ?? 0,
   }));
 
-  const daily = (d.daily?.time ?? []).map((date: string, i: number) => ({
-    date,
+  const dailyTimes: number[] = d.daily?.time ?? [];
+  const daily = dailyTimes.map((t: number, i: number) => ({
+    date: new Date(t * 1000).toISOString().slice(0, 10),
     code: d.daily.weather_code?.[i] ?? 0,
     max: d.daily.temperature_2m_max?.[i] ?? 0,
     min: d.daily.temperature_2m_min?.[i] ?? 0,
@@ -116,16 +160,19 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherSna
   const currentCode = d.current?.weather_code ?? 0;
   const nextRainMin = minutely15.findIndex((m) => m.precip > 0.1);
 
-  let rainSummary = "No rain expected in the immediate 2-hour forecast.";
-  if (currentPrecip > 0.2 || (currentCode >= 50 && currentCode <= 99)) {
-    rainSummary = `Active ${weatherCodeInfo(currentCode).label.toLowerCase()} currently falling.`;
+  let rainSummary = "0.0 mm/h • Dry conditions in immediate forecast.";
+  if (currentPrecip > 0.1 || (currentCode >= 50 && currentCode <= 99 && currentPrecip > 0)) {
+    rainSummary = `${currentPrecip.toFixed(1)} mm/h • Active ${weatherCodeInfo(currentCode).label.toLowerCase()} currently falling.`;
   } else if (nextRainMin > 0) {
     const mins = nextRainMin * 15;
-    rainSummary = `Rain starting in approximately ${mins} minutes.`;
+    const incomingPrecip = minutely15[nextRainMin]?.precip ?? 0.2;
+    rainSummary = `Rain starting in ~${mins} minutes (${incomingPrecip.toFixed(1)} mm/h expected).`;
   } else {
     const maxUpcomingProb = Math.max(...hourly.slice(0, 6).map((h) => h.precipProb));
     if (maxUpcomingProb >= 40) {
-      rainSummary = `${maxUpcomingProb}% chance of rain in the next 6 hours.`;
+      rainSummary = `${maxUpcomingProb}% chance of rain in the next 6 hours (currently dry).`;
+    } else {
+      rainSummary = "Dry conditions • 0.0 mm precipitation expected.";
     }
   }
 
@@ -137,7 +184,7 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherSna
     humidity: d.current?.relative_humidity_2m ?? 0,
     dewPoint: d.current?.dew_point_2m ?? 0,
     cloudCover: d.current?.cloud_cover ?? 0,
-    uvIndex: d.daily?.uv_index_max?.[0] ?? Math.min(11, Math.round(((d.hourly?.cape?.[idx] ?? 0) / 400) + 3)),
+    uvIndex: d.current?.uv_index !== undefined ? Math.round(d.current.uv_index * 10) / 10 : (d.daily?.uv_index_max?.[0] ?? 5),
     windSpeed: d.current?.wind_speed_10m ?? 0,
     windGust: d.current?.wind_gusts_10m ?? 0,
     windDirection: d.current?.wind_direction_10m ?? 0,

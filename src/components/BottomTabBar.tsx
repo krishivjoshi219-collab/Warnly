@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  Platform,
 } from 'react-native';
 import { Home, Radar, Shield, CloudSun, Settings } from './Icons';
 import { COLORS, RADII, SHADOWS } from '../theme';
@@ -32,7 +33,6 @@ const TABS: TabConfig[] = [
   { id: 'SETTINGS', label: 'Settings', icon: Settings },
 ];
 
-// ─── Individual tab button ──────────────────────────────────────────────────
 const TabButton: React.FC<{
   tab: TabConfig;
   isActive: boolean;
@@ -44,15 +44,15 @@ const TabButton: React.FC<{
   const handlePress = () => {
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 0.9,
-        duration: 80,
+        toValue: 0.88,
+        duration: 70,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 300,
-        friction: 14,
+        tension: 350,
+        friction: 12,
         useNativeDriver: true,
       }),
     ]).start();
@@ -61,7 +61,7 @@ const TabButton: React.FC<{
 
   const Icon = tab.icon;
   const activeColor = '#FFFFFF';
-  const inactiveColor = '#64748B';
+  const inactiveColor = '#71717A';
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
@@ -92,7 +92,6 @@ const TabButton: React.FC<{
   );
 };
 
-// ─── Main BottomTabBar ───────────────────────────────────────────────────────
 export const BottomTabBar: React.FC<Props> = ({ activeTab, onTabChange, hasDanger }) => {
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
@@ -118,22 +117,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 200,
+    paddingBottom: Platform.OS === 'android' ? 10 : 20,
   },
   barContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 12,
-    marginBottom: 12,
-    backgroundColor: '#090F1B',
-    borderRadius: RADII['3xl'],
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(18, 18, 22, 0.94)',
+    borderRadius: RADII.full,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
-    padding: 4,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 12,
   },
   tabPressable: {
     flex: 1,
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
   tabInner: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 7,
-    borderRadius: RADII['2xl'],
+    paddingVertical: 6,
+    borderRadius: RADII.full,
     gap: 3,
   },
   tabInnerActive: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
   },
   iconWrap: {
     position: 'relative',
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: COLORS.danger,
     borderWidth: 1,
-    borderColor: '#090F1B',
+    borderColor: '#121216',
   },
   tabLabel: {
     fontSize: 10,

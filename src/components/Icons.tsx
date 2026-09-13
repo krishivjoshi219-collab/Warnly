@@ -45,6 +45,7 @@ export const Settings = createFeather('settings');
 export const Search = createFeather('search');
 export const RefreshCw = createFeather('refresh-cw');
 export const MapPin = createFeather('map-pin');
+export const Map = createFeather('map');
 export const Navigation = createFeather('navigation');
 export const Share2 = createFeather('share-2');
 export const BookOpen = createFeather('book-open');

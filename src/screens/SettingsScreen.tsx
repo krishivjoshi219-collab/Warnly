@@ -43,7 +43,7 @@ import {
   StatusBadge,
   Divider,
 } from '../components/ui';
-import { COLORS, RADII, FONTS, SHADOWS, SPACING } from '../theme';
+import { COLORS, RADII, FONTS, SHADOWS, SPACING, SAFE_TOP_PADDING } from '../theme';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -131,8 +131,8 @@ export const SettingsScreen: React.FC = () => {
             {!isPro && (
               <GlowButton
                 label="Upgrade to Pro"
-                variant="safe"
-                icon={<Sparkles size={13} color={COLORS.textInverted} />}
+                variant="primary"
+                icon={<Sparkles size={13} color="#000000" />}
                 onPress={() => openPaywall('Unlock all features with Warnly Pro.')}
                 style={{ flex: 1 }}
               />
@@ -193,10 +193,10 @@ export const SettingsScreen: React.FC = () => {
             >
               {units === u && (
                 <View style={styles.unitCheck}>
-                  <CheckCircle2 size={12} color={COLORS.safe} />
+                  <CheckCircle2 size={12} color="#FFFFFF" />
                 </View>
               )}
-              <Text style={[styles.unitCardTitle, units === u && { color: COLORS.safe }]}>
+              <Text style={[styles.unitCardTitle, units === u && { color: '#FFFFFF' }]}>
                 {u === 'metric' ? 'Metric' : 'Imperial'}
               </Text>
               <Text style={styles.unitCardSub}>
@@ -450,8 +450,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 135,
+    paddingTop: SAFE_TOP_PADDING,
+    paddingBottom: 110,
     gap: 12,
   },
 
@@ -460,14 +460,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     borderRadius: RADII['3xl'],
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     padding: 18,
     gap: 14,
     ...SHADOWS.md,
   },
   proCardActive: {
-    borderColor: COLORS.safeBorder,
-    ...SHADOWS.glowSafe,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    ...SHADOWS.glowPrimary,
   },
   proCardHighlight: {
     position: 'absolute',
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     height: 1,
-    backgroundColor: COLORS.safe + '40',
+    backgroundColor: 'rgba(255, 255, 255, 0.20)',
     borderRadius: 1,
   },
   proCardTop: {
@@ -484,11 +484,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   proIconBox: {
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: RADII.lg,
     padding: 10,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   proCardTitles: { flex: 1 },
   proTitleRow: {
@@ -504,9 +504,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderRadius: RADII.xl,
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -520,11 +520,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   settingIconBox: {
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: RADII.md,
     padding: 9,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -550,15 +550,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   unitCardActive: {
-    borderColor: COLORS.safeBorder,
-    backgroundColor: COLORS.safeBg,
+    borderColor: 'rgba(255, 255, 255, 0.30)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   unitCheck: { position: 'absolute', top: 10, right: 10 },
   unitCardTitle: { fontSize: 14, fontWeight: '800', color: COLORS.textSecondary, marginBottom: 2 },
   unitCardSub: { fontSize: 10, color: COLORS.textMuted },
 
   // ── Radius ──
-  radiusValue: { fontSize: 13, fontWeight: '800', fontFamily: FONTS.mono, color: COLORS.safe },
+  radiusValue: { fontSize: 13, fontWeight: '800', fontFamily: FONTS.mono, color: '#FFFFFF' },
   radiiPicker: {
     flexDirection: 'row',
     gap: 6,
@@ -567,20 +567,20 @@ const styles = StyleSheet.create({
   },
   radiusChip: {
     flex: 1,
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: RADII.lg,
     paddingVertical: 9,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.10)',
   },
   radiusChipActive: {
-    backgroundColor: COLORS.safe,
-    borderColor: COLORS.safe,
-    ...SHADOWS.glowSafe,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+    ...SHADOWS.glowPrimary,
   },
   radiusChipText: { fontSize: 11, fontWeight: '700', color: COLORS.textSecondary },
-  radiusChipTextActive: { color: COLORS.textInverted, fontWeight: '900' },
+  radiusChipTextActive: { color: '#000000', fontWeight: '900' },
   radiusHint: {
     fontSize: 10,
     color: COLORS.textMuted,

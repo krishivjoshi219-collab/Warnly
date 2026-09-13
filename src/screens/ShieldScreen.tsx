@@ -26,7 +26,7 @@ import { distanceKm, SAFETY_RADIUS_KM } from "../lib/warnly/risk";
 import type { Coords } from "../lib/warnly/types";
 import { LocationSearch } from "../components/warnly/LocationSearch";
 import { PaywallModal } from "../components/warnly/PaywallModal";
-import { COLORS, RADII, FONTS, SHADOWS, SPACING } from "../theme";
+import { COLORS, RADII, FONTS, SHADOWS, SPACING, SAFE_TOP_PADDING } from "../theme";
 import { FadeIn, ScreenHeader, SectionHeader, GlassCard, StatusBadge, GlowButton, PulseDot } from "../components/ui";
 
 export const ShieldScreen: React.FC = () => {
@@ -413,21 +413,20 @@ const styles = StyleSheet.create({
   },
   screenContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 135,
+    paddingTop: SAFE_TOP_PADDING,
+    paddingBottom: 110,
     gap: 12,
   },
   proBanner: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADII['2xl'],
-    borderWidth: 1,
-    borderColor: COLORS.safeBorder,
-    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: COLORS.card,
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    padding: 14,
     gap: 10,
-    ...SHADOWS.md,
   },
   proBannerLeft: {
     flexDirection: "row",
@@ -436,9 +435,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   crownIconBox: {
-    backgroundColor: COLORS.safeBg,
-    borderRadius: RADII.full,
-    padding: 8,
+    width: 32,
+    height: 32,
+    borderRadius: RADII.md,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   proBannerTexts: {
     flex: 1,
@@ -447,6 +449,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexWrap: "wrap",
   },
   proTitle: {
     fontSize: 12,
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(16, 185, 129, 0.2)",
   },
   capBadgeFree: {
-    backgroundColor: COLORS.backgroundElevated,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
   capBadgeText: {
     fontSize: 8,
@@ -472,24 +475,24 @@ const styles = StyleSheet.create({
     color: "#10B981",
   },
   capBadgeTextFree: {
-    color: COLORS.textMuted,
+    color: COLORS.textTertiary,
   },
   proSubtitle: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     marginTop: 2,
     lineHeight: 14,
   },
   upgradeBtn: {
-    backgroundColor: COLORS.safe,
-    borderRadius: RADII.lg,
-    paddingHorizontal: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: RADII.full,
+    paddingHorizontal: 14,
     paddingVertical: 7,
   },
   upgradeBtnText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#070A0F",
+    color: "#000000",
   },
   sectionHeader: {
     marginTop: 4,
