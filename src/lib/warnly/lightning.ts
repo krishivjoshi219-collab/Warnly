@@ -177,6 +177,45 @@ export function getLightningFeedStatus(): {
   };
 }
 
+export interface DemoStrike extends Strike {
+  timestamp: number;
+  isSimulated?: boolean;
+}
+
+export function generateDemoStrikesSync(origin: Coords): DemoStrike[] {
+  const now = Date.now();
+  const demoDistances = [2.4, 4.2, 7.8, 12.5, 18.3];
+  return demoDistances.map((distKm, idx) => {
+    const brg = 195 + idx * 22;
+    const R = 6371;
+    const brgRad = (brg * Math.PI) / 180;
+    const lat1 = (origin.lat * Math.PI) / 180;
+    const lon1 = (origin.lon * Math.PI) / 180;
+    const dByR = distKm / R;
+
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(dByR) + Math.cos(lat1) * Math.sin(dByR) * Math.cos(brgRad)
+    );
+    const lon2 =
+      lon1 +
+      Math.atan2(
+        Math.sin(brgRad) * Math.sin(dByR) * Math.cos(lat1),
+        Math.cos(dByR) - Math.sin(lat1) * Math.sin(lat2)
+      );
+
+    return {
+      id: `demo-strike-${idx}`,
+      lat: Number(((lat2 * 180) / Math.PI).toFixed(5)),
+      lon: Number(((lon2 * 180) / Math.PI).toFixed(5)),
+      timestamp: now - (idx + 1) * 2 * 60 * 1000,
+      distanceKm: distKm,
+      bearingDeg: brg,
+      isSimulated: true,
+      ageMin: (idx + 1) * 2,
+    };
+  });
+}
+
 /**
  * Fetches real live lightning strikes around user coordinates from the live Blitzortung network.
  * If weather is completely clear and no strikes are active in radius, strictly returns [] (0 strikes).
@@ -206,35 +245,7 @@ export async function fetchRealLightningStrikes(
   if (simulateStorm) {
     // Only generate demo strikes if pool is empty — 5-cell supercell with imminent breach
     if (!strikePool.some((s) => s.isSimulated)) {
-      const demoDistances = [2.4, 4.2, 7.8, 12.5, 18.3];
-      demoDistances.forEach((distKm, idx) => {
-        const brg = 195 + idx * 22;
-        const R = 6371;
-        const brgRad = (brg * Math.PI) / 180;
-        const lat1 = (origin.lat * Math.PI) / 180;
-        const lon1 = (origin.lon * Math.PI) / 180;
-        const dByR = distKm / R;
-
-        const lat2 = Math.asin(
-          Math.sin(lat1) * Math.cos(dByR) + Math.cos(lat1) * Math.sin(dByR) * Math.cos(brgRad)
-        );
-        const lon2 =
-          lon1 +
-          Math.atan2(
-            Math.sin(brgRad) * Math.sin(dByR) * Math.cos(lat1),
-            Math.cos(dByR) - Math.sin(lat1) * Math.sin(lat2)
-          );
-
-        strikePool.push({
-          id: `demo-strike-${idx}`,
-          lat: Number(((lat2 * 180) / Math.PI).toFixed(5)),
-          lon: Number(((lon2 * 180) / Math.PI).toFixed(5)),
-          timestamp: now - (idx + 1) * 2 * 60 * 1000,
-          distanceKm: distKm,
-          bearingDeg: brg,
-          isSimulated: true,
-        });
-      });
+      strikePool.push(...generateDemoStrikesSync(origin));
     }
   }
 

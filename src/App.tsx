@@ -19,67 +19,58 @@ import "./lib/warnly/astra";
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("HOME");
   const { level, nearest, probability } = useWarnly();
-  const screenFade = useRef(new Animated.Value(1)).current;
+  const sirenActiveRef = useRef(false);
 
-  // Wow factor: breakthrough siren + critical heads-up on DANGER breach (even on silent)
+  // Breakthrough siren + critical heads-up on DANGER breach (guarded to avoid bridge spam)
   useEffect(() => {
     if (level === "danger") {
-      startSirenAudio();
-      NativeEmergency.setupEmergencyNotificationChannel();
-      NativeEmergency.postCriticalAlert(
-        "TAKE SHELTER NOW",
-        nearest
-          ? `Lightning ${nearest.distanceKm} km away — ${probability}% threat. Move indoors.`
-          : "Lightning inside 10 km ring. Move indoors now."
-      );
+      if (!sirenActiveRef.current) {
+        sirenActiveRef.current = true;
+        startSirenAudio();
+        NativeEmergency.setupEmergencyNotificationChannel();
+        NativeEmergency.postCriticalAlert(
+          "TAKE SHELTER NOW",
+          nearest
+            ? `Lightning ${nearest.distanceKm} km away — ${probability}% threat. Move indoors.`
+            : "Lightning inside 10 km ring. Move indoors now."
+        );
+      }
     } else {
-      stopSirenAudio();
+      if (sirenActiveRef.current) {
+        sirenActiveRef.current = false;
+        stopSirenAudio();
+      }
     }
-    return () => {
-      if (level !== "danger") stopSirenAudio();
-    };
   }, [level, nearest, probability]);
 
+  // Zero-lag instant tab switching (0 ms)
   const handleTabChange = (nextTab: ActiveTab) => {
-    if (nextTab === activeTab) return;
-    Animated.timing(screenFade, {
-      toValue: 0.15,
-      duration: 70,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start(() => {
+    if (nextTab !== activeTab) {
       setActiveTab(nextTab);
-      Animated.timing(screenFade, {
-        toValue: 1,
-        duration: 140,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start();
-    });
-  };
-
-  const renderScreen = () => {
-    switch (activeTab) {
-      case "HOME":
-        return <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />;
-      case "RADAR":
-        return <RadarScreen />;
-      case "SHIELD":
-        return <ShieldScreen />;
-      case "WEATHER":
-        return <WeatherScreen />;
-      case "SETTINGS":
-        return <SettingsScreen />;
-      default:
-        return <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />;
     }
   };
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.screenWrapper, { opacity: screenFade }]}>
-        {renderScreen()}
-      </Animated.View>
+      <View style={styles.screenContainer}>
+        {/* All screens mounted in parallel with fast display toggling (0 ms tab switch) */}
+        <View style={[styles.screenPane, activeTab !== "HOME" && styles.hiddenPane]}>
+          <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />
+        </View>
+        <View style={[styles.screenPane, activeTab !== "RADAR" && styles.hiddenPane]}>
+          <RadarScreen />
+        </View>
+        <View style={[styles.screenPane, activeTab !== "SHIELD" && styles.hiddenPane]}>
+          <ShieldScreen />
+        </View>
+        <View style={[styles.screenPane, activeTab !== "WEATHER" && styles.hiddenPane]}>
+          <WeatherScreen />
+        </View>
+        <View style={[styles.screenPane, activeTab !== "SETTINGS" && styles.hiddenPane]}>
+          <SettingsScreen />
+        </View>
+      </View>
+
       <BottomTabBar
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -110,7 +101,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     position: "relative",
   },
-  screenWrapper: {
+  screenContainer: {
     flex: 1,
+  },
+  screenPane: {
+    flex: 1,
+  },
+  hiddenPane: {
+    display: "none",
   },
 });

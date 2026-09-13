@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef, type ReactNode } from "react";
 import { gridProbability, riskLevel, SAFETY_RADIUS_KM } from "./risk";
 import type { Coords, RiskLevel, Strike, WeatherSnapshot } from "./types";
-import { fetchRealLightningStrikes, clearSimulatedStrikes } from "./lightning";
+import { fetchRealLightningStrikes, clearSimulatedStrikes, generateDemoStrikesSync } from "./lightning";
 import {
   ResilientBackendEngine,
   type UnifiedBackendSnapshot,
@@ -101,6 +101,8 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const [locating, setLocating] = useState(false);
   const [alertDismissedAt, setAlertDismissedAt] = useState<number | null>(null);
   const [simulateStorm, setSimulateStorm] = useState(false);
+  const savedBaselineWeatherRef = useRef<WeatherSnapshot | undefined>(undefined);
+  const savedBaselineSnapshotRef = useRef<UnifiedBackendSnapshot | null>(null);
 
   const [weather, setWeather] = useState<WeatherSnapshot | undefined>(undefined);
   const [strikes, setStrikes] = useState<Strike[]>([]);
@@ -235,27 +237,11 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     try {
       // Ingest through the Resilient Multi-Tier Backend
       const snapshot = await ResilientBackendEngine.getAtmosphericTelemetry(c);
-      // Demo override: force severe supercell so judges see DANGER + radar + ETA instantly
-      if (simulateStorm) {
-        snapshot.weather = {
-          ...snapshot.weather,
-          cape: Math.max(snapshot.weather.cape, 2450),
-          liftedIndex: Math.min(snapshot.weather.liftedIndex, -4.2),
-          precipProbability: Math.max(snapshot.weather.precipProbability, 92),
-          weatherCode: 95,
-          precipitation: Math.max(snapshot.weather.precipitation, 12.5),
-        };
-        snapshot.doppler = analyzeDopplerCells(
-          c,
-          Math.max(snapshot.weather.cape, 2200),
-          Math.max(snapshot.weather.precipProbability, 85),
-          95,
-          true
-        );
-      }
       setBackendSnapshot(snapshot);
+      savedBaselineSnapshotRef.current = snapshot;
       setConnectionState(snapshot.connectionState);
       setWeather(snapshot.weather);
+      savedBaselineWeatherRef.current = snapshot.weather;
       if (snapshot.connectionState !== 'OFFLINE_CACHED') {
         setLastRemoteSync(Date.now());
       }
@@ -265,7 +251,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
         snapshot.weather.cape,
         snapshot.weather.precipProbability,
         snapshot.weather.weatherCode,
-        simulateStorm
+        false
       );
       setStrikes(st);
       setError(null);
@@ -274,7 +260,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [simulateStorm]);
+  }, []);
 
   // 15-Minute Stale-Data Watchdog Timer
   const [lastRemoteSync, setLastRemoteSync] = useState(Date.now());
@@ -329,7 +315,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
       clearInterval(wxInterval);
       clearInterval(stInterval);
     };
-  }, [coords?.lat, coords?.lon, simulateStorm, loadData]);
+  }, [coords?.lat, coords?.lon, loadData]);
 
   const { probability, level } = useMemo(() => {
     const base = weather
@@ -413,9 +399,84 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     shelterUntil,
     simulateStorm,
     toggleSimulateStorm: () =>
-      setSimulateStorm((s) => {
-        const next = !s;
-        if (!next) clearSimulatedStrikes();
+      setSimulateStorm((prev) => {
+        const next = !prev;
+        if (next) {
+          // Synchronous immediate demo injection (0 ms latency)
+          if (weather) savedBaselineWeatherRef.current = weather;
+          if (backendSnapshot) savedBaselineSnapshotRef.current = backendSnapshot;
+
+          const c = coords ?? { lat: 28.5355, lon: 77.26 };
+          const baseWx: WeatherSnapshot = weather ?? {
+            place: "South East, Delhi",
+            coords: c,
+            temperature: 24,
+            apparent: 26,
+            humidity: 92,
+            dewPoint: 22,
+            cloudCover: 90,
+            uvIndex: 1,
+            windSpeed: 45,
+            windGust: 65,
+            windDirection: 210,
+            pressure: 1004,
+            precipitation: 24.5,
+            weatherCode: 95,
+            isDay: false,
+            cape: 2850,
+            liftedIndex: -5.4,
+            precipProbability: 98,
+            updatedAt: Date.now(),
+            rainSummary: "Severe convective cell — torrential rain and lightning",
+            daily: [],
+            hourly: [],
+            minutely15: [],
+          };
+          const demoWeather: WeatherSnapshot = {
+            ...baseWx,
+            cape: 2850,
+            liftedIndex: -5.4,
+            precipProbability: 98,
+            weatherCode: 95,
+            precipitation: 24.5,
+            windSpeed: 48,
+          };
+          setWeather(demoWeather);
+
+          const demoSt = generateDemoStrikesSync(c);
+          setStrikes(demoSt);
+
+          setBackendSnapshot({
+            connectionState: 'ONLINE_REALTIME',
+            weather: demoWeather,
+            doppler: analyzeDopplerCells(c, 2850, 98, 95, true),
+            barometer: backendSnapshot?.barometer ?? {
+              currentHpa: 1004,
+              delta1hHpa: -4.2,
+              delta3hHpa: -7.5,
+              tendency: 'MICROBURST_SURGE',
+              hasMicroburstRisk: true,
+              leadTimeMinutes: 18,
+              advisoryText: 'Severe convective pressure surge detected — microburst imminent',
+            },
+            glof: backendSnapshot?.glof ?? null,
+            earlyWarning: backendSnapshot?.earlyWarning ?? null,
+            cachedAgeSec: 0,
+            metar: backendSnapshot?.metar ?? null,
+            hardwareBarometer: backendSnapshot?.hardwareBarometer ?? null,
+            lastSuccessfulSync: Date.now(),
+          });
+        } else {
+          // Synchronous clean restore (0 ms latency)
+          clearSimulatedStrikes();
+          setStrikes([]);
+          if (savedBaselineWeatherRef.current) {
+            setWeather(savedBaselineWeatherRef.current);
+          }
+          if (savedBaselineSnapshotRef.current) {
+            setBackendSnapshot(savedBaselineSnapshotRef.current);
+          }
+        }
         return next;
       }),
     connectionState,
