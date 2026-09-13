@@ -51,12 +51,15 @@ export const SettingsScreen: React.FC = () => {
     isPro, toggleProDemo, openPaywall, units, setUnits,
     alertRadiusKm, setAlertRadiusKm, startSiren, stopSiren, sirenActive,
     apiKeys, setApiKey,
+    rcInitialized, rcAppUserId, rcEntitlements, restorePurchases,
   } = usePro();
   const { simulateStorm, toggleSimulateStorm } = useWarnly();
   const [feeds, setFeeds] = useState<FeedStatus[]>([]);
   const [checkingFeeds, setCheckingFeeds] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [isDndGranted, setIsDndGranted] = useState(false);
+  const [restoringRc, setRestoringRc] = useState(false);
+  const [restoreMsg, setRestoreMsg] = useState<string | null>(null);
 
   const checkDnd = async () => {
     try {
@@ -78,6 +81,24 @@ export const SettingsScreen: React.FC = () => {
       setFeeds(results);
     } catch { /* ignore */ }
     finally { setCheckingFeeds(false); }
+  };
+
+  const handleRestoreRc = async () => {
+    setRestoringRc(true);
+    setRestoreMsg(null);
+    try {
+      const res = await restorePurchases();
+      if (res.success && res.isPro) {
+        setRestoreMsg("Purchases restored! Astra Pro active.");
+      } else {
+        setRestoreMsg("No active purchases found for this account.");
+      }
+    } catch (err: any) {
+      setRestoreMsg(err?.message || "Restore failed.");
+    } finally {
+      setRestoringRc(false);
+      setTimeout(() => setRestoreMsg(null), 3500);
+    }
   };
 
   const radii = [5, 10, 15, 20, 25];
@@ -110,7 +131,7 @@ export const SettingsScreen: React.FC = () => {
             </View>
             <View style={styles.proCardTitles}>
               <View style={styles.proTitleRow}>
-                <Text style={styles.proName}>Warnly Pro</Text>
+                <Text style={styles.proName}>Warnly Astra Pro</Text>
                 <StatusBadge
                   label={isPro ? 'ACTIVE' : 'FREE'}
                   variant={isPro ? 'safe' : 'muted'}
@@ -120,11 +141,45 @@ export const SettingsScreen: React.FC = () => {
               </View>
               <Text style={styles.proDesc}>
                 {isPro
-                  ? 'Unlimited places, priority radar, critical siren alerts.'
-                  : 'Upgrade to unlock unlimited Family Shield & precision alerts.'}
+                  ? 'Unlimited places, priority radar, critical siren alerts & satellite feeds.'
+                  : 'Upgrade to unlock unlimited Family Shield & precision disaster alerts.'}
               </Text>
             </View>
           </View>
+
+          {/* RevenueCat Sandbox Telemetry */}
+          <View style={styles.rcInfoBox}>
+            <View style={styles.rcInfoRow}>
+              <Text style={styles.rcInfoLabel}>BILLING ENGINE</Text>
+              <Text style={styles.rcInfoValue}>
+                {rcInitialized ? 'RevenueCat Sandbox' : 'RevenueCat Initializing'}
+              </Text>
+            </View>
+            <View style={styles.rcInfoRow}>
+              <Text style={styles.rcInfoLabel}>TEST API KEY</Text>
+              <Text style={styles.rcInfoValueMono}>test_iHpFsm...Fr</Text>
+            </View>
+            {rcAppUserId && (
+              <View style={styles.rcInfoRow}>
+                <Text style={styles.rcInfoLabel}>CUSTOMER ID</Text>
+                <Text style={styles.rcInfoValueMono} numberOfLines={1}>
+                  {rcAppUserId}
+                </Text>
+              </View>
+            )}
+            <View style={styles.rcInfoRow}>
+              <Text style={styles.rcInfoLabel}>ENTITLEMENTS</Text>
+              <Text style={[styles.rcInfoValue, isPro && { color: COLORS.safe }]}>
+                {rcEntitlements.length > 0 ? rcEntitlements.join(', ') : (isPro ? 'astra_pro (sandbox)' : 'none')}
+              </Text>
+            </View>
+          </View>
+
+          {restoreMsg && (
+            <View style={styles.restoreMsgBox}>
+              <Text style={styles.restoreMsgText}>{restoreMsg}</Text>
+            </View>
+          )}
 
           <Divider />
 
@@ -134,16 +189,26 @@ export const SettingsScreen: React.FC = () => {
                 label="Upgrade to Pro"
                 variant="primary"
                 icon={<Sparkles size={13} color="#000000" />}
-                onPress={() => openPaywall('Unlock all features with Warnly Pro.')}
+                onPress={() => openPaywall('Unlock all features with Warnly Astra Pro.')}
                 style={{ flex: 1 }}
               />
             )}
+            <TouchableOpacity
+              style={styles.ghostBtn}
+              onPress={handleRestoreRc}
+              disabled={restoringRc}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.ghostBtnText}>
+                {restoringRc ? 'Restoring...' : 'Restore'}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.ghostBtn, !isPro && { flex: 0 }]}
               onPress={toggleProDemo}
               activeOpacity={0.8}
             >
-              <Text style={styles.ghostBtnText}>{isPro ? 'Reset Demo' : 'Demo Mode'}</Text>
+              <Text style={styles.ghostBtnText}>{isPro ? 'Reset' : 'Demo Mode'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -524,6 +589,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ghostBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
+  rcInfoBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderRadius: RADII.lg,
+    padding: 10,
+    marginTop: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  rcInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rcInfoLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 0.5,
+  },
+  rcInfoValue: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  rcInfoValueMono: {
+    fontSize: 10,
+    fontFamily: FONTS.mono,
+    color: COLORS.safe,
+  },
+  restoreMsgBox: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  restoreMsgText: {
+    fontSize: 11,
+    color: COLORS.safe,
+    fontWeight: '600',
+  },
 
   // ── Common setting row ──
   settingRow: {

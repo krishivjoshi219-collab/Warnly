@@ -9,6 +9,19 @@ import {
 } from "react";
 import type { Coords } from "./types";
 import { startSirenAudio, stopSirenAudio } from "./siren";
+import {
+  REVENUECAT_TEST_API_KEY,
+  initializeRevenueCat,
+  getRevenueCatCustomerInfo,
+  getRevenueCatOfferings,
+  purchaseRevenueCatPackage,
+  restoreRevenueCatPurchases,
+  getRevenueCatAppUserId,
+  subscribeToRevenueCatCustomerUpdates,
+  checkHasProEntitlement,
+  getActiveEntitlements,
+} from "./revenuecat";
+import type { PurchasesOffering, PurchasesPackage } from "react-native-purchases";
 
 export interface MonitoredPlace {
   id: string;
@@ -68,6 +81,15 @@ interface ProState {
   stopSiren: () => void;
   apiKeys: ApiKeys;
   setApiKey: (provider: keyof ApiKeys, key: string) => void;
+  // RevenueCat In-App Subscriptions
+  rcInitialized: boolean;
+  rcAppUserId: string | null;
+  rcEntitlements: string[];
+  rcOffering: PurchasesOffering | null;
+  rcPackages: PurchasesPackage[];
+  purchasePackage: (pkg: PurchasesPackage) => Promise<{ success: boolean; userCancelled?: boolean; error?: string }>;
+  restorePurchases: () => Promise<{ success: boolean; isPro: boolean; error?: string }>;
+  loadingOfferings: boolean;
 }
 
 const Ctx = createContext<ProState | null>(null);
@@ -120,6 +142,15 @@ export function ProProvider({ children }: { children: ReactNode }) {
   const [paywallReason, setPaywallReason] = useState("");
   const [sirenActive, setSirenActive] = useState(false);
 
+  // RevenueCat state
+  const [rcInitialized, setRcInitialized] = useState(false);
+  const [rcAppUserId, setRcAppUserId] = useState<string | null>(null);
+  const [rcEntitlements, setRcEntitlements] = useState<string[]>([]);
+  const [rcOffering, setRcOffering] = useState<PurchasesOffering | null>(null);
+  const [rcPackages, setRcPackages] = useState<PurchasesPackage[]>([]);
+  const [loadingOfferings, setLoadingOfferings] = useState(false);
+  const [rcPro, setRcPro] = useState(false);
+
   useEffect(() => {
     try {
       const raw = getStorageItem(KEY);
@@ -139,14 +170,80 @@ export function ProProvider({ children }: { children: ReactNode }) {
     }
   }, [state, hydrated]);
 
+  // Initialize RevenueCat SDK
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    async function setupRC() {
+      try {
+        const ok = await initializeRevenueCat(REVENUECAT_TEST_API_KEY);
+        setRcInitialized(ok);
+        const userId = await getRevenueCatAppUserId();
+        setRcAppUserId(userId);
+
+        const info = await getRevenueCatCustomerInfo();
+        if (info) {
+          const hasPro = checkHasProEntitlement(info);
+          setRcPro(hasPro);
+          setRcEntitlements(getActiveEntitlements(info));
+        }
+
+        setLoadingOfferings(true);
+        const offering = await getRevenueCatOfferings();
+        if (offering) {
+          setRcOffering(offering);
+          setRcPackages(offering.availablePackages || []);
+        }
+        setLoadingOfferings(false);
+
+        unsubscribe = subscribeToRevenueCatCustomerUpdates((updatedInfo, isProActive) => {
+          setRcPro(isProActive);
+          setRcEntitlements(getActiveEntitlements(updatedInfo));
+        });
+      } catch (err) {
+        console.warn("[ProProvider] RevenueCat setup error:", err);
+        setLoadingOfferings(false);
+      }
+    }
+    setupRC();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
   const openPaywall = useCallback((reason = "") => {
     setPaywallReason(reason);
     setPaywallOpen(true);
   }, []);
 
+  const purchasePackage = useCallback(async (pkg: PurchasesPackage) => {
+    const res = await purchaseRevenueCatPackage(pkg);
+    if (res.success) {
+      setRcPro(true);
+      setState((s) => ({ ...s, isPro: true }));
+      if (res.customerInfo) {
+        setRcEntitlements(getActiveEntitlements(res.customerInfo));
+      }
+    }
+    return res;
+  }, []);
+
+  const restorePurchases = useCallback(async () => {
+    const res = await restoreRevenueCatPurchases();
+    if (res.success && res.isPro) {
+      setRcPro(true);
+      setState((s) => ({ ...s, isPro: true }));
+      if (res.customerInfo) {
+        setRcEntitlements(getActiveEntitlements(res.customerInfo));
+      }
+    }
+    return res;
+  }, []);
+
+  const isPro = state.isPro || rcPro;
+
   const value = useMemo<ProState>(
     () => ({
-      isPro: state.isPro,
+      isPro,
       toggleProDemo: () => setState((s) => ({ ...s, isPro: !s.isPro })),
       paywallOpen,
       openPaywall,
@@ -158,7 +255,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
       setAlertRadiusKm: (km) => setState((s) => ({ ...s, alertRadiusKm: km })),
       places: state.places,
       addPlace: (p) => {
-        if (!state.isPro && state.places.length >= 1) {
+        if (!isPro && state.places.length >= 1) {
           openPaywall("Family Shield tracks unlimited places with Warnly Pro.");
           return false;
         }
@@ -184,8 +281,32 @@ export function ProProvider({ children }: { children: ReactNode }) {
           ...s,
           apiKeys: { ...s.apiKeys, [provider]: key.trim() },
         })),
+      // RevenueCat fields
+      rcInitialized,
+      rcAppUserId,
+      rcEntitlements,
+      rcOffering,
+      rcPackages,
+      purchasePackage,
+      restorePurchases,
+      loadingOfferings,
     }),
-    [state, paywallOpen, paywallReason, sirenActive, openPaywall],
+    [
+      isPro,
+      state,
+      paywallOpen,
+      paywallReason,
+      sirenActive,
+      openPaywall,
+      rcInitialized,
+      rcAppUserId,
+      rcEntitlements,
+      rcOffering,
+      rcPackages,
+      purchasePackage,
+      restorePurchases,
+      loadingOfferings,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
