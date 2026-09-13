@@ -96,4 +96,4 @@ export function gridFailChecklist(): string[] { return ['Water: fill bottles + b
 
 // ── 15. CALM-VOICE: panic-proof instruction ──
 export function calmInstruction(step: string, lang = 'en'): string { const s = step.length > 90 ? step.slice(0, 90) + ' — do this first' : step; return lang === 'en' ? `Breathe. ${s}. Tap when done.` : s; }
-export const SURVIVAL_CORE_VERSION = '3.3.0';
+export const SURVIVAL_CORE_VERSION = '0.6.4';

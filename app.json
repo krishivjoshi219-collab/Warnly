@@ -2,7 +2,7 @@
   "expo": {
     "name": "Warnly",
     "slug": "warnly",
-    "version": "3.3.0",
+    "version": "0.6.4",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "ios": {
