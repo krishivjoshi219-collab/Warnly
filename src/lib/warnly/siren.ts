@@ -46,7 +46,7 @@ export function startSirenAudio() {
     osc = ctx.createOscillator();
     gain = ctx.createGain();
     osc.type = "square";
-    osc.frequency.setValueAtTime(760, ctx.currentTime);
+    osc.frequency.setValueAtTime(960, ctx.currentTime);
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.05);
     osc.connect(gain);
@@ -58,7 +58,7 @@ export function startSirenAudio() {
       if (!ctx || !osc) return;
       high = !high;
       osc.frequency.setValueAtTime(high ? 960 : 640, ctx.currentTime);
-    }, 500);
+    }, 450);
   } catch {
     /* audio blocked */
   }

@@ -63,7 +63,9 @@ export class AdvectionEngine {
     // Relative angle between vector from storm to user and storm movement vector
     // Vector from storm to user has bearing: (stormBearingDeg + 180) % 360
     const bearingStormToUser = (stormBearingDeg + 180) % 360;
-    const angleDeltaRad = Math.abs(bearingStormToUser - stormHeadingDeg) * (Math.PI / 180);
+    let angleDeltaDeg = Math.abs(bearingStormToUser - stormHeadingDeg) % 360;
+    if (angleDeltaDeg > 180) angleDeltaDeg = 360 - angleDeltaDeg;
+    const angleDeltaRad = angleDeltaDeg * (Math.PI / 180);
 
     // Closing velocity component toward user
     const closingSpeedKmh = stormSpeedKmh * Math.cos(angleDeltaRad);

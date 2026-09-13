@@ -80,10 +80,12 @@ export function analyzeDopplerCells(
   userCoords: Coords,
   cape: number,
   precipProb: number,
-  weatherCode: number
+  weatherCode: number,
+  simulateStorm = false
 ): DopplerRadarSummary {
   // If atmosphere is calm and no convective conditions, return 0 cells
-  const isConvective = cape >= 400 || precipProb >= 40 || [95, 96, 99, 80, 81, 82].includes(weatherCode);
+  // simulateStorm forces demo cells for hackathon live demo
+  const isConvective = simulateStorm || cape >= 400 || precipProb >= 40 || [95, 96, 99, 80, 81, 82].includes(weatherCode);
 
   if (!isConvective) {
     return {

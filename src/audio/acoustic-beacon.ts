@@ -11,7 +11,7 @@ export class AcousticBeaconSynthesizer {
   private gainNode: GainNode | null = null;
   private isSirenActive: boolean = false;
   private toggleTimer: any = null;
-  private currentFreq: number = 880;
+  private currentFreq: number = 960;
 
   private initAudio() {
     if (!this.audioCtx && typeof window !== 'undefined') {
@@ -41,7 +41,7 @@ export class AcousticBeaconSynthesizer {
       if (!this.audioCtx) return;
 
       this.isSirenActive = true;
-      this.currentFreq = 880;
+      this.currentFreq = 960;
 
       this.oscillator = this.audioCtx.createOscillator();
       this.gainNode = this.audioCtx.createGain();
@@ -63,16 +63,16 @@ export class AcousticBeaconSynthesizer {
       this.gainNode.connect(this.audioCtx.destination);
       this.oscillator.start();
 
-      // Bi-tonal alternation: 880 Hz for 400ms, then 440 Hz for 400ms
+      // Bi-tonal alternation: 960 Hz / 640 Hz to match native STREAM_ALARM siren
       this.toggleTimer = setInterval(() => {
         if (!this.isSirenActive || !this.oscillator || !this.audioCtx) return;
-        this.currentFreq = this.currentFreq === 880 ? 440 : 880;
+        this.currentFreq = this.currentFreq === 960 ? 640 : 960;
         this.oscillator.frequency.setTargetAtTime(
           this.currentFreq,
           this.audioCtx.currentTime,
           0.04
         );
-      }, 420);
+      }, 450);
     } catch (e) {
       console.warn('Acoustic Siren initialization error:', e);
     }
