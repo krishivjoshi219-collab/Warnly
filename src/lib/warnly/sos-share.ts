@@ -31,6 +31,15 @@ export function buildAllClearMessage(place: string): string {
   return `WARNLY ALL-CLEAR — ${place}: 30/30 hold complete, no strikes inside 10km. Safe to resume.`;
 }
 
+export type { SosBundle, CustodyStage } from "./astra/rescuechain";
+import { createBundle as createSosBundle, statusText as sosCustodyText } from "./astra/rescuechain";
+
+/** RESCUECHAIN bridge: verifiable DTN bundle for the same SOS context. Never fakes delivery. */
+export function sosBundleFromContext(ctx: SosContext, senderId: string, secret = "warnly-demo-secret") {
+  return createSosBundle(senderId, ctx.lat, ctx.lon, buildSosMessage(ctx), secret);
+}
+export { sosCustodyText };
+
 export function buildSosUrls(ctx: SosContext): { sms: string; whatsapp: string; maps: string } {
   const msg = buildSosMessage(ctx);
   const maps = `https://www.google.com/maps/dir/?api=1&destination=${ctx.lat},${ctx.lon}`;

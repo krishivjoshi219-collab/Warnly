@@ -32,11 +32,8 @@ export function createBundle(senderId: string, lat: number, lon: number, message
 
 export function relayBundle(b: SosBundle, peerId: string): SosBundle {
   if (b.hops.includes(peerId)) return b;
-  const order: CustodyStage[] = ['STORED_LOCAL', 'RELAYED_BY_PEER', 'GATEWAY_RECEIVED', 'DESK_ACCEPTED', 'RESPONDER_DISPATCHED'];
-  const next = order[Math.min(order.length - 1, order.indexOf(b.stage) + 1)];
-  // Only advance one hop per relay; gateway/desk stages require receipts (see acceptReceipt).
+  // Only advance one hop per relay; gateway/desk stages require signed receipts (see acceptReceipt).
   const stage: CustodyStage = b.stage === 'STORED_LOCAL' ? 'RELAYED_BY_PEER' : b.stage;
-  void next;
   return { ...b, stage, hops: [...b.hops, peerId] };
 }
 

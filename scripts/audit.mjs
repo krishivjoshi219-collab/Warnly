@@ -23,7 +23,11 @@ if (pkg && appJson?.expo?.version && pkg.version !== appJson.expo.version) {
 if (tsconfig && !JSON.stringify(tsconfig.include || []).includes('src')) {
   failures.push('tsconfig.json include must contain src');
 }
-['index.html','index.js','src/App.tsx','src/main.tsx','vite.config.ts','tsconfig.json','app.json'].forEach(checkExists);
+['index.html','index.js','src/App.tsx','src/main.tsx','vite.config.ts','tsconfig.json','app.json','src/lib/warnly/astra/index.ts','src/lib/warnly/risk.ts','src/lib/warnly/sos-share.ts'].forEach(checkExists);
+const astraRequired = ['signallock','aegis','refuge-id','cutline','pressurenet','pact','rescuechain','echotrace','lifereserve','groundtruth'];
+for (const m of astraRequired) {
+  if (!fs.existsSync(path.join(root, `src/lib/warnly/astra/${m}.ts`))) failures.push(`missing Astra engine: ${m}`);
+}
 console.log(`failures: ${failures.length}`);
 failures.forEach((f) => console.log(`FAIL: ${f}`));
 if (failures.length > 0) process.exit(1);

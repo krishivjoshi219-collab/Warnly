@@ -13,6 +13,8 @@ import { ShieldScreen } from "./screens/ShieldScreen";
 import { WeatherScreen } from "./screens/WeatherScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { COLORS } from "./theme";
+// Astra engines bundled for offline demo (no UI change, no behavior change).
+import "./lib/warnly/astra";
 
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("HOME");

@@ -109,6 +109,27 @@ Dynamically linked to Doppler radar advection vectors, generating phase-based ch
 
 ---
 
+## 🏆 Astra Killer Features — Why Warnly Wins
+
+> Thesis: turning uncertain information into a defensible action when comms, infra, and attention fail.
+
+| # | Engine | 30-sec demo | Module |
+|---|---|---|---|
+| 1 | SIGNALLOCK provenance + ACTIVE/UPDATED/CANCELLED/EXPIRED/STALE/UNVERIFIED | Inject expired/tampered alert offline — rejected with proof | `src/lib/warnly/astra/signallock.ts` |
+| 2 | AEGIS do / do-NOT / fallback compiler | Toggle basement-flooded — basement shelter disappears | `src/lib/warnly/astra/aegis.ts` |
+| 3 | REFUGE-ID indoor graph + QR anchor | Scan mock QR, block hallway, reroutes accessibly | `src/lib/warnly/astra/refuge-id.ts` |
+| 4 | CUTLINE evacuate vs shelter-in-place | Wash out bridge — 3 routes → 1, then stop-driving | `src/lib/warnly/astra/cutline.ts` |
+| 5 | PRESSURENET Hampel + wavefront bearing | Replay 2 pressure traces — gust vector appears | `src/lib/warnly/astra/pressurenet.ts` |
+| 6 | PACT rally-point sync, no downgrade of NEEDS_HELP | 3 offline phones show same plan, BLE merge on touch | `src/lib/warnly/astra/pact.ts` |
+| 7 | RESCUECHAIN stored→relayed→gateway→desk→dispatched | Airplane-mode SOS shows saved-locally, then signed receipt | `src/lib/warnly/astra/rescuechain.ts` |
+| 8 | ECHOTRACE BLE + acoustic ToF `d≈c/2·Δt` | Backpack phone chirps — radius narrows to ~2m | `src/lib/warnly/astra/echotrace.ts` |
+| 9 | LIFERESERVE 72h rendezvous budget | 8h standard vs 74h beacon mode timeline | `src/lib/warnly/astra/lifereserve.ts` |
+| 10 | GROUNDTRUTH CRDT merge + expiry | Two offline map edits merge on pass-by | `src/lib/warnly/astra/groundtruth.ts` |
+
+Run `npm run astra:audit` before committing. Existing risk/shelter/SOS logic untouched — bridges only.
+
+---
+
 ## 📱 Hardware-Verified Production Gallery
 
 Every feature documented here is **100% operational on live physical hardware** (tested on Realme RMX3381 running Android 14):

@@ -104,6 +104,27 @@ export const levelMeta: Record<
   },
 };
 
+export type { AegisInput, AegisDecision, Tri } from "./astra/aegis";
+import { compileSafety as compileAegisSafety } from "./astra/aegis";
+
+/** AEGIS bridge: convert calibrated risk + field constraints into do / do-not / fallback. */
+export function compileAegisFromRisk(
+  probability: number,
+  strikes: Strike[] = [],
+  opts: { basementFlooded?: boolean; hasInteriorHallway?: boolean; hasUpperFloor?: boolean; mobilityLimited?: boolean } = {}
+) {
+  const breach = strikes.some((s) => s.distanceKm <= SAFETY_RADIUS_KM && s.ageMin <= 20);
+  return compileAegisSafety({
+    tornadoShelterDownstairs: breach || probability >= 65 ? true : "unknown",
+    basementFlooded: opts.basementFlooded ? true : false,
+    floodWaterRising: opts.basementFlooded ? true : "unknown",
+    lightningWithin10km: breach ? true : false,
+    hasInteriorHallway: opts.hasInteriorHallway ? true : "unknown",
+    hasUpperFloor: opts.hasUpperFloor ? true : "unknown",
+    mobilityLimited: opts.mobilityLimited ? true : "unknown",
+  });
+}
+
 export const strikeAgeColor = (ageMin: number): string => {
   if (ageMin <= 5) return "#ef4444";
   if (ageMin <= 15) return "#f59e0b";

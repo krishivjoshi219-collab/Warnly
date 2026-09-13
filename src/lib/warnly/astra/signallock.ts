@@ -53,3 +53,21 @@ export function isActionable(e: SignalEnvelope, secret: string, now = Date.now()
   const l = lifecycleOf(e, secret, now);
   return l === 'ACTIVE' || l === 'UPDATED';
 }
+
+/** 30-sec demo: build a signed envelope, then tamper/expire it to prove rejection. */
+export function demoEnvelope(secret: string, overrides: Partial<SignalEnvelope> = {}): SignalEnvelope {
+  const now = Date.now();
+  const base = {
+    id: 'DEMO-001',
+    authority: 'NOAA-CAP',
+    event: 'TORNADO_WARNING',
+    geometryHash: 'geo-abc123',
+    issuedAt: now,
+    expiresAt: now + 30 * 60 * 1000,
+    receivedAt: now,
+    payload: 'TAKE_SHELTER_NOW',
+    hopCount: 1,
+    ...overrides,
+  };
+  return { ...base, signature: signEnvelope(base, secret) };
+}
