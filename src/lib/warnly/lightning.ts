@@ -45,11 +45,11 @@ export async function fetchRealLightningStrikes(
 
   // If simulateStorm is explicitly activated by user in Settings (DEMO ONLY)
   if (simulateStorm) {
-    // Only generate demo strikes if pool is empty
+    // Only generate demo strikes if pool is empty — 5-cell supercell with imminent breach
     if (strikePool.length === 0) {
-      const demoDistances = [4.2, 7.8, 12.5];
+      const demoDistances = [2.4, 4.2, 7.8, 12.5, 18.3];
       demoDistances.forEach((distKm, idx) => {
-        const brg = 210 + idx * 30;
+        const brg = 195 + idx * 22;
         const R = 6371;
         const brgRad = (brg * Math.PI) / 180;
         const lat1 = (origin.lat * Math.PI) / 180;

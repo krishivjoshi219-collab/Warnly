@@ -296,7 +296,6 @@ export async function fetchNearbySafetyCamps(
     try {
       const r = await fetch(url, {
         headers: {
-          "User-Agent": "WarnlyEmergencyDisasterApp/1.1 (https://github.com/krishivjoshi219-collab/Warnly; team@warnly.app)",
           "Accept": "application/json",
         },
         signal: controller.signal,

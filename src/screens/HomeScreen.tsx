@@ -65,6 +65,8 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
     setShowLocationPrompt,
     locating,
     coords,
+    simulateStorm,
+    toggleSimulateStorm,
   } = useWarnly();
 
   const [campsOpen, setCampsOpen] = useState(false);
@@ -164,6 +166,31 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
           locating={locating}
         />
       </FadeIn>
+
+      {/* ── DEMO STORM WOW SWITCH ── */}
+      <TouchableOpacity
+        style={[
+          styles.radarCard,
+          simulateStorm && { borderColor: COLORS.danger, backgroundColor: COLORS.dangerBg },
+        ]}
+        onPress={toggleSimulateStorm}
+        activeOpacity={0.85}
+      >
+        <View style={styles.radarCardLeft}>
+          <View style={styles.radarCardHeaderRow}>
+            <PulseDot color={simulateStorm ? COLORS.danger : COLORS.warning} size={6} speed={900} />
+            <Text style={styles.radarCardTitle}>
+              {simulateStorm ? 'DEMO SUPERCELL LIVE — TAP TO CLEAR' : 'DEMO: TRIGGER SUPERCELL'}
+            </Text>
+          </View>
+          <Text style={styles.radarCardSubtitle}>
+            {simulateStorm
+              ? '5 strikes · Doppler intercept ETA 18m · Siren + strobe armed'
+              : 'One tap: 5 strikes, Doppler ETA, siren + escape vector for judges'}
+          </Text>
+        </View>
+        <Text style={{ fontSize: 22 }}>{simulateStorm ? '🛑' : '⛈️'}</Text>
+      </TouchableOpacity>
 
       {/* ── PRIMARY STATUS HERO CARD ── */}
       <FadeIn duration={260} delay={40}>

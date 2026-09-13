@@ -36,7 +36,14 @@ export class TelemetryService {
   ): Promise<AtmosphericTelemetry> {
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,precipitation,rain,surface_pressure,wind_speed_10m,wind_gusts_10m,cape,lifted_index&hourly=cape,lifted_index&forecast_days=1`;
-      const response = await fetch(url, { signal: AbortSignal.timeout(3500) });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      let response: Response;
+      try {
+        response = await fetch(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (response.ok) {
         const data = await response.json();

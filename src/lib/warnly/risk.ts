@@ -84,22 +84,22 @@ export const levelMeta: Record<
   safe: {
     label: "YOUR ZONE IS SAFE",
     sub: "0 strikes detected \u00B7 normal weather conditions",
-    color: "var(--color-safe)",
-    ring: "shadow-[0_0_60px_-18px_var(--color-safe)]",
+    color: "#10B981",
+    ring: "shadow-[0_0_60px_-18px_#10B981]",
     badge: "bg-safe/15 text-safe border-safe/30",
   },
   advisory: {
     label: "LIGHTNING ADVISORY",
     sub: "Thunderstorm activity detected within 25 km",
-    color: "var(--color-advisory)",
-    ring: "shadow-[0_0_60px_-18px_var(--color-advisory)]",
+    color: "#F59E0B",
+    ring: "shadow-[0_0_60px_-18px_#F59E0B]",
     badge: "bg-advisory/15 text-advisory border-advisory/30",
   },
   danger: {
     label: "TAKE SHELTER NOW",
     sub: "Active strike breach inside your 10 km safety ring",
-    color: "var(--color-danger)",
-    ring: "shadow-[0_0_70px_-14px_var(--color-danger)]",
+    color: "#EF4444",
+    ring: "shadow-[0_0_70px_-14px_#EF4444]",
     badge: "bg-danger/15 text-danger border-danger/30 animate-pulse",
   },
 };

@@ -214,8 +214,16 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     try {
       // Ingest through the Resilient Multi-Tier Backend
       const snapshot = await ResilientBackendEngine.getAtmosphericTelemetry(c);
-      // Demo override: force Doppler cells when simulateStorm is ON so judges see radar
-      if (simulateStorm && (!snapshot.doppler || snapshot.doppler.cellCount === 0)) {
+      // Demo override: force severe supercell so judges see DANGER + radar + ETA instantly
+      if (simulateStorm) {
+        snapshot.weather = {
+          ...snapshot.weather,
+          cape: Math.max(snapshot.weather.cape, 2450),
+          liftedIndex: Math.min(snapshot.weather.liftedIndex, -4.2),
+          precipProbability: Math.max(snapshot.weather.precipProbability, 92),
+          weatherCode: 95,
+          precipitation: Math.max(snapshot.weather.precipitation, 12.5),
+        };
         snapshot.doppler = analyzeDopplerCells(
           c,
           Math.max(snapshot.weather.cape, 2200),
@@ -265,17 +273,21 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
         .catch(() => {});
     }, 3 * 60 * 1000);
 
-    // Strike refresh every 15 seconds
+    // Strike refresh every 15 seconds — read live snapshot to avoid stale closure
     const stInterval = setInterval(() => {
-      fetchRealLightningStrikes(
-        coords,
-        weather?.cape ?? 0,
-        weather?.precipProbability ?? 0,
-        weather?.weatherCode ?? 0,
-        simulateStorm
-      )
-        .then((st) => setStrikes(st))
-        .catch(() => {});
+      setBackendSnapshot((snap) => {
+        const w = snap?.weather ?? weather;
+        fetchRealLightningStrikes(
+          coords,
+          simulateStorm ? Math.max(w?.cape ?? 0, 2450) : (w?.cape ?? 0),
+          simulateStorm ? Math.max(w?.precipProbability ?? 0, 92) : (w?.precipProbability ?? 0),
+          simulateStorm ? 95 : (w?.weatherCode ?? 0),
+          simulateStorm
+        )
+          .then((st) => setStrikes(st))
+          .catch(() => {});
+        return snap;
+      });
     }, 15 * 1000);
 
     return () => {

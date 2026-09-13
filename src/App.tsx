@@ -1,5 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, StyleSheet, Animated, Easing } from "react-native";
+import { startSirenAudio, stopSirenAudio } from "./lib/warnly/siren";
+import { NativeEmergency } from "./lib/warnly/native-emergency";
 import { WarnlyProvider, useWarnly } from "./lib/warnly/store";
 import { ProProvider } from "./lib/warnly/pro";
 import { MobileFrame } from "./components/MobileFrame";
@@ -14,8 +16,27 @@ import { COLORS } from "./theme";
 
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("HOME");
-  const { level } = useWarnly();
+  const { level, nearest, probability } = useWarnly();
   const screenFade = useRef(new Animated.Value(1)).current;
+
+  // Wow factor: breakthrough siren + critical heads-up on DANGER breach (even on silent)
+  useEffect(() => {
+    if (level === "danger") {
+      startSirenAudio();
+      NativeEmergency.setupEmergencyNotificationChannel();
+      NativeEmergency.postCriticalAlert(
+        "TAKE SHELTER NOW",
+        nearest
+          ? `Lightning ${nearest.distanceKm} km away — ${probability}% threat. Move indoors.`
+          : "Lightning inside 10 km ring. Move indoors now."
+      );
+    } else {
+      stopSirenAudio();
+    }
+    return () => {
+      if (level !== "danger") stopSirenAudio();
+    };
+  }, [level]);
 
   const handleTabChange = (nextTab: ActiveTab) => {
     if (nextTab === activeTab) return;
