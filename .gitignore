@@ -45,3 +45,6 @@ test_*.jpg
 # Aider files
 .aider*
 
+# Downloaded CI APK artifacts
+build-output/
+
