@@ -1,7 +1,7 @@
 {
   "name": "warnly-disaster-resilience-ts",
   "private": true,
-  "version": "1.1.0",
+  "version": "3.2.0",
   "license": "Apache-2.0",
   "main": "index.js",
   "scripts": {
@@ -10,8 +10,10 @@
     "ios": "expo run:ios",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon",
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
     "expo": "~51.0.28",

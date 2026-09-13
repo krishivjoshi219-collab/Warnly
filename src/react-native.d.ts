@@ -82,6 +82,9 @@ declare module 'react-native' {
   export const Linking: {
     openURL(url: string): Promise<any>;
   };
+  export const AppRegistry: {
+    registerComponent(appKey: string, componentProvider: () => any): void;
+  };
   export interface ImageProps extends ViewProps {
     source?: any;
     resizeMode?: 'cover' | 'contain' | 'stretch' | 'repeat' | 'center';
