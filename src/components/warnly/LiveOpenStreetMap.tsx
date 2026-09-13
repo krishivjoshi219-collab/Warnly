@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Platform,
   Linking,
+  PanResponder,
 } from 'react-native';
 import {
   Zap,
@@ -20,11 +21,13 @@ import {
   X,
   Phone,
   Compass,
+  Radar,
 } from '../Icons';
 import { COLORS, RADII, FONTS, SHADOWS } from '../../theme';
 import type { Coords, Strike } from '../../lib/warnly/types';
 import type { SafetyCamp } from '../../lib/warnly/shelters';
 import type { DopplerRadarSummary } from '../../lib/warnly/doppler-vector';
+import { fetchRainViewerRadar, type RadarFrame } from '../../lib/warnly/weather';
 
 interface Props {
   coords: Coords;
@@ -33,6 +36,7 @@ interface Props {
   strikes?: Strike[];
   camps?: SafetyCamp[];
   doppler?: DopplerRadarSummary | null;
+  showRadarOverlay?: boolean;
   onRecenter?: () => void;
   onSelectLocation?: (coords: Coords) => void;
 }
@@ -68,6 +72,7 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
   strikes = [],
   camps = [],
   doppler,
+  showRadarOverlay = true,
   onRecenter,
   onSelectLocation,
 }) => {
@@ -76,14 +81,42 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [selectedCamp, setSelectedCamp] = useState<SafetyCamp | null>(null);
 
+  // RainViewer Live Doppler Radar Overlay
+  const [showRadar, setShowRadar] = useState(showRadarOverlay);
+  const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
+  const [radarHost, setRadarHost] = useState<string>('https://tilecache.rainviewer.com');
+  const [currentFrameIdx, setCurrentFrameIdx] = useState<number>(-1);
+
+  // Fetch RainViewer radar tiles on mount & every 2 minutes
+  useEffect(() => {
+    let mounted = true;
+    const loadRadar = () => {
+      fetchRainViewerRadar().then(({ host, frames }) => {
+        if (mounted && frames.length > 0) {
+          setRadarHost(host);
+          setRadarFrames(frames);
+          setCurrentFrameIdx(frames.length - 1);
+        }
+      });
+    };
+    loadRadar();
+    const interval = setInterval(loadRadar, 2 * 60 * 1000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Recenter map on hardware GPS coords update
+  useEffect(() => {
+    setPanOffset({ x: 0, y: 0 });
+  }, [coords.lat, coords.lon]);
+
   const centerLat = coords.lat;
   const centerLon = coords.lon;
 
   const centerTileX = lon2tile(centerLon, zoom);
   const centerTileY = lat2tile(centerLat, zoom);
-
-  const tileOriginX = Math.floor(centerTileX) - 1;
-  const tileOriginY = Math.floor(centerTileY) - 1;
 
   const subTileX = (centerTileX - Math.floor(centerTileX)) * 256;
   const subTileY = (centerTileY - Math.floor(centerTileY)) * 256;
@@ -93,7 +126,6 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
   const maxTile = Math.pow(2, zoom) - 1;
 
   const getTileUrl = (tx: number, ty: number) => {
-    // Wrap around for longitude
     const wrappedX = ((tx % (maxTile + 1)) + (maxTile + 1)) % (maxTile + 1);
     const clampedY = Math.max(0, Math.min(maxTile, ty));
 
@@ -103,24 +135,51 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
     if (layer === 'topo') {
       return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${zoom}/${clampedY}/${wrappedX}`;
     }
-    // Default: High-Res Real Satellite Imagery (ESRI World Imagery) - dark, photographic, zero watermark
+    // High-Res Photographic ESRI World Imagery
     return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${clampedY}/${wrappedX}`;
   };
 
+  const getRadarTileUrl = (tx: number, ty: number) => {
+    if (!showRadar || radarFrames.length === 0 || currentFrameIdx < 0 || zoom > 7) return null;
+    const frame = radarFrames[currentFrameIdx];
+    if (!frame) return null;
+    const wrappedX = ((tx % (maxTile + 1)) + (maxTile + 1)) % (maxTile + 1);
+    const clampedY = Math.max(0, Math.min(maxTile, ty));
+    return `${radarHost}${frame.path}/256/${zoom}/${wrappedX}/${clampedY}/2/1_1.png`;
+  };
+
   const handleZoomIn = () => setZoom((z) => Math.min(16, z + 1));
-  const handleZoomOut = () => setZoom((z) => Math.max(9, z - 1));
+  const handleZoomOut = () => setZoom((z) => Math.max(4, z - 1));
   const toggleLayer = () => {
     setLayer((l) => (l === 'satellite' ? 'streets' : l === 'streets' ? 'topo' : 'satellite'));
   };
 
-  return (
-    <View style={[styles.container, { width, height }]}>
-      {/* ── Real Map Tile Grid (Interactive Tap-to-Pinpoint) ── */}
-      <TouchableOpacity
-        activeOpacity={1}
-        style={styles.tileCanvas}
-        onPress={(e: any) => {
-          if (!onSelectLocation) return;
+  // Pan gesture tracking for smooth map panning
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gesture) => {
+        return Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3;
+      },
+      onPanResponderGrant: () => {
+        panStartRef.current = { ...panOffset };
+        isDraggingRef.current = false;
+      },
+      onPanResponderMove: (_, gesture) => {
+        if (Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4) {
+          isDraggingRef.current = true;
+        }
+        setPanOffset({
+          x: panStartRef.current.x + gesture.dx,
+          y: panStartRef.current.y + gesture.dy,
+        });
+      },
+      onPanResponderRelease: (e, gesture) => {
+        // If it was a tap (not a drag), pinpoint location
+        if (!isDraggingRef.current && onSelectLocation) {
           const { locationX, locationY } = e.nativeEvent;
           const offsetX = locationX - (width / 2 + panOffset.x);
           const offsetY = locationY - (height / 2 + panOffset.y);
@@ -132,34 +191,65 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
             lat: Math.round(tappedLat * 10000) / 10000,
             lon: Math.round(tappedLon * 10000) / 10000,
           });
-        }}
-      >
+        }
+      },
+    })
+  ).current;
+
+  const currentFrame = radarFrames[currentFrameIdx];
+  const frameTimeStr = currentFrame
+    ? new Date(currentFrame.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  return (
+    <View style={[styles.container, { width, height }]}>
+      {/* ── Real Map Tile Grid with PanResponder ── */}
+      <View {...panResponder.panHandlers} style={styles.tileCanvas}>
         {tileIndices.map((dx) =>
           tileIndices.map((dy) => {
             const tx = Math.floor(centerTileX) + dx;
             const ty = Math.floor(centerTileY) + dy;
             const posX = dx * 256 + width / 2 - subTileX + panOffset.x;
             const posY = dy * 256 + height / 2 - subTileY + panOffset.y;
+            const radarUrl = getRadarTileUrl(tx, ty);
 
             return (
-              <Image
-                key={`${zoom}-${tx}-${ty}-${layer}`}
-                source={{ uri: getTileUrl(tx, ty) }}
-                style={[
-                  styles.tileImage,
-                  {
-                    left: posX,
-                    top: posY,
-                    width: 256,
-                    height: 256,
-                  },
-                ]}
-                resizeMode="cover"
-              />
+              <React.Fragment key={`${zoom}-${tx}-${ty}-${layer}`}>
+                <Image
+                  source={{ uri: getTileUrl(tx, ty) }}
+                  style={[
+                    styles.tileImage,
+                    {
+                      left: posX,
+                      top: posY,
+                      width: 256,
+                      height: 256,
+                    },
+                  ]}
+                  resizeMode="cover"
+                />
+                {/* ── RainViewer Doppler Radar Tile Layer (Transparent Cloud Mosaic) ── */}
+                {radarUrl && (
+                  <Image
+                    source={{ uri: radarUrl }}
+                    style={[
+                      styles.tileImage,
+                      styles.radarTile,
+                      {
+                        left: posX,
+                        top: posY,
+                        width: 256,
+                        height: 256,
+                      },
+                    ]}
+                    resizeMode="cover"
+                  />
+                )}
+              </React.Fragment>
             );
           })
         )}
-      </TouchableOpacity>
+      </View>
 
       {/* ── Map Grid Overlay & Crosshair Vignette ── */}
       <View style={styles.vignetteOverlay} pointerEvents="none" />
@@ -272,6 +362,14 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.iconControlBtn, showRadar && styles.iconControlBtnActive]}
+          onPress={() => setShowRadar((v) => !v)}
+          activeOpacity={0.8}
+        >
+          <Radar size={14} color={showRadar ? '#38BDF8' : '#FFFFFF'} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.iconControlBtn}
           onPress={handleZoomIn}
           activeOpacity={0.8}
@@ -349,10 +447,26 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
 
       {/* ── Recenter Button & Map Attribution (Floating Bottom) ── */}
       <View style={styles.bottomBar}>
-        <View style={styles.osmBadge}>
-          <Text style={styles.osmText}>
-            {layer === 'streets' ? '© Esri Streets' : layer === 'topo' ? '© Esri Topo' : '© Esri Satellite'}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={styles.osmBadge}>
+            <Text style={styles.osmText}>
+              {layer === 'streets' ? '© Esri Streets' : layer === 'topo' ? '© Esri Topo' : '© Esri Satellite'}
+            </Text>
+          </View>
+          {showRadar && (
+            <TouchableOpacity
+              style={styles.radarBadge}
+              onPress={() => {
+                if (zoom > 7) setZoom(7);
+              }}
+              activeOpacity={zoom > 7 ? 0.7 : 1}
+            >
+              <View style={[styles.radarBadgeDot, zoom > 7 && { backgroundColor: COLORS.warning }]} />
+              <Text style={styles.radarBadgeText}>
+                {zoom > 7 ? 'RADAR · TAP (Z≤7)' : `RADAR ${frameTimeStr ? `· ${frameTimeStr}` : '· LIVE'}`}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity
@@ -388,6 +502,9 @@ const styles = StyleSheet.create({
   tileImage: {
     position: 'absolute',
     backgroundColor: '#09090B',
+  },
+  radarTile: {
+    opacity: 0.68,
   },
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -572,6 +689,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
     alignSelf: 'flex-end',
+  },
+  iconControlBtnActive: {
+    borderColor: '#38BDF8',
+    backgroundColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  radarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(14, 165, 233, 0.25)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.50)',
+  },
+  radarBadgeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#38BDF8',
+  },
+  radarBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#38BDF8',
+    fontFamily: FONTS.mono,
+    letterSpacing: 0.5,
   },
 
   // ── Bottom Bar ──

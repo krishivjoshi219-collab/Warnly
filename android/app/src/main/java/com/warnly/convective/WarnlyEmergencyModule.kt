@@ -30,6 +30,11 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import kotlin.math.sin
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+
 class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
@@ -37,6 +42,14 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
     @Volatile
     private var isPlayingSiren = false
     private var sirenThread: Thread? = null
+
+    // Hardware MEMS Barometer (zero-internet offline pressure telemetry)
+    private var sensorManager: SensorManager? = null
+    private var pressureSensor: Sensor? = null
+    private var barometerListener: SensorEventListener? = null
+    private val pressureHistory = mutableListOf<Pair<Long, Float>>()
+    @Volatile
+    private var latestPressureHpa: Float? = null
 
     companion object {
         const val NAME = "WarnlyEmergencyModule"
@@ -50,6 +63,42 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
     init {
         // Automatically ensure the high-priority DND bypass channel is created on initialization
         setupNotificationChannelInternal()
+        setupBarometerInternal()
+    }
+
+    private fun setupBarometerInternal() {
+        try {
+            sensorManager = reactApplicationContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+            pressureSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PRESSURE)
+            if (pressureSensor != null) {
+                barometerListener = object : SensorEventListener {
+                    override fun onSensorChanged(event: SensorEvent) {
+                        if (event.sensor.type == Sensor.TYPE_PRESSURE && event.values.isNotEmpty()) {
+                            val hpa = event.values[0]
+                            latestPressureHpa = hpa
+                            val now = System.currentTimeMillis()
+                            synchronized(pressureHistory) {
+                                pressureHistory.add(Pair(now, hpa))
+                                // Keep last 3 hours of readings
+                                val threeHoursAgo = now - 3 * 60 * 60 * 1000
+                                pressureHistory.removeAll { it.first < threeHoursAgo }
+                            }
+                        }
+                    }
+                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+                }
+                sensorManager?.registerListener(
+                    barometerListener,
+                    pressureSensor,
+                    SensorManager.SENSOR_DELAY_NORMAL
+                )
+                Log.i(TAG, "Hardware barometer sensor (TYPE_PRESSURE) registered successfully")
+            } else {
+                Log.w(TAG, "Device does not possess a hardware ambient pressure sensor (TYPE_PRESSURE)")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize hardware barometer", e)
+        }
     }
 
     private fun setupNotificationChannelInternal() {
@@ -435,7 +484,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                     promise.reject("TIMEOUT", "Hardware GPS timed out waiting for satellite fix")
                 }
             }
-        }, 8000)
+        }, 3500)
 
         mainHandler.post {
             try {
@@ -457,5 +506,90 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                 }
             }
         }
+    }
+
+    /**
+     * Checks if the device has a physical onboard MEMS barometer sensor.
+     */
+    @ReactMethod
+    fun hasHardwareBarometer(promise: Promise) {
+        promise.resolve(pressureSensor != null)
+    }
+
+    /**
+     * Reads the real-time atmospheric pressure directly from the physical phone sensor.
+     * Computes pressure tendency (dP/dt in hPa/hour) completely offline without internet.
+     */
+    @ReactMethod
+    fun getHardwareBarometer(promise: Promise) {
+        val curP = latestPressureHpa
+        if (pressureSensor == null || curP == null) {
+            val map = Arguments.createMap().apply {
+                putBoolean("hasHardwareBarometer", pressureSensor != null)
+                putDouble("currentPressureHpa", curP?.toDouble() ?: 0.0)
+                putDouble("trendHpaPerHour", 0.0)
+                putBoolean("isPressurePlunging", false)
+                putInt("readingCount", pressureHistory.size)
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+            }
+            promise.resolve(map)
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        var trendHpaPerHour = 0.0
+        var isPlunging = false
+
+        synchronized(pressureHistory) {
+            if (pressureHistory.size >= 2) {
+                // Find reference reading ~30 to 60 minutes ago
+                val oneHourAgo = now - 60 * 60 * 1000
+                var reference = pressureHistory.first()
+                for (reading in pressureHistory) {
+                    if (reading.first <= oneHourAgo) {
+                        reference = reading
+                    } else {
+                        break
+                    }
+                }
+                val dtHours = (now - reference.first) / (1000.0 * 60.0 * 60.0)
+                if (dtHours >= 0.03) { // At least 2 minutes of sensor readings
+                    val dP = curP - reference.second
+                    trendHpaPerHour = (dP / dtHours).toDouble()
+                    // Sudden microburst / severe thunderstorm surge condition: <= -1.5 hPa/hr
+                    if (trendHpaPerHour <= -1.5 || (dtHours >= 0.2 && dP <= -0.8f)) {
+                        isPlunging = true
+                    }
+                }
+            }
+        }
+
+        val map = Arguments.createMap().apply {
+            putBoolean("hasHardwareBarometer", true)
+            putDouble("currentPressureHpa", Math.round(curP.toDouble() * 100.0) / 100.0)
+            putDouble("trendHpaPerHour", Math.round(trendHpaPerHour * 100.0) / 100.0)
+            putBoolean("isPressurePlunging", isPlunging)
+            putInt("readingCount", pressureHistory.size)
+            putDouble("timestamp", now.toDouble())
+        }
+        promise.resolve(map)
+    }
+
+    /**
+     * Explicit start/stop triggers for hardware barometer sensor
+     */
+    @ReactMethod
+    fun startHardwareBarometer() {
+        setupBarometerInternal()
+    }
+
+    @ReactMethod
+    fun stopHardwareBarometer() {
+        try {
+            if (barometerListener != null) {
+                sensorManager?.unregisterListener(barometerListener)
+                barometerListener = null
+            }
+        } catch (ignored: Exception) {}
     }
 }

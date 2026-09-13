@@ -190,4 +190,35 @@ declare module 'react-native' {
   export const NativeModules: {
     [key: string]: any;
   };
+
+  export interface GestureResponderEvent {
+    nativeEvent: any;
+  }
+  export interface PanResponderGestureState {
+    stateID: number;
+    moveX: number;
+    moveY: number;
+    x0: number;
+    y0: number;
+    dx: number;
+    dy: number;
+    vx: number;
+    vy: number;
+    numberActiveTouches: number;
+    _accountsForMovesUpTo: number;
+  }
+  export interface PanResponderCallbacks {
+    onStartShouldSetPanResponder?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => boolean;
+    onMoveShouldSetPanResponder?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => boolean;
+    onPanResponderGrant?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => void;
+    onPanResponderMove?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => void;
+    onPanResponderRelease?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => void;
+    onPanResponderTerminate?: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => void;
+  }
+  export interface PanResponderInstance {
+    panHandlers: { [key: string]: any };
+  }
+  export const PanResponder: {
+    create(config: PanResponderCallbacks): PanResponderInstance;
+  };
 }

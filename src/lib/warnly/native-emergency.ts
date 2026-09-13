@@ -16,6 +16,15 @@ export interface HardwareLocationResult {
   provider?: string;
 }
 
+export interface HardwareBarometerResult {
+  hasHardwareBarometer: boolean;
+  currentPressureHpa: number;
+  trendHpaPerHour: number;
+  isPressurePlunging: boolean;
+  readingCount: number;
+  timestamp: number;
+}
+
 export interface EmergencyModuleInterface {
   isAvailable: boolean;
   startAlarmSiren: () => void;
@@ -29,6 +38,11 @@ export interface EmergencyModuleInterface {
   requestHardwareLocationPermission: () => Promise<boolean>;
   getHardwareLocation: () => Promise<HardwareLocationResult>;
   openLocationSettings: () => void;
+  // Physical MEMS Barometer chip integration (zero internet offline pressure tendency)
+  hasHardwareBarometer: () => Promise<boolean>;
+  getHardwareBarometer: () => Promise<HardwareBarometerResult>;
+  startHardwareBarometer: () => void;
+  stopHardwareBarometer: () => void;
 }
 
 export const NativeEmergency: EmergencyModuleInterface = {
@@ -161,6 +175,53 @@ export const NativeEmergency: EmergencyModuleInterface = {
       } catch {
         /* fallback */
       }
+    }
+  },
+
+  hasHardwareBarometer: async (): Promise<boolean> => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.hasHardwareBarometer) {
+      try {
+        return await mod.hasHardwareBarometer();
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  },
+
+  getHardwareBarometer: async (): Promise<HardwareBarometerResult> => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.getHardwareBarometer) {
+      try {
+        return await mod.getHardwareBarometer();
+      } catch {}
+    }
+    return {
+      hasHardwareBarometer: false,
+      currentPressureHpa: 0,
+      trendHpaPerHour: 0,
+      isPressurePlunging: false,
+      readingCount: 0,
+      timestamp: Date.now(),
+    };
+  },
+
+  startHardwareBarometer: () => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.startHardwareBarometer) {
+      try {
+        mod.startHardwareBarometer();
+      } catch {}
+    }
+  },
+
+  stopHardwareBarometer: () => {
+    const mod = getModule();
+    if (Platform.OS === "android" && mod?.stopHardwareBarometer) {
+      try {
+        mod.stopHardwareBarometer();
+      } catch {}
     }
   },
 };

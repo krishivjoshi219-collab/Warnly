@@ -56,6 +56,9 @@ export const RadarScreen: React.FC = () => {
     setShowLocationPrompt,
     locating,
     doppler,
+    isStale,
+    staleMinutes,
+    airportMetar,
   } = useWarnly();
 
   const [showDoppler, setShowDoppler] = useState(true);
@@ -146,6 +149,17 @@ export const RadarScreen: React.FC = () => {
         </ScrollView>
       </FadeIn>
 
+      {/* ── 15-Minute Stale-Data Watchdog Banner ── */}
+      {isStale && (
+        <FadeIn duration={240}>
+          <View style={[styles.cellRow, { backgroundColor: 'rgba(245, 158, 11, 0.12)', borderColor: 'rgba(245, 158, 11, 0.45)', borderWidth: 1, borderRadius: RADII.lg, padding: 12 }]}>
+            <Text style={{ fontSize: 11, color: COLORS.warning, fontWeight: '700' }}>
+              ⚠️ TELEMETRY STALE ({staleMinutes}m) · Doppler radar & strike feeds may be unreachable.
+            </Text>
+          </View>
+        </FadeIn>
+      )}
+
       {/* ── Real Live Multi-Hazard Radar Map (Hero) ── */}
       {coords ? (
         <FadeIn duration={450} delay={80}>
@@ -156,6 +170,7 @@ export const RadarScreen: React.FC = () => {
             strikes={showLightning ? strikes : []}
             camps={showShelters ? camps : []}
             doppler={showDoppler ? doppler : null}
+            showRadarOverlay={showDoppler}
             onRecenter={requestLocation}
             onSelectLocation={setCustomCoords}
           />
@@ -168,6 +183,34 @@ export const RadarScreen: React.FC = () => {
             <Text style={styles.noLocationSub}>
               Search any city or location above, or tap GPS to activate live radar.
             </Text>
+          </View>
+        </FadeIn>
+      )}
+
+      {/* ── NOAA Airport Ground Station Observation Card ── */}
+      {airportMetar && (
+        <FadeIn duration={400} delay={120}>
+          <View style={[
+            styles.dopplerTableCard,
+            airportMetar.isSevereConvective && { borderColor: COLORS.dangerBorder, backgroundColor: 'rgba(239, 68, 68, 0.12)' }
+          ]}>
+            <View style={styles.dopplerTableHeader}>
+              <Navigation size={13} color={airportMetar.isSevereConvective ? COLORS.danger : '#38BDF8'} />
+              <Text style={[styles.dopplerTableTitle, airportMetar.isSevereConvective && { color: COLORS.danger }]}>
+                AIRPORT GROUND OBSERVATION · {airportMetar.icaoId} ({airportMetar.metarType})
+              </Text>
+            </View>
+            <View style={{ paddingHorizontal: 14, paddingBottom: 12, gap: 4 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: COLORS.textPrimary }}>
+                {airportMetar.name} ({airportMetar.distanceKm} km away)
+              </Text>
+              <Text style={{ fontSize: 10, color: COLORS.textSecondary, fontFamily: FONTS.mono }}>
+                {airportMetar.rawOb}
+              </Text>
+              <Text style={{ fontSize: 11, color: airportMetar.isSevereConvective ? COLORS.danger : '#38BDF8', fontWeight: '600', marginTop: 2 }}>
+                {airportMetar.summary}
+              </Text>
+            </View>
           </View>
         </FadeIn>
       )}

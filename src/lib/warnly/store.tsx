@@ -11,6 +11,9 @@ import { analyzeDopplerCells, type DopplerRadarSummary } from "./doppler-vector"
 import type { BarometricAnalysis } from "./barometric-surge";
 import { NativeEmergency } from "./native-emergency";
 
+import type { AirportMetar } from "./metar";
+import { getLightningFeedStatus } from "./lightning";
+
 interface SurvivalPanel {
   directive: string;
   fallback: string;
@@ -50,6 +53,12 @@ interface WarnlyState {
   backendSnapshot: UnifiedBackendSnapshot | null;
   doppler: DopplerRadarSummary | null;
   barometer: BarometricAnalysis | null;
+  // ── 15-Minute Stale-Data Watchdog & Anti-False-Safe Guardrails ──
+  isStale: boolean;
+  staleMinutes: number;
+  lastRemoteSync: number;
+  airportMetar: AirportMetar | null;
+  lightningFeedStatus: 'CONNECTED' | 'RECONNECTING' | 'OFFLINE';
 }
 
 const Ctx = createContext<WarnlyState | null>(null);
@@ -247,6 +256,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
       setBackendSnapshot(snapshot);
       setConnectionState(snapshot.connectionState);
       setWeather(snapshot.weather);
+      if (snapshot.connectionState !== 'OFFLINE_CACHED') {
+        setLastRemoteSync(Date.now());
+      }
 
       const st = await fetchRealLightningStrikes(
         c,
@@ -264,11 +276,22 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     }
   }, [simulateStorm]);
 
+  // 15-Minute Stale-Data Watchdog Timer
+  const [lastRemoteSync, setLastRemoteSync] = useState(Date.now());
+  const [nowTick, setNowTick] = useState(Date.now());
+
   useEffect(() => {
-    if (!coords) {
-      requestLocation();
-    }
-  }, [coords, requestLocation]);
+    const timer = setInterval(() => setNowTick(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const staleMinutes = lastRemoteSync > 0 ? Math.floor((nowTick - lastRemoteSync) / 60000) : 0;
+  const isStale = staleMinutes >= 15;
+
+  // Always acquire true hardware GPS satellite reception on launch
+  useEffect(() => {
+    requestHardwareLocation();
+  }, [requestHardwareLocation]);
 
   useEffect(() => {
     if (!coords) return;
@@ -318,12 +341,22 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
         }
       : { cape: 0, liftedIndex: 4, precipProbability: 0, weatherCode: 0 };
 
-    const p = gridProbability(base, strikes);
+    let p = gridProbability(base, strikes);
+    let lvl = riskLevel(p, strikes);
+
+    // ANTI-FALSE-SAFE GUARDRAIL:
+    // If telemetry data is > 15 minutes old, strip the green "ALL CLEAR" badge!
+    // Downgrade to advisory and floor probability so user is not misled.
+    if (isStale && lvl === 'safe') {
+      lvl = 'advisory';
+      p = Math.max(p, 25);
+    }
+
     return {
       probability: p,
-      level: riskLevel(p, strikes),
+      level: lvl,
     };
-  }, [weather, strikes]);
+  }, [weather, strikes, isStale]);
 
   const nearest = strikes[0] ?? null;
 
@@ -389,6 +422,12 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     backendSnapshot,
     doppler: backendSnapshot?.doppler ?? null,
     barometer: backendSnapshot?.barometer ?? null,
+    // ── 15-Minute Stale-Data Watchdog & Anti-False-Safe Guardrails ──
+    isStale,
+    staleMinutes,
+    lastRemoteSync,
+    airportMetar: backendSnapshot?.metar ?? null,
+    lightningFeedStatus: getLightningFeedStatus().status,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

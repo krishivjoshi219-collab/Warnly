@@ -13,6 +13,8 @@ import { BarometerAnalyzer, type BarometricAnalysis } from './barometric-surge';
 import { analyzeDopplerCells, type DopplerRadarSummary } from './doppler-vector';
 import { evaluateGlofRisk, type GlofRiskAssessment } from './glof';
 import { computeEarlyWarnings, type EarlyWarningSummary } from './early-warning';
+import { fetchNearbyMetar, type AirportMetar } from './metar';
+import { NativeEmergency, type HardwareBarometerResult } from './native-emergency';
 
 export type BackendConnectionState = 'ONLINE_REALTIME' | 'ONLINE_DEGRADED' | 'OFFLINE_CACHED';
 
@@ -25,6 +27,8 @@ export interface UnifiedBackendSnapshot {
   glof: GlofRiskAssessment | null;
   earlyWarning: EarlyWarningSummary | null;
   cachedAgeSec: number;
+  metar: AirportMetar | null;
+  hardwareBarometer: HardwareBarometerResult | null;
 }
 
 const CACHE_KEY_WEATHER = 'warnly_weather_snapshot';
@@ -106,13 +110,44 @@ export class ResilientBackendEngine {
     const now = Date.now();
     const cacheAge = this.lastSyncTimestamp > 0 ? Math.round((now - this.lastSyncTimestamp) / 1000) : 0;
 
-    // 4. Run Barometric tendency analytics
-    const barometer = BarometerAnalyzer.analyze(weather.pressure, weather.windSpeed);
+    // 4. Ingest real on-device hardware MEMS barometer reading (works 100% offline)
+    let hwBaro: HardwareBarometerResult | null = null;
+    try {
+      hwBaro = await NativeEmergency.getHardwareBarometer();
+    } catch {}
 
-    // 5. Run Doppler convective cell vector tracking
+    // Run Barometric tendency analytics (prioritizing physical onboard sensor if available)
+    const effectivePressure = (hwBaro && hwBaro.hasHardwareBarometer && hwBaro.currentPressureHpa > 800)
+      ? hwBaro.currentPressureHpa
+      : weather.pressure;
+    const barometer = BarometerAnalyzer.analyze(effectivePressure, weather.windSpeed);
+    if (hwBaro && hwBaro.isPressurePlunging) {
+      barometer.hasMicroburstRisk = true;
+      barometer.tendency = 'MICROBURST_SURGE';
+      barometer.leadTimeMinutes = 20;
+      barometer.advisoryText = `Hardware Barometer Alert: Sudden onboard pressure plunge detected (${hwBaro.trendHpaPerHour} hPa/hr). Imminent microburst / downdraft.`;
+    }
+
+    // 5. Ingest NOAA Airport METAR / SPECI nowcasting (2-5 min latency ground truth)
+    let metar: AirportMetar | null = null;
+    try {
+      metar = await fetchWithTimeout(fetchNearbyMetar(coords), 3500);
+      if (metar && metar.isSevereConvective) {
+        // Immediate nowcast override: airport confirms active severe convective event
+        weather.cape = Math.max(weather.cape, 1800);
+        weather.precipProbability = Math.max(weather.precipProbability, 85);
+        if (weather.weatherCode < 95) {
+          weather.weatherCode = 95;
+        }
+      }
+    } catch {
+      metar = null;
+    }
+
+    // 6. Run Doppler convective cell vector tracking
     const doppler = analyzeDopplerCells(coords, weather.cape, weather.precipProbability, weather.weatherCode);
 
-    // 6. Run GLOF mountain basin assessment
+    // 7. Run GLOF mountain basin assessment
     let glof: GlofRiskAssessment | null = null;
     try {
       glof = await evaluateGlofRisk(coords, weather.temperature, weather.precipitation);
@@ -120,7 +155,7 @@ export class ResilientBackendEngine {
       glof = null;
     }
 
-    // 7. Synthesize multi-hazard early warning
+    // 8. Synthesize multi-hazard early warning
     let earlyWarning: EarlyWarningSummary | null = null;
     try {
       earlyWarning = await computeEarlyWarnings(coords, weather, [], null, []);
@@ -137,6 +172,8 @@ export class ResilientBackendEngine {
       glof,
       earlyWarning,
       cachedAgeSec: cacheAge,
+      metar,
+      hardwareBarometer: hwBaro,
     };
   }
 }

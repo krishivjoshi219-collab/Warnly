@@ -67,6 +67,10 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
     coords,
     simulateStorm,
     toggleSimulateStorm,
+    isStale,
+    staleMinutes,
+    airportMetar,
+    lightningFeedStatus,
   } = useWarnly();
 
   const [campsOpen, setCampsOpen] = useState(false);
@@ -91,25 +95,26 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
   };
   const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
-  // Status colors - restrained
+  // Status colors - with anti-false-safe stale watchdog protection
   const statusColor =
     level === 'danger'   ? COLORS.danger  :
-    level === 'advisory' ? COLORS.warning :
+    (level === 'advisory' || isStale) ? COLORS.warning :
     COLORS.safe;
 
   const statusBorder =
     level === 'danger'   ? COLORS.dangerBorder  :
-    level === 'advisory' ? COLORS.warningBorder :
+    (level === 'advisory' || isStale) ? COLORS.warningBorder :
     'rgba(255, 255, 255, 0.10)';
 
   const statusLabel =
+    isStale              ? `OFFLINE · ${staleMinutes}M OLD` :
     level === 'danger'   ? 'CRITICAL ALERT' :
     level === 'advisory' ? 'WEATHER ADVISORY' :
     'ALL CLEAR';
 
   const statusVariant =
     level === 'danger'   ? 'danger'  :
-    level === 'advisory' ? 'warning' :
+    (level === 'advisory' || isStale) ? 'warning' :
     'safe';
 
   return (
@@ -195,6 +200,56 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
         </View>
         <Text style={{ fontSize: 22 }}>{simulateStorm ? '🛑' : '⛈️'}</Text>
       </TouchableOpacity>
+
+      {/* ── 15-MINUTE STALE DATA WATCHDOG BANNER ── */}
+      {isStale && (
+        <FadeIn duration={240}>
+          <View style={styles.staleWatchdogBanner}>
+            <View style={styles.staleBannerIcon}>
+              <AlertTriangle size={15} color={COLORS.warning} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.staleBannerTitle}>
+                ⚠️ SENSORS UNREACHABLE · DATA IS {staleMinutes} MINS OLD
+              </Text>
+              <Text style={styles.staleBannerBody}>
+                Cellular telemetry or numerical model feeds in this zone have lapsed. Green "All Clear" status has been stripped. Maintain visual vigilance of dark skies and rising water.
+              </Text>
+            </View>
+          </View>
+        </FadeIn>
+      )}
+
+      {/* ── NOAA AIRPORT SPECI FLASH ALERT BANNER ── */}
+      {airportMetar && (airportMetar.isSevereConvective || airportMetar.metarType === 'SPECI') && (
+        <FadeIn duration={240}>
+          <View style={[
+            styles.staleWatchdogBanner,
+            {
+              borderColor: airportMetar.isSevereConvective ? COLORS.dangerBorder : COLORS.warningBorder,
+              backgroundColor: airportMetar.isSevereConvective ? 'rgba(239, 68, 68, 0.14)' : 'rgba(245, 158, 11, 0.14)'
+            }
+          ]}>
+            <View style={[
+              styles.staleBannerIcon,
+              { backgroundColor: airportMetar.isSevereConvective ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)' }
+            ]}>
+              <AlertTriangle size={15} color={airportMetar.isSevereConvective ? COLORS.danger : COLORS.warning} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[
+                styles.staleBannerTitle,
+                { color: airportMetar.isSevereConvective ? COLORS.danger : COLORS.warning }
+              ]}>
+                {airportMetar.metarType === 'SPECI' ? '🚨 AIRPORT SPECI FLASH NOWCAST' : '✈️ AIRPORT GROUND OBSERVATION'} · {airportMetar.icaoId}
+              </Text>
+              <Text style={styles.staleBannerBody}>
+                {airportMetar.summary}
+              </Text>
+            </View>
+          </View>
+        </FadeIn>
+      )}
 
       {/* ── PRIMARY STATUS HERO CARD ── */}
       <FadeIn duration={260} delay={40}>
@@ -288,7 +343,11 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
                   styles.metricValue,
                   nearest ? { color: COLORS.danger } : null
                 ]}>
-                  {nearest ? `${nearest.distanceKm} km` : '0 Strikes'}
+                  {nearest
+                    ? `${nearest.distanceKm} km`
+                    : (lightningFeedStatus === 'OFFLINE' && isStale)
+                      ? 'OFFLINE'
+                      : '0 Strikes'}
                 </Text>
               </View>
             </View>
@@ -574,6 +633,39 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  // ── 15-Min Stale Watchdog Banner ──
+  staleWatchdogBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.45)',
+    borderRadius: RADII.xl,
+    padding: 12,
+  },
+  staleBannerIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(245, 158, 11, 0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  staleBannerTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.warning,
+    letterSpacing: 0.4,
+    marginBottom: 2,
+  },
+  staleBannerBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: COLORS.textSecondary,
   },
 
   // ── Hero Card ──
