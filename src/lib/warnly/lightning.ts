@@ -18,6 +18,7 @@ let lastStrikeRxTimestamp = 0;
 let totalStrikesReceived = 0;
 let wsStatus: 'CONNECTED' | 'RECONNECTING' | 'OFFLINE' = 'OFFLINE';
 let reconnectTimer: any = null;
+let isExplicitlyStopped = false;
 let serverIdx = 0;
 
 const WS_SERVERS = [
@@ -63,6 +64,7 @@ function decodeBlitzortung(x: string): string {
  * to the global Blitzortung crowdsourced lightning sensor network.
  */
 export function startLiveLightningFeed(origin?: Coords) {
+  isExplicitlyStopped = false;
   if (origin) {
     currentOrigin = origin;
   }
@@ -120,9 +122,12 @@ export function startLiveLightningFeed(origin?: Coords) {
                 isSimulated: false,
               };
 
-              // Deduplicate and push
+              // Deduplicate and push, capping pool to 150 items
               if (!strikePool.some((s) => s.id === newStrike.id)) {
                 strikePool.push(newStrike);
+                if (strikePool.length > 150) {
+                  strikePool.shift();
+                }
               }
             }
           }
@@ -137,10 +142,12 @@ export function startLiveLightningFeed(origin?: Coords) {
     ws.onclose = () => {
       wsStatus = 'OFFLINE';
       activeWs = null;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      reconnectTimer = setTimeout(() => {
-        startLiveLightningFeed();
-      }, 5000);
+      if (!isExplicitlyStopped) {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          startLiveLightningFeed();
+        }, 5000);
+      }
     };
   } catch {
     wsStatus = 'OFFLINE';
@@ -151,6 +158,7 @@ export function startLiveLightningFeed(origin?: Coords) {
  * Closes the live feed
  */
 export function stopLiveLightningFeed() {
+  isExplicitlyStopped = true;
   if (reconnectTimer) clearTimeout(reconnectTimer);
   if (activeWs) {
     try {

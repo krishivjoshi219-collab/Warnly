@@ -279,31 +279,43 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     requestHardwareLocation();
   }, [requestHardwareLocation]);
 
+  const simulateStormRef = useRef(simulateStorm);
+  simulateStormRef.current = simulateStorm;
+
   useEffect(() => {
     if (!coords) return;
     loadData(coords);
 
     // Weather refresh every 3 minutes via resilient backend
     const wxInterval = setInterval(() => {
+      if (simulateStormRef.current) return;
       ResilientBackendEngine.getAtmosphericTelemetry(coords)
         .then((snap) => {
-          setBackendSnapshot(snap);
-          setConnectionState(snap.connectionState);
-          setWeather(snap.weather);
+          if (!simulateStormRef.current) {
+            setBackendSnapshot(snap);
+            savedBaselineSnapshotRef.current = snap;
+            setConnectionState(snap.connectionState);
+            setWeather(snap.weather);
+            savedBaselineWeatherRef.current = snap.weather;
+            if (snap.connectionState !== 'OFFLINE_CACHED') {
+              setLastRemoteSync(Date.now());
+            }
+          }
         })
         .catch(() => {});
     }, 3 * 60 * 1000);
 
-    // Strike refresh every 15 seconds — read live snapshot to avoid stale closure
+    // Strike refresh every 15 seconds — read live snapshot & simulateStormRef to avoid stale closure
     const stInterval = setInterval(() => {
+      const isSim = simulateStormRef.current;
       setBackendSnapshot((snap) => {
         const w = snap?.weather ?? weather;
         fetchRealLightningStrikes(
           coords,
-          simulateStorm ? Math.max(w?.cape ?? 0, 2450) : (w?.cape ?? 0),
-          simulateStorm ? Math.max(w?.precipProbability ?? 0, 92) : (w?.precipProbability ?? 0),
-          simulateStorm ? 95 : (w?.weatherCode ?? 0),
-          simulateStorm
+          isSim ? Math.max(w?.cape ?? 0, 2450) : (w?.cape ?? 0),
+          isSim ? Math.max(w?.precipProbability ?? 0, 92) : (w?.precipProbability ?? 0),
+          isSim ? 95 : (w?.weatherCode ?? 0),
+          isSim
         )
           .then((st) => setStrikes(st))
           .catch(() => {});

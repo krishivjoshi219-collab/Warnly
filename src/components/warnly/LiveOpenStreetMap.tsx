@@ -154,6 +154,27 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
     setLayer((l) => (l === 'satellite' ? 'streets' : l === 'streets' ? 'topo' : 'satellite'));
   };
 
+  // Synchronize showRadar with prop updates
+  useEffect(() => {
+    setShowRadar(showRadarOverlay);
+  }, [showRadarOverlay]);
+
+  // Keep refs synchronized to eliminate stale closure bugs in PanResponder
+  const panOffsetRef = useRef(panOffset);
+  panOffsetRef.current = panOffset;
+
+  const centerTileRef = useRef({ x: centerTileX, y: centerTileY });
+  centerTileRef.current = { x: centerTileX, y: centerTileY };
+
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+
+  const dimsRef = useRef({ width, height });
+  dimsRef.current = { width, height };
+
+  const onSelectLocationRef = useRef(onSelectLocation);
+  onSelectLocationRef.current = onSelectLocation;
+
   // Pan gesture tracking for smooth map panning
   const panStartRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
@@ -165,7 +186,7 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
         return Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3;
       },
       onPanResponderGrant: () => {
-        panStartRef.current = { ...panOffset };
+        panStartRef.current = { ...panOffsetRef.current };
         isDraggingRef.current = false;
       },
       onPanResponderMove: (_, gesture) => {
@@ -178,16 +199,21 @@ export const LiveOpenStreetMap: React.FC<Props> = ({
         });
       },
       onPanResponderRelease: (e, gesture) => {
-        // If it was a tap (not a drag), pinpoint location
-        if (!isDraggingRef.current && onSelectLocation) {
+        // If it was a tap (not a drag), pinpoint location using latest refs
+        if (!isDraggingRef.current && onSelectLocationRef.current) {
           const { locationX, locationY } = e.nativeEvent;
-          const offsetX = locationX - (width / 2 + panOffset.x);
-          const offsetY = locationY - (height / 2 + panOffset.y);
-          const targetTileX = centerTileX + offsetX / 256;
-          const targetTileY = centerTileY + offsetY / 256;
-          const tappedLat = tile2lat(targetTileY, zoom);
-          const tappedLon = tile2lon(targetTileX, zoom);
-          onSelectLocation({
+          const currentOffset = panOffsetRef.current;
+          const currentDims = dimsRef.current;
+          const currentCenter = centerTileRef.current;
+          const currentZoom = zoomRef.current;
+
+          const offsetX = locationX - (currentDims.width / 2 + currentOffset.x);
+          const offsetY = locationY - (currentDims.height / 2 + currentOffset.y);
+          const targetTileX = currentCenter.x + offsetX / 256;
+          const targetTileY = currentCenter.y + offsetY / 256;
+          const tappedLat = tile2lat(targetTileY, currentZoom);
+          const tappedLon = tile2lon(targetTileX, currentZoom);
+          onSelectLocationRef.current({
             lat: Math.round(tappedLat * 10000) / 10000,
             lon: Math.round(tappedLon * 10000) / 10000,
           });
