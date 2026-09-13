@@ -182,11 +182,11 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
         <View style={styles.radarCardLeft}>
           <View style={styles.radarCardHeaderRow}>
             <PulseDot color={simulateStorm ? COLORS.danger : COLORS.warning} size={6} speed={900} />
-            <Text style={styles.radarCardTitle}>
+            <Text style={[styles.radarCardTitle, { flexShrink: 1 }]} numberOfLines={1}>
               {simulateStorm ? 'DEMO SUPERCELL LIVE — TAP TO CLEAR' : 'DEMO: TRIGGER SUPERCELL'}
             </Text>
           </View>
-          <Text style={styles.radarCardSubtitle}>
+          <Text style={styles.radarCardSubtitle} numberOfLines={2}>
             {simulateStorm
               ? '5 strikes · Doppler intercept ETA 18m · Siren + strobe armed'
               : 'One tap: 5 strikes, Doppler ETA, siren + escape vector for judges'}
@@ -477,7 +477,7 @@ const AnimatedRing: React.FC<{ size: number; delay: number; danger?: boolean }> 
     );
     anim.start();
     return () => anim.stop();
-  }, []);
+  }, [delay, opacity]);
 
   const ringSize = 92 * size;
   return (
@@ -792,6 +792,8 @@ const styles = StyleSheet.create({
   },
   radarCardLeft: {
     flex: 1,
+    minWidth: 0,
+    paddingRight: 8,
     gap: 6,
   },
   radarCardHeaderRow: {
