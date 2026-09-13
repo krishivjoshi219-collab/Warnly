@@ -42,3 +42,6 @@ test_*.png
 test_*.jpg
 *.tmp
 
+# Aider files
+.aider*
+
