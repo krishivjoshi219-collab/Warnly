@@ -311,7 +311,7 @@ export const ShieldScreen: React.FC = () => {
           <Text style={styles.sirenTitle}>EMERGENCY SIREN BROADCAST</Text>
         </View>
         <Text style={styles.sirenSubtitle}>
-          Test the two-tone 760Hz/960Hz acoustic emergency sound designed to wake sleeping households.
+          Test the two-tone 960Hz/640Hz acoustic emergency sound designed to wake sleeping households.
         </Text>
         <TouchableOpacity
           style={[

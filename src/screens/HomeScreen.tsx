@@ -175,6 +175,9 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
         ]}
         onPress={toggleSimulateStorm}
         activeOpacity={0.85}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: simulateStorm }}
+        accessibilityLabel={simulateStorm ? "Stop demo supercell" : "Trigger demo supercell"}
       >
         <View style={styles.radarCardLeft}>
           <View style={styles.radarCardHeaderRow}>
@@ -232,8 +235,8 @@ export const HomeScreen: React.FC<Props> = ({ onNavigateRadar }) => {
               </View>
 
               <View style={styles.heroTextCol}>
-                <Text style={styles.heroTitle} numberOfLines={1}>{meta.label}</Text>
-                <Text style={styles.heroSubtitle} numberOfLines={2}>{meta.sub}</Text>
+                <Text style={styles.heroTitle} numberOfLines={2}>{meta.label}</Text>
+                <Text style={styles.heroSubtitle} numberOfLines={3}>{meta.sub}</Text>
               </View>
             </View>
 

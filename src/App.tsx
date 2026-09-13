@@ -36,7 +36,7 @@ const MainApp: React.FC = () => {
     return () => {
       if (level !== "danger") stopSirenAudio();
     };
-  }, [level]);
+  }, [level, nearest, probability]);
 
   const handleTabChange = (nextTab: ActiveTab) => {
     if (nextTab === activeTab) return;

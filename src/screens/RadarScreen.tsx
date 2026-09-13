@@ -79,7 +79,7 @@ export const RadarScreen: React.FC = () => {
   }, [coords?.lat, coords?.lon]);
 
   const breaches = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
-  const mapWidth = Dimensions.get('window').width - 32;
+  const mapWidth = Math.max(280, Dimensions.get('window').width - 32);
 
   return (
     <ScrollView
