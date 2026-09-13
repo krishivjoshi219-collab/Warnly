@@ -51,7 +51,7 @@ export const SettingsScreen: React.FC = () => {
     isPro, toggleProDemo, openPaywall, units, setUnits,
     alertRadiusKm, setAlertRadiusKm, startSiren, stopSiren, sirenActive,
     apiKeys, setApiKey,
-    rcInitialized, rcAppUserId, rcEntitlements, restorePurchases,
+    restorePurchases,
   } = usePro();
   const { simulateStorm, toggleSimulateStorm } = useWarnly();
   const [feeds, setFeeds] = useState<FeedStatus[]>([]);
@@ -147,33 +147,6 @@ export const SettingsScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* RevenueCat Sandbox Telemetry */}
-          <View style={styles.rcInfoBox}>
-            <View style={styles.rcInfoRow}>
-              <Text style={styles.rcInfoLabel}>BILLING ENGINE</Text>
-              <Text style={styles.rcInfoValue}>
-                {rcInitialized ? 'RevenueCat Sandbox' : 'RevenueCat Initializing'}
-              </Text>
-            </View>
-            <View style={styles.rcInfoRow}>
-              <Text style={styles.rcInfoLabel}>TEST API KEY</Text>
-              <Text style={styles.rcInfoValueMono}>test_iHpFsm...Fr</Text>
-            </View>
-            {rcAppUserId && (
-              <View style={styles.rcInfoRow}>
-                <Text style={styles.rcInfoLabel}>CUSTOMER ID</Text>
-                <Text style={styles.rcInfoValueMono} numberOfLines={1}>
-                  {rcAppUserId}
-                </Text>
-              </View>
-            )}
-            <View style={styles.rcInfoRow}>
-              <Text style={styles.rcInfoLabel}>ENTITLEMENTS</Text>
-              <Text style={[styles.rcInfoValue, isPro && { color: COLORS.safe }]}>
-                {rcEntitlements.length > 0 ? rcEntitlements.join(', ') : (isPro ? 'astra_pro (sandbox)' : 'none')}
-              </Text>
-            </View>
-          </View>
 
           {restoreMsg && (
             <View style={styles.restoreMsgBox}>
@@ -589,36 +562,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ghostBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
-  rcInfoBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: RADII.lg,
-    padding: 10,
-    marginTop: 10,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  rcInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rcInfoLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-  },
-  rcInfoValue: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
-  rcInfoValueMono: {
-    fontSize: 10,
-    fontFamily: FONTS.mono,
-    color: COLORS.safe,
-  },
+
   restoreMsgBox: {
     backgroundColor: 'rgba(0, 229, 255, 0.12)',
     borderRadius: RADII.md,

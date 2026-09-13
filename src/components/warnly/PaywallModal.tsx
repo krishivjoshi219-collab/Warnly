@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { Crown, X, Check, Sparkles, RefreshCw } from "../Icons";
 import { OFFERINGS, usePro } from "../../lib/warnly/pro";
-import { REVENUECAT_TEST_API_KEY } from "../../lib/warnly/revenuecat";
 import { COLORS, RADII, FONTS } from "../../theme";
 import type { PurchasesPackage } from "react-native-purchases";
 
@@ -268,12 +267,6 @@ export const PaywallModal: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* RevenueCat Test API Badge */}
-            <View style={styles.rcBadgeContainer}>
-              <Text style={styles.rcBadgeText}>
-                ⚡ REVENUECAT SANDBOX • API: {REVENUECAT_TEST_API_KEY.substring(0, 14)}...
-              </Text>
-            </View>
           </ScrollView>
         </View>
       </View>
@@ -480,15 +473,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textSecondary,
     fontWeight: "600",
-  },
-  rcBadgeContainer: {
-    alignItems: "center",
-    marginTop: 6,
-  },
-  rcBadgeText: {
-    fontSize: 9,
-    fontFamily: FONTS.mono,
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
   },
 });
