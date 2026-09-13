@@ -1,4 +1,4 @@
-/** Astra killer-feature barrel — import from here to avoid deep paths. */
+export const ASTRA_VERSION = '1.0.0';
 export * from './signallock';
 export * from './aegis';
 export * from './refuge-id';
