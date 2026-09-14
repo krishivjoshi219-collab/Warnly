@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "audit": "node scripts/audit.mjs",
     "astra:audit": "node scripts/astra-audit.mjs",
-    "astra:test": "node scripts/astra-audit.mjs"
+    "astra:test": "node scripts/astra-audit.mjs",
+    "generate:icons": "python scripts/generate-icons.py"
   },
   "dependencies": {
     "expo": "~51.0.28",

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="pulseWGrad" x1="6" y1="28" x2="34" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Chassis -->
+  <rect width="40" height="40" rx="11" fill="#090D16" stroke="#1E293B" stroke-width="1.2" />
+
+  <!-- Scaled Pulse W Mark with elegant breathing room -->
+  <g transform="translate(20, 20) scale(0.82) translate(-20, -20)">
+    <!-- Atmospheric Signal Arc -->
+    <path
+      d="M 15 8 A 6.5 6.5 0 0 1 25 8"
+      stroke="url(#pulseWGrad)"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      opacity="0.85"
+    />
+
+    <!-- Central Beacon with soft ambient halo -->
+    <circle cx="20" cy="10.5" r="3.5" fill="#38BDF8" opacity="0.3" />
+    <circle cx="20" cy="10.5" r="1.8" fill="#FFFFFF" />
+
+    <!-- Main Pulse W Vector Path -->
+    <path
+      d="M 7.5 14.5 L 13.8 28.5 L 20 16.5 L 26.2 28.5 L 32.5 14.5"
+      stroke="url(#pulseWGrad)"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Specular Core Highlight -->
+    <path
+      d="M 13.8 28.5 L 20 16.5 L 26.2 28.5"
+      stroke="#FFFFFF"
+      stroke-width="1.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-opacity="0.85"
+    />
+  </g>
+</svg>
