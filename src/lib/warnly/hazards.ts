@@ -32,8 +32,18 @@ const USGS_FEED = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5
 
 export const MAX_QUAKE_RADIUS_KM = 350;
 
+async function fetchWithSignal(url: string, timeoutMs: number): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchEarthquakes(origin: Coords): Promise<Quake[]> {
-  const res = await fetch(USGS_FEED);
+  const res = await fetchWithSignal(USGS_FEED, 8000);
   if (!res.ok) throw new Error("USGS feed unavailable");
   const data = await res.json();
   const allQuakes: Quake[] = (data.features ?? []).map((f: any) => {
@@ -87,12 +97,12 @@ export function floodMeta(level: FloodLevel): { label: string; color: string } {
 }
 
 export async function fetchFloodRisk(origin: Coords): Promise<FloodSnapshot> {
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${origin.lat}&longitude=${origin.lon}&current=precipitation,rain,showers&hourly=precipitation,precipitation_probability&forecast_days=1`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${origin.lat}&longitude=${origin.lon}&current=precipitation,rain,showers&hourly=precipitation,precipitation_probability&forecast_days=1&timezone=auto&timeformat=unixtime`;
   const floodUrl = `https://flood-api.open-meteo.com/v1/flood?latitude=${origin.lat}&longitude=${origin.lon}&daily=river_discharge,river_discharge_max&forecast_days=3`;
 
   const [wRes, fRes] = await Promise.all([
-    fetch(weatherUrl),
-    fetch(floodUrl).catch(() => null),
+    fetchWithSignal(weatherUrl, 8000),
+    fetchWithSignal(floodUrl, 8000).catch(() => null),
   ]);
 
   const w = wRes.ok ? await wRes.json() : {};
@@ -102,7 +112,13 @@ export async function fetchFloodRisk(origin: Coords): Promise<FloodSnapshot> {
   const showers = w.current?.showers ?? 0;
   const hourlyPrecip: number[] = w.hourly?.precipitation ?? [];
   const hourlyProb: number[] = w.hourly?.precipitation_probability ?? [];
-  const nowIdx = new Date().getHours();
+  const hourlyTime: number[] = w.hourly?.time ?? [];
+  // Match forecast slots to real time (was: device-local getHours() used as
+  // an array index — wrong timezone whenever the device and the queried
+  // location differ, or when the series doesn't start at midnight).
+  const nowSec = Math.floor(Date.now() / 1000);
+  let nowIdx = hourlyTime.findIndex((t) => t >= nowSec - 1800);
+  if (nowIdx < 0) nowIdx = 0;
   const next6hTotal = hourlyPrecip
     .slice(nowIdx, nowIdx + 6)
     .reduce((a: number, b: number) => a + (b ?? 0), 0);

@@ -51,7 +51,12 @@ export async function fetchNearbyMetar(coords: Coords): Promise<AirportMetar | n
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
-    const stations: any[] = await res.json();
+    const stations: Array<{
+      lat?: number; lon?: number; icaoId?: string; name?: string;
+      rawOb?: string; wxString?: string; metarType?: string;
+      wgst?: number | null; temp?: number; dewp?: number; altim?: number;
+      wspd?: number; reportTime?: string; receiptTime?: string;
+    }> = await res.json();
     if (!Array.isArray(stations) || stations.length === 0) {
       cachedMetar = { coords, metar: null, timestamp: now };
       return null;

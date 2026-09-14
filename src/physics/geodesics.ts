@@ -1,8 +1,10 @@
 /**
  * Warnly Geodesic Spatial Physics Engine
- * High-performance client-side edge computing (<20 microsecond Haversine).
- * Adheres strictly to FR-01 (10 km Critical Danger / 15 km Advisory rings).
+ * Single-source wrapper over lib/warnly/risk geodesic math.
+ * risk.ts owns the haversine/bearing implementation; this class
+ * preserves the legacy GeodesicPhysics API for engine/services.
  */
+import { distanceKm, bearingDeg } from "../lib/warnly/risk";
 
 const EARTH_RADIUS_KM = 6371.0088;
 
@@ -17,19 +19,7 @@ export class GeodesicPhysics {
     lat2: number,
     lon2: number
   ): number {
-    const toRad = Math.PI / 180;
-    const dLat = (lat2 - lat1) * toRad;
-    const dLon = (lon2 - lon1) * toRad;
-
-    const lat1Rad = lat1 * toRad;
-    const lat2Rad = lat2 * toRad;
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS_KM * c;
+    return distanceKm({ lat: lat1, lon: lon1 }, { lat: lat2, lon: lon2 });
   }
 
   /**
@@ -41,20 +31,7 @@ export class GeodesicPhysics {
     lat2: number,
     lon2: number
   ): number {
-    const toRad = Math.PI / 180;
-    const toDeg = 180 / Math.PI;
-
-    const phi1 = lat1 * toRad;
-    const phi2 = lat2 * toRad;
-    const deltaLambda = (lon2 - lon1) * toRad;
-
-    const y = Math.sin(deltaLambda) * Math.cos(phi2);
-    const x =
-      Math.cos(phi1) * Math.sin(phi2) -
-      Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
-
-    const theta = Math.atan2(y, x);
-    return (theta * toDeg + 360) % 360;
+    return bearingDeg({ lat: lat1, lon: lon1 }, { lat: lat2, lon: lon2 });
   }
 
   /**

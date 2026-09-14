@@ -1,7 +1,4 @@
-import { NativeModules, Platform } from "react-native";
-
-// Safe access for React Native runtime
-const PermissionsAndroid = (require("react-native") as any)?.PermissionsAndroid;
+import { NativeModules, PermissionsAndroid, Platform } from "react-native";
 
 function getModule() {
   return NativeModules.WarnlyEmergencyModule;

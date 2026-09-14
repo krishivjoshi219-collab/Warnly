@@ -13,15 +13,16 @@ import { ShieldScreen } from "./screens/ShieldScreen";
 import { WeatherScreen } from "./screens/WeatherScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { COLORS } from "./theme";
-// Astra engines bundled for offline demo (no UI change, no behavior change).
-import "./lib/warnly/astra";
 
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("HOME");
   const { level, nearest, probability } = useWarnly();
   const sirenActiveRef = useRef(false);
 
-  // Breakthrough siren + critical heads-up on DANGER breach (guarded to avoid bridge spam)
+  // Breakthrough siren + critical heads-up on DANGER breach (guarded to avoid bridge spam).
+  // Single owner for the danger siren: EmergencyOverlay handles early-warning
+  // critical alerts; this effect handles the lightning-danger breach only.
+  // Cleanup stops the siren on unmount so backgrounded screens can't wail.
   useEffect(() => {
     if (level === "danger") {
       if (!sirenActiveRef.current) {
@@ -41,6 +42,12 @@ const MainApp: React.FC = () => {
         stopSirenAudio();
       }
     }
+    return () => {
+      if (sirenActiveRef.current) {
+        sirenActiveRef.current = false;
+        stopSirenAudio();
+      }
+    };
   }, [level, nearest, probability]);
 
   // Zero-lag instant tab switching (0 ms)
@@ -53,21 +60,14 @@ const MainApp: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.screenContainer}>
-        {/* All screens mounted in parallel with fast display toggling (0 ms tab switch) */}
-        <View style={[styles.screenPane, activeTab !== "HOME" && styles.hiddenPane]}>
-          <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />
-        </View>
-        <View style={[styles.screenPane, activeTab !== "RADAR" && styles.hiddenPane]}>
-          <RadarScreen />
-        </View>
-        <View style={[styles.screenPane, activeTab !== "SHIELD" && styles.hiddenPane]}>
-          <ShieldScreen />
-        </View>
-        <View style={[styles.screenPane, activeTab !== "WEATHER" && styles.hiddenPane]}>
-          <WeatherScreen />
-        </View>
-        <View style={[styles.screenPane, activeTab !== "SETTINGS" && styles.hiddenPane]}>
-          <SettingsScreen />
+        {/* Only the active tab is mounted — same visuals, but background tabs
+            can't keep timers/subs/animations running (battery + memory). */}
+        <View style={styles.screenPane}>
+          {activeTab === "HOME" && <HomeScreen onNavigateRadar={() => handleTabChange("RADAR")} />}
+          {activeTab === "RADAR" && <RadarScreen />}
+          {activeTab === "SHIELD" && <ShieldScreen />}
+          {activeTab === "WEATHER" && <WeatherScreen />}
+          {activeTab === "SETTINGS" && <SettingsScreen />}
         </View>
       </View>
 

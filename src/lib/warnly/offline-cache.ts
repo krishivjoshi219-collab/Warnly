@@ -12,20 +12,31 @@ interface CacheEnvelope<T> {
 }
 
 class OfflineStorageEngine {
-  private memCache: Map<string, CacheEnvelope<any>> = new Map();
-  private cacheDir: string = `${FileSystem.documentDirectory || ''}warnly_cache/`;
+  private memCache: Map<string, CacheEnvelope<unknown>> = new Map();
+  private cacheDir: string = '';
   private initialized: boolean = false;
+  private diskAvailable: boolean = false;
 
   private async ensureDir() {
     if (this.initialized) return;
     try {
+      const docDir = (FileSystem as { documentDirectory?: string | null }).documentDirectory;
+      if (!docDir) {
+        // Expo web / runtimes without a document directory: memory-only cache.
+        this.diskAvailable = false;
+        this.initialized = true;
+        return;
+      }
+      this.cacheDir = `${docDir}warnly_cache/`;
       const dirInfo = await FileSystem.getInfoAsync(this.cacheDir);
       if (!dirInfo.exists) {
         await FileSystem.makeDirectoryAsync(this.cacheDir, { intermediates: true });
       }
+      this.diskAvailable = true;
       this.initialized = true;
     } catch {
       // Fallback to memory-only if filesystem fails
+      this.diskAvailable = false;
       this.initialized = true;
     }
   }
@@ -47,6 +58,7 @@ class OfflineStorageEngine {
 
     try {
       await this.ensureDir();
+      if (!this.diskAvailable) return;
       const filePath = `${this.cacheDir}${this.sanitizeKey(key)}`;
       await FileSystem.writeAsStringAsync(filePath, JSON.stringify(envelope));
     } catch {
@@ -68,9 +80,10 @@ class OfflineStorageEngine {
       }
     }
 
-    // 2. Fall back to disk
+    // 2. Fall back to disk (skipped when no document directory exists)
     try {
       await this.ensureDir();
+      if (!this.diskAvailable) return null;
       const filePath = `${this.cacheDir}${this.sanitizeKey(key)}`;
       const fileInfo = await FileSystem.getInfoAsync(filePath);
       if (fileInfo.exists) {

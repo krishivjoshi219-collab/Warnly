@@ -9,8 +9,9 @@ export type StrobeListener = (isLit: boolean) => void;
 export class OpticalStrobeEngine {
   private isStrobeRunning: boolean = false;
   private listeners: StrobeListener[] = [];
-  private mediaStreamTrack: any = null;
-  private intervalId: any = null;
+  private mediaStreamTrack: { applyConstraints?: (c: unknown) => Promise<void>; stop?: () => void } | null = null;
+  private mediaStream: { getVideoTracks?: () => Array<{ stop?: () => void }> } | null = null;
+  private intervalId: ReturnType<typeof setTimeout> | null = null;
 
   // Standard Morse SOS timing in milliseconds
   // Dot = 150ms, Dash = 450ms, intra-char gap = 150ms, inter-word gap = 900ms
@@ -62,16 +63,23 @@ export class OpticalStrobeEngine {
     if (this.isStrobeRunning) return;
     this.isStrobeRunning = true;
 
-    // Attempt to acquire camera flashlight torch if running in mobile browser
+    // Attempt to acquire camera flashlight torch if running in mobile browser.
+    // Never retain a camera stream when the device has no torch — release it
+    // immediately so we don't hold the camera (privacy + battery).
     try {
       if (typeof navigator !== 'undefined' && navigator?.mediaDevices?.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },
         });
         const track = stream.getVideoTracks()[0];
-        const capabilities = (track as any).getCapabilities?.();
+        const capabilities = (track as unknown as { getCapabilities?: () => { torch?: boolean } }).getCapabilities?.();
         if (capabilities?.torch) {
-          this.mediaStreamTrack = track;
+          this.mediaStream = stream;
+          this.mediaStreamTrack = track as unknown as { applyConstraints?: (c: unknown) => Promise<void>; stop?: () => void };
+        } else {
+          try {
+            stream.getVideoTracks().forEach((t) => t.stop());
+          } catch {}
         }
       }
     } catch {}
@@ -117,9 +125,15 @@ export class OpticalStrobeEngine {
 
     if (this.mediaStreamTrack) {
       try {
-        this.mediaStreamTrack.stop();
+        this.mediaStreamTrack.stop?.();
       } catch {}
       this.mediaStreamTrack = null;
+    }
+    if (this.mediaStream) {
+      try {
+        this.mediaStream.getVideoTracks?.().forEach((t) => t.stop?.());
+      } catch {}
+      this.mediaStream = null;
     }
   }
 }

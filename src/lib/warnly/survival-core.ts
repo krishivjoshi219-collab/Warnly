@@ -7,6 +7,9 @@
  */
 
 // ── 1. Warning provenance & lifecycle ──
+// NOTE: fnv/signWarning is a demo checksum for offline dedup, NOT cryptographic
+// security. Never present it as verified delivery — custody text must stay
+// honest ("saved locally", "relayed") until a real signed gateway ack exists.
 export type WarningLifecycle = 'ACTIVE' | 'UPDATED' | 'CANCELLED' | 'EXPIRED' | 'STALE' | 'UNVERIFIED';
 export interface WarningEnvelope { id: string; authority: string; event: string; geoHash: string; issuedAt: number; expiresAt: number; payload: string; signature: string; hops: number; }
 function fnv(s: string): string { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16).padStart(8, '0'); }

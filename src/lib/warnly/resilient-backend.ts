@@ -34,15 +34,22 @@ export interface UnifiedBackendSnapshot {
 const CACHE_KEY_WEATHER = 'warnly_weather_snapshot';
 
 /**
- * Executes a network fetch with timeout
+ * Executes a promise with timeout. Note: this rejects on timeout but cannot
+ * abort the underlying fetch unless the callee honors AbortSignal — callers
+ * should still pass short timeouts so the UI never blocks on a hung network.
  */
 async function fetchWithTimeout<T>(promise: Promise<T>, timeoutMs: number = 7000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Network request timed out')), timeoutMs)
-    ),
-  ]);
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Network request timed out')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 export class ResilientBackendEngine {
@@ -110,13 +117,54 @@ export class ResilientBackendEngine {
     const now = Date.now();
     const cacheAge = this.lastSyncTimestamp > 0 ? Math.round((now - this.lastSyncTimestamp) / 1000) : 0;
 
-    // 4. Ingest real on-device hardware MEMS barometer reading (works 100% offline)
-    let hwBaro: HardwareBarometerResult | null = null;
-    try {
-      hwBaro = await NativeEmergency.getHardwareBarometer();
-    } catch {}
+    // 4-8. Run independent ingestions in parallel (was sequential awaits).
+    // Hardware barometer, METAR, GLOF, and early warnings don't depend on
+    // each other — awaiting them one-by-one blocked the first paint.
+    const [hwBaro, metar, glof, earlyWarning] = await (async () => {
+      const hwP: Promise<HardwareBarometerResult | null> = (async () => {
+        try {
+          return await fetchWithTimeout(NativeEmergency.getHardwareBarometer(), 2500);
+        } catch {
+          return null;
+        }
+      })();
+      const metarP: Promise<AirportMetar | null> = (async () => {
+        try {
+          return await fetchWithTimeout(fetchNearbyMetar(coords), 3500);
+        } catch {
+          return null;
+        }
+      })();
+      const glofP: Promise<GlofRiskAssessment | null> = (async () => {
+        try {
+          return await fetchWithTimeout(
+            evaluateGlofRisk(coords, weather.temperature, weather.precipitation),
+            5000
+          );
+        } catch {
+          return null;
+        }
+      })();
+      const earlyP: Promise<EarlyWarningSummary | null> = (async () => {
+        try {
+          return await fetchWithTimeout(computeEarlyWarnings(coords, weather, [], null, []), 5000);
+        } catch {
+          return null;
+        }
+      })();
+      return Promise.all([hwP, metarP, glofP, earlyP]);
+    })();
 
-    // Run Barometric tendency analytics (prioritizing physical onboard sensor if available)
+    if (metar && metar.isSevereConvective) {
+      // Immediate nowcast override: airport confirms active severe convective event
+      weather.cape = Math.max(weather.cape, 1800);
+      weather.precipProbability = Math.max(weather.precipProbability, 85);
+      if (weather.weatherCode < 95) {
+        weather.weatherCode = 95;
+      }
+    }
+
+    // Barometric tendency analytics (physical onboard sensor preferred when sane)
     const effectivePressure = (hwBaro && hwBaro.hasHardwareBarometer && hwBaro.currentPressureHpa > 800)
       ? hwBaro.currentPressureHpa
       : weather.pressure;
@@ -128,40 +176,8 @@ export class ResilientBackendEngine {
       barometer.advisoryText = `Hardware Barometer Alert: Sudden onboard pressure plunge detected (${hwBaro.trendHpaPerHour} hPa/hr). Imminent microburst / downdraft.`;
     }
 
-    // 5. Ingest NOAA Airport METAR / SPECI nowcasting (2-5 min latency ground truth)
-    let metar: AirportMetar | null = null;
-    try {
-      metar = await fetchWithTimeout(fetchNearbyMetar(coords), 3500);
-      if (metar && metar.isSevereConvective) {
-        // Immediate nowcast override: airport confirms active severe convective event
-        weather.cape = Math.max(weather.cape, 1800);
-        weather.precipProbability = Math.max(weather.precipProbability, 85);
-        if (weather.weatherCode < 95) {
-          weather.weatherCode = 95;
-        }
-      }
-    } catch {
-      metar = null;
-    }
-
-    // 6. Run Doppler convective cell vector tracking
+    // Doppler convective cell vector tracking (pure math, no I/O)
     const doppler = analyzeDopplerCells(coords, weather.cape, weather.precipProbability, weather.weatherCode);
-
-    // 7. Run GLOF mountain basin assessment
-    let glof: GlofRiskAssessment | null = null;
-    try {
-      glof = await evaluateGlofRisk(coords, weather.temperature, weather.precipitation);
-    } catch {
-      glof = null;
-    }
-
-    // 8. Synthesize multi-hazard early warning
-    let earlyWarning: EarlyWarningSummary | null = null;
-    try {
-      earlyWarning = await computeEarlyWarnings(coords, weather, [], null, []);
-    } catch {
-      earlyWarning = null;
-    }
 
     return {
       weather,

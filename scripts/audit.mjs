@@ -23,7 +23,11 @@ if (pkg && appJson?.expo?.version && pkg.version !== appJson.expo.version) {
 if (tsconfig && !JSON.stringify(tsconfig.include || []).includes('src')) {
   failures.push('tsconfig.json include must contain src');
 }
-['index.html','index.js','src/App.tsx','src/main.tsx','vite.config.ts','tsconfig.json','app.json','src/lib/warnly/astra/index.ts','src/lib/warnly/risk.ts','src/lib/warnly/sos-share.ts'].forEach(checkExists);
+['index.js','src/App.tsx','babel.config.js','metro.config.js','tsconfig.json','app.json','src/lib/warnly/astra/index.ts','src/lib/warnly/risk.ts','src/lib/warnly/sos-share.ts'].forEach(checkExists);
+// Expo canonical entry: Vite files must NOT exist (deleted in Expo-only unification).
+['index.html','src/main.tsx','vite.config.ts','wrangler.toml'].forEach((rel) => {
+  if (fs.existsSync(path.join(root, rel))) failures.push(`Vite-era file should be deleted for Expo-only build: ${rel}`);
+});
 const astraRequired = ['signallock','aegis','refuge-id','cutline','pressurenet','pact','rescuechain','echotrace','lifereserve','groundtruth'];
 for (const m of astraRequired) {
   if (!fs.existsSync(path.join(root, `src/lib/warnly/astra/${m}.ts`))) failures.push(`missing Astra engine: ${m}`);

@@ -9,9 +9,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon",
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "audit": "node scripts/audit.mjs",
     "astra:audit": "node scripts/astra-audit.mjs",
@@ -30,10 +28,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@react-native/babel-preset": "^0.76.7",
     "@types/react": "~18.2.45",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.4.5",
-    "vite": "^6.4.3"
+    "babel-preset-expo": "~11.0.0",
+    "typescript": "^5.4.5"
   }
 }
