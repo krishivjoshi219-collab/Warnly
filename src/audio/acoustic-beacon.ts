@@ -10,7 +10,7 @@ export class AcousticBeaconSynthesizer {
   private oscillator: OscillatorNode | null = null;
   private gainNode: GainNode | null = null;
   private isSirenActive: boolean = false;
-  private toggleTimer: any = null;
+  private toggleTimer: ReturnType<typeof setInterval> | null = null;
   private currentFreq: number = 960;
 
   private initAudio() {

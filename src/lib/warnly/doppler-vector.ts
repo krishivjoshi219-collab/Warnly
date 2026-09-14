@@ -152,9 +152,13 @@ export function analyzeDopplerCells(
     });
   });
 
-  // Demo wow: guarantee one intercepting cell with visible ETA for judges
+  // Demo wow (hackathon only): when simulateStorm is true, label the nearest
+  // cell as a DEMO intercept with a visible ETA for judges. Live path (false)
+  // is pure CPA math with no forced intercepts.
   if (simulateStorm && cells.length > 0) {
     cells.sort((a, b) => a.distanceKm - b.distanceKm);
+    cells[0].id = `DEMO-${cells[0].id}`;
+    cells[0].name = `DEMO ${cells[0].name}`;
     cells[0].willIntercept = true;
     if (cells[0].etaMinutes < 0) cells[0].etaMinutes = 18;
     cells[0].severity = 'EXTREME';

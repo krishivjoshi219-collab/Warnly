@@ -87,11 +87,27 @@ const setStorageItem = (k: string, v: string) => {
   }
 };
 
+function isValidCoords(v: unknown): v is Coords {
+  if (!v || typeof v !== "object") return false;
+  const c = v as { lat?: unknown; lon?: unknown };
+  return (
+    typeof c.lat === "number" &&
+    typeof c.lon === "number" &&
+    Number.isFinite(c.lat) &&
+    Number.isFinite(c.lon) &&
+    Math.abs(c.lat) <= 90 &&
+    Math.abs(c.lon) <= 180
+  );
+}
+
 export function WarnlyProvider({ children }: { children: ReactNode }) {
   const [coords, setCoords] = useState<Coords | null>(() => {
     try {
       const saved = getStorageItem("warnly:coords");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (isValidCoords(parsed)) return parsed;
+      }
     } catch {
       /* ignore */
     }
@@ -108,6 +124,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const [strikes, setStrikes] = useState<Strike[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  // Refs mirror async state so intervals never need side-effects inside updaters.
+  const weatherRef = useRef<WeatherSnapshot | undefined>(undefined);
+  weatherRef.current = weather;
 
   // Backend resilience state
   const [backendSnapshot, setBackendSnapshot] = useState<UnifiedBackendSnapshot | null>(null);
@@ -282,14 +301,19 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const simulateStormRef = useRef(simulateStorm);
   simulateStormRef.current = simulateStorm;
 
+  // Round GPS to ~1km for subscription keys so meter-level jitter doesn't
+  // tear down and rebuild the 3-min / 15-s polling loops.
+  const coordKey = coords ? `${coords.lat.toFixed(2)},${coords.lon.toFixed(2)}` : null;
+
   useEffect(() => {
     if (!coords) return;
-    loadData(coords);
+    const liveCoords = coords;
+    loadData(liveCoords);
 
     // Weather refresh every 3 minutes via resilient backend
     const wxInterval = setInterval(() => {
       if (simulateStormRef.current) return;
-      ResilientBackendEngine.getAtmosphericTelemetry(coords)
+      ResilientBackendEngine.getAtmosphericTelemetry(liveCoords)
         .then((snap) => {
           if (!simulateStormRef.current) {
             setBackendSnapshot(snap);
@@ -305,29 +329,30 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
         .catch(() => {});
     }, 3 * 60 * 1000);
 
-    // Strike refresh every 15 seconds — read live snapshot & simulateStormRef to avoid stale closure
+    // Strike refresh every 15 seconds — pure read path. Never put
+    // side-effects inside a state updater (StrictMode double-invokes them).
     const stInterval = setInterval(() => {
       const isSim = simulateStormRef.current;
-      setBackendSnapshot((snap) => {
-        const w = snap?.weather ?? weather;
-        fetchRealLightningStrikes(
-          coords,
-          isSim ? Math.max(w?.cape ?? 0, 2450) : (w?.cape ?? 0),
-          isSim ? Math.max(w?.precipProbability ?? 0, 92) : (w?.precipProbability ?? 0),
-          isSim ? 95 : (w?.weatherCode ?? 0),
-          isSim
-        )
-          .then((st) => setStrikes(st))
-          .catch(() => {});
-        return snap;
-      });
+      const w = weatherRef.current;
+      fetchRealLightningStrikes(
+        liveCoords,
+        isSim ? Math.max(w?.cape ?? 0, 2450) : (w?.cape ?? 0),
+        isSim ? Math.max(w?.precipProbability ?? 0, 92) : (w?.precipProbability ?? 0),
+        isSim ? 95 : (w?.weatherCode ?? 0),
+        isSim
+      )
+        .then((st) => {
+          if (simulateStormRef.current === isSim) setStrikes(st);
+        })
+        .catch(() => {});
     }, 15 * 1000);
 
     return () => {
       clearInterval(wxInterval);
       clearInterval(stInterval);
     };
-  }, [coords?.lat, coords?.lon, loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coordKey, loadData]);
 
   const { probability, level } = useMemo(() => {
     const base = weather
@@ -373,11 +398,16 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     };
   }, [strikes]);
 
+  // 30-30 shelter deadline anchored to the freshest breach strike timestamp,
+  // not to Date.now() at render time — so the countdown doesn't jump every
+  // time the 15-s strike poll returns a new array identity.
   const shelterUntil = useMemo(() => {
     const breach = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
     if (!breach.length) return null;
-    const freshest = Math.min(...breach.map((s) => s.ageMin));
-    return Date.now() + (30 - freshest) * 60_000;
+    const freshestAgeMin = Math.min(...breach.map((s) => s.ageMin));
+    const now = Date.now();
+    const freshestTs = now - freshestAgeMin * 60_000;
+    return freshestTs + 30 * 60_000;
   }, [strikes]);
 
   useEffect(() => {
@@ -387,6 +417,115 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const refreshAll = useCallback(() => {
     if (coords) loadData(coords);
   }, [coords, loadData]);
+
+  // DEMO MODE (hackathon): clearly-labeled synthetic supercell. All demo
+  // strikes carry `isSimulated: true` + `demo-strike-*` ids so they can never
+  // be mistaken for Blitzortung live data, and exiting demo purges ONLY the
+  // synthetic pool then restores the saved live baseline. No setState calls
+  // inside an updater — StrictMode-safe.
+  const toggleSimulateStorm = useCallback(() => {
+    const next = !simulateStormRef.current;
+    setSimulateStorm(next);
+    simulateStormRef.current = next;
+    if (next) {
+      if (weatherRef.current) savedBaselineWeatherRef.current = weatherRef.current;
+      setBackendSnapshot((prevSnap) => {
+        if (prevSnap) savedBaselineSnapshotRef.current = prevSnap;
+        return prevSnap;
+      });
+
+      const c = coords ?? { lat: 28.5355, lon: 77.26 };
+      const baseWx: WeatherSnapshot = weatherRef.current ?? {
+        place: "South East, Delhi (DEMO)",
+        coords: c,
+        temperature: 24,
+        apparent: 26,
+        humidity: 92,
+        dewPoint: 22,
+        cloudCover: 90,
+        uvIndex: 1,
+        windSpeed: 45,
+        windGust: 65,
+        windDirection: 210,
+        pressure: 1004,
+        precipitation: 24.5,
+        weatherCode: 95,
+        isDay: false,
+        cape: 2850,
+        liftedIndex: -5.4,
+        precipProbability: 98,
+        updatedAt: Date.now(),
+        rainSummary: "DEMO supercell — synthetic data for hackathon judging, not a live warning",
+        daily: [],
+        hourly: [],
+        minutely15: [],
+      };
+      const demoWeather: WeatherSnapshot = {
+        ...baseWx,
+        cape: 2850,
+        liftedIndex: -5.4,
+        precipProbability: 98,
+        weatherCode: 95,
+        precipitation: 24.5,
+        windSpeed: 48,
+      };
+      setWeather(demoWeather);
+      weatherRef.current = demoWeather;
+
+      const demoSt = generateDemoStrikesSync(c);
+      setStrikes(demoSt);
+
+      setBackendSnapshot((prevSnap) => ({
+        connectionState: 'ONLINE_REALTIME',
+        weather: demoWeather,
+        doppler: analyzeDopplerCells(c, 2850, 98, 95, true),
+        barometer: prevSnap?.barometer ?? {
+          currentHpa: 1004,
+          delta1hHpa: -4.2,
+          delta3hHpa: -7.5,
+          tendency: 'MICROBURST_SURGE',
+          hasMicroburstRisk: true,
+          leadTimeMinutes: 18,
+          advisoryText: 'DEMO pressure surge — synthetic microburst for hackathon judging',
+        },
+        glof: prevSnap?.glof ?? null,
+        earlyWarning: prevSnap?.earlyWarning ?? null,
+        cachedAgeSec: 0,
+        metar: prevSnap?.metar ?? null,
+        hardwareBarometer: prevSnap?.hardwareBarometer ?? null,
+        lastSuccessfulSync: Date.now(),
+      }));
+    } else {
+      clearSimulatedStrikes();
+      // Re-fetch live strikes for current coords instead of trusting a stale pool.
+      const liveCoords = coords;
+      if (liveCoords) {
+        const w = savedBaselineWeatherRef.current;
+        fetchRealLightningStrikes(
+          liveCoords,
+          w?.cape ?? 0,
+          w?.precipProbability ?? 0,
+          w?.weatherCode ?? 0,
+          false
+        )
+          .then((st) => {
+            if (!simulateStormRef.current) setStrikes(st);
+          })
+          .catch(() => {
+            if (!simulateStormRef.current) setStrikes([]);
+          });
+      } else {
+        setStrikes([]);
+      }
+      if (savedBaselineWeatherRef.current) {
+        setWeather(savedBaselineWeatherRef.current);
+        weatherRef.current = savedBaselineWeatherRef.current;
+      }
+      if (savedBaselineSnapshotRef.current) {
+        setBackendSnapshot(savedBaselineSnapshotRef.current);
+      }
+    }
+  }, [coords]);
 
   const value: WarnlyState = {
     survival,
@@ -410,87 +549,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     dismissAlert: () => setAlertDismissedAt(Date.now()),
     shelterUntil,
     simulateStorm,
-    toggleSimulateStorm: () =>
-      setSimulateStorm((prev) => {
-        const next = !prev;
-        if (next) {
-          // Synchronous immediate demo injection (0 ms latency)
-          if (weather) savedBaselineWeatherRef.current = weather;
-          if (backendSnapshot) savedBaselineSnapshotRef.current = backendSnapshot;
-
-          const c = coords ?? { lat: 28.5355, lon: 77.26 };
-          const baseWx: WeatherSnapshot = weather ?? {
-            place: "South East, Delhi",
-            coords: c,
-            temperature: 24,
-            apparent: 26,
-            humidity: 92,
-            dewPoint: 22,
-            cloudCover: 90,
-            uvIndex: 1,
-            windSpeed: 45,
-            windGust: 65,
-            windDirection: 210,
-            pressure: 1004,
-            precipitation: 24.5,
-            weatherCode: 95,
-            isDay: false,
-            cape: 2850,
-            liftedIndex: -5.4,
-            precipProbability: 98,
-            updatedAt: Date.now(),
-            rainSummary: "Severe convective cell — torrential rain and lightning",
-            daily: [],
-            hourly: [],
-            minutely15: [],
-          };
-          const demoWeather: WeatherSnapshot = {
-            ...baseWx,
-            cape: 2850,
-            liftedIndex: -5.4,
-            precipProbability: 98,
-            weatherCode: 95,
-            precipitation: 24.5,
-            windSpeed: 48,
-          };
-          setWeather(demoWeather);
-
-          const demoSt = generateDemoStrikesSync(c);
-          setStrikes(demoSt);
-
-          setBackendSnapshot({
-            connectionState: 'ONLINE_REALTIME',
-            weather: demoWeather,
-            doppler: analyzeDopplerCells(c, 2850, 98, 95, true),
-            barometer: backendSnapshot?.barometer ?? {
-              currentHpa: 1004,
-              delta1hHpa: -4.2,
-              delta3hHpa: -7.5,
-              tendency: 'MICROBURST_SURGE',
-              hasMicroburstRisk: true,
-              leadTimeMinutes: 18,
-              advisoryText: 'Severe convective pressure surge detected — microburst imminent',
-            },
-            glof: backendSnapshot?.glof ?? null,
-            earlyWarning: backendSnapshot?.earlyWarning ?? null,
-            cachedAgeSec: 0,
-            metar: backendSnapshot?.metar ?? null,
-            hardwareBarometer: backendSnapshot?.hardwareBarometer ?? null,
-            lastSuccessfulSync: Date.now(),
-          });
-        } else {
-          // Synchronous clean restore (0 ms latency)
-          clearSimulatedStrikes();
-          setStrikes([]);
-          if (savedBaselineWeatherRef.current) {
-            setWeather(savedBaselineWeatherRef.current);
-          }
-          if (savedBaselineSnapshotRef.current) {
-            setBackendSnapshot(savedBaselineSnapshotRef.current);
-          }
-        }
-        return next;
-      }),
+    toggleSimulateStorm,
     connectionState,
     backendSnapshot,
     doppler: backendSnapshot?.doppler ?? null,

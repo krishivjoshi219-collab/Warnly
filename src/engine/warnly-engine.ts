@@ -119,10 +119,13 @@ export class WarnlyEngine {
   public readonly zoneService = new ZoneService();
 
   // Observable Engine State
+  // NOTE: legacy simulation engine — not mounted by App (store.tsx is canonical).
+  // Kept for the unrouted Simulator/Telemetry screens; defaults are neutral
+  // (no fake San Francisco danger) so it can never fabricate a live warning.
   public alertLevel: AlertLevel = AlertLevel.SAFE;
-  public userLatitude: number = 37.7749;
-  public userLongitude: number = -122.4194;
-  public locationName: string = 'San Francisco, CA (Tactical Node)';
+  public userLatitude: number = 0;
+  public userLongitude: number = 0;
+  public locationName: string = 'Unset — waiting for GPS';
   public selectedProfile: DemographicProfile = DEMOGRAPHIC_PROFILES.general;
 
   public strikes: LightningStrike[] = [];
@@ -137,7 +140,7 @@ export class WarnlyEngine {
   public timerRemainingSeconds: number = 0;
   public isTimerRunning: boolean = false;
   public timerStrikeCount: number = 0;
-  private timerInterval: any = null;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   // FR-04: Emergency Intrusion Modal
   public isEmergencyModalMounted: boolean = false;

@@ -154,7 +154,22 @@ export function ProProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = getStorageItem(KEY);
-      if (raw) setState({ ...DEFAULTS, ...JSON.parse(raw) });
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          const p = parsed as Partial<Persisted>;
+          setState({
+            ...DEFAULTS,
+            ...(typeof p.isPro === "boolean" ? { isPro: p.isPro } : {}),
+            ...(p.units === "metric" || p.units === "imperial" ? { units: p.units } : {}),
+            ...(typeof p.alertRadiusKm === "number" && Number.isFinite(p.alertRadiusKm)
+              ? { alertRadiusKm: Math.min(50, Math.max(5, p.alertRadiusKm)) }
+              : {}),
+            ...(Array.isArray(p.places) ? { places: p.places.filter((x) => x && typeof x.id === "string") } : {}),
+            ...(p.apiKeys && typeof p.apiKeys === "object" ? { apiKeys: {} } : {}),
+          });
+        }
+      }
     } catch {
       /* ignore */
     }

@@ -17,7 +17,7 @@ let currentOrigin: Coords | null = null;
 let lastStrikeRxTimestamp = 0;
 let totalStrikesReceived = 0;
 let wsStatus: 'CONNECTED' | 'RECONNECTING' | 'OFFLINE' = 'OFFLINE';
-let reconnectTimer: any = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let isExplicitlyStopped = false;
 let serverIdx = 0;
 
@@ -286,7 +286,7 @@ export async function fetchRealLightningStrikes(
     .sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
-/** Reset strikes pool immediately */
+/** Reset only DEMO strikes — never wipes the real Blitzortung pool. */
 export function clearSimulatedStrikes() {
-  strikePool = [];
+  strikePool = strikePool.filter((s) => !s.isSimulated);
 }

@@ -21,9 +21,17 @@ export interface BarometricAnalysis {
 
 export class BarometerAnalyzer {
   private static history: PressureReading[] = [];
+  private static readonly MAX_HISTORY = 500;
+
+  static reset(): void {
+    this.history = [];
+  }
 
   static record(pressureHpa: number, timestamp: number = Date.now()): void {
     this.history.push({ pressureHpa, timestamp });
+    if (this.history.length > this.MAX_HISTORY) {
+      this.history = this.history.slice(-this.MAX_HISTORY);
+    }
     // Keep max 24 hours of readings
     const cutoff = timestamp - 24 * 60 * 60 * 1000;
     this.history = this.history.filter((r) => r.timestamp >= cutoff);

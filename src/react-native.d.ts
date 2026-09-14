@@ -191,6 +191,13 @@ declare module 'react-native' {
     [key: string]: any;
   };
 
+  export const PermissionsAndroid: {
+    PERMISSIONS: { ACCESS_FINE_LOCATION: string; ACCESS_COARSE_LOCATION: string };
+    RESULTS: { GRANTED: string; DENIED: string; NEVER_ASK_AGAIN: string };
+    check(permission: string): Promise<boolean>;
+    request(permission: string, rationale?: { title: string; message: string; buttonNeutral?: string; buttonNegative?: string; buttonPositive?: string }): Promise<string>;
+  };
+
   export interface GestureResponderEvent {
     nativeEvent: any;
   }

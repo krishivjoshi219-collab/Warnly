@@ -11,20 +11,38 @@ captures/
 .cxx
 local.properties
 
+# Expo / Metro
+.expo/
+.expo-shared/
+.eas/
+
 # TypeScript / Web dependencies & cache
 node_modules/
 **/node_modules/
 dist/
+*.bundle
+*.jsbundle
+*.tsbuildinfo
+.wrangler/
+coverage/
+.vite/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # GitRisk: added missing security patterns
 .env
+.env.*
+.env.local
+.env.*.local
 *.key
 *.pem
 *.p12
 *.pfx
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
 
 # Screenshots, media and local documents
 WhatsApp Image*

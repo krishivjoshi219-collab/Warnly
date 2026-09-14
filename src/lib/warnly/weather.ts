@@ -1,5 +1,15 @@
 import type { WeatherSnapshot } from "./types";
 
+async function fetchWithSignal(input: string, init: RequestInit = {}, timeoutMs = 8000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export interface SearchResult {
   id: number;
   name: string;
@@ -56,7 +66,7 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
   const normalizedQ = typoMap[cleanQ.toLowerCase()] ?? cleanQ;
 
   try {
-    let res = await fetch(
+    let res = await fetchWithSignal(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(normalizedQ)}&count=6&language=en&format=json`,
     );
     if (res.ok) {
@@ -67,23 +77,28 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
     }
 
     // Resilient fallback: OpenStreetMap Nominatim for any global language or place
-    const nomRes = await fetch(
+    const nomRes = await fetchWithSignal(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(normalizedQ)}&limit=6`,
       { headers: { 'User-Agent': 'WarnlyEmergencyApp/1.1 (team@warnly.app)' } }
     );
     if (nomRes.ok) {
-      const nomData = (await nomRes.json()) as any[];
-      return nomData.map((n: any, idx: number) => {
-        const parts = (n.display_name || '').split(',');
-        return {
-          id: n.place_id || idx + 100000,
-          name: n.name || parts[0] || 'Location',
-          latitude: parseFloat(n.lat),
-          longitude: parseFloat(n.lon),
-          country: parts.slice(-1)[0]?.trim(),
-          admin1: parts.slice(-2, -1)[0]?.trim(),
-        };
-      });
+      const nomData = (await nomRes.json()) as Array<{ display_name?: string; name?: string; place_id?: number; lat?: string; lon?: string }>;
+      return nomData
+        .map((n, idx) => {
+          const lat = parseFloat(n.lat ?? "");
+          const lon = parseFloat(n.lon ?? "");
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+          const parts = (n.display_name || '').split(',');
+          return {
+            id: n.place_id || idx + 100000,
+            name: n.name || parts[0] || 'Location',
+            latitude: lat,
+            longitude: lon,
+            country: parts.slice(-1)[0]?.trim(),
+            admin1: parts.slice(-2, -1)[0]?.trim(),
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null);
     }
 
     return [];
@@ -94,8 +109,10 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
 
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
   try {
-    const res = await fetch(
+    const res = await fetchWithSignal(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+      {},
+      6000
     );
     if (!res.ok) throw new Error("geocode failed");
     const j = (await res.json()) as { city?: string; locality?: string; countryName?: string; principalSubdivision?: string };
@@ -116,7 +133,7 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherSna
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max` +
     `&forecast_days=7&timezone=auto&timeformat=unixtime`;
 
-  const [res, place] = await Promise.all([fetch(url), reverseGeocode(lat, lon)]);
+  const [res, place] = await Promise.all([fetchWithSignal(url, {}, 9000), reverseGeocode(lat, lon)]);
   if (!res.ok) throw new Error("Weather service unavailable");
   const d = (await res.json()) as any;
 
@@ -218,7 +235,7 @@ export interface RainViewerData {
 
 export async function fetchRainViewerRadar(): Promise<{ host: string; frames: RadarFrame[] }> {
   try {
-    const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+    const res = await fetchWithSignal("https://api.rainviewer.com/public/weather-maps.json", {}, 8000);
     if (!res.ok) throw new Error("Failed to fetch radar");
     const data: RainViewerData = await res.json();
     const frames = [...(data.radar?.past ?? []), ...(data.radar?.nowcast ?? [])];

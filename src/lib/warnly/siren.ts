@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { NativeEmergency } from "./native-emergency";
 
 /** Two-tone emergency siren synthesized with USAGE_ALARM (native DND bypass) or Web Audio API fallback. */
@@ -36,8 +37,8 @@ export function startSirenAudio() {
   // 1. On Android hardware, route siren to STREAM_ALARM (bypasses DND and silent mode)
   NativeEmergency.startAlarmSiren();
 
-  // 2. Web Audio fallback for browser/simulator
-  if (typeof window === "undefined") return;
+  // 2. Web Audio fallback — Expo native (Hermes) has no window.AudioContext.
+  if (Platform.OS !== "web" || typeof window === "undefined") return;
   stopWebAudioSiren();
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;

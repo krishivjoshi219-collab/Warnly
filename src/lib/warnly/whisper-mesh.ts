@@ -59,12 +59,20 @@ export class WhisperMeshEngine {
     this.state = {
       isMeshActive: true,
       localNodeId: localId,
-      activePeers: this.generateInitialPeers(),
+      // No fake peers: real BLE mesh starts empty. Demo peers (if any)
+      // must be injected explicitly via seedDemoPeers() for hackathon demos.
+      activePeers: [],
       packetQueue: [],
       meshCoverageRadiusMeters: 850,
       uplinkBridgeAvailable: false,
-      totalPacketsRelayed: 14,
+      totalPacketsRelayed: 0,
     };
+  }
+
+  /** Hackathon/demo only: clearly-labeled fake peers. Never used in live path. */
+  public seedDemoPeers(): void {
+    this.state.activePeers = this.generateInitialPeers();
+    this.notify();
   }
 
   private generateInitialPeers(): WhisperNode[] {

@@ -35,7 +35,8 @@ export type { SosBundle, CustodyStage } from "./astra/rescuechain";
 import { createBundle as createSosBundle, statusText as sosCustodyText } from "./astra/rescuechain";
 
 /** RESCUECHAIN bridge: verifiable DTN bundle for the same SOS context. Never fakes delivery. */
-export function sosBundleFromContext(ctx: SosContext, senderId: string, secret = "warnly-demo-secret") {
+export function sosBundleFromContext(ctx: SosContext, senderId: string, secret: string) {
+  if (!secret) throw new Error("sosBundleFromContext requires an explicit secret (no default demo secret).");
   return createSosBundle(senderId, ctx.lat, ctx.lon, buildSosMessage(ctx), secret);
 }
 export { sosCustodyText };
