@@ -127,6 +127,8 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   // Refs mirror async state so intervals never need side-effects inside updaters.
   const weatherRef = useRef<WeatherSnapshot | undefined>(undefined);
   weatherRef.current = weather;
+  const strikesRef = useRef<Strike[]>([]);
+  strikesRef.current = strikes;
 
   // Backend resilience state
   const [backendSnapshot, setBackendSnapshot] = useState<UnifiedBackendSnapshot | null>(null);
@@ -254,8 +256,11 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const loadData = useCallback(async (c: Coords) => {
     setIsLoading(true);
     try {
-      // Ingest through the Resilient Multi-Tier Backend
-      const snapshot = await ResilientBackendEngine.getAtmosphericTelemetry(c);
+      // Ingest through the Resilient Multi-Tier Backend, fed with the latest
+      // known strikes so early-warning synthesis uses real inputs.
+      const snapshot = await ResilientBackendEngine.getAtmosphericTelemetry(c, {
+        strikes: strikesRef.current,
+      });
       setBackendSnapshot(snapshot);
       savedBaselineSnapshotRef.current = snapshot;
       setConnectionState(snapshot.connectionState);
@@ -281,17 +286,20 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 15-Minute Stale-Data Watchdog Timer
-  const [lastRemoteSync, setLastRemoteSync] = useState(Date.now());
+  // 15-Minute Stale-Data Watchdog Timer.
+  // lastRemoteSync starts at 0 (never synced) so a fresh offline launch is
+  // honestly STALE until the first successful remote sync — never "0 min ago".
+  const [lastRemoteSync, setLastRemoteSync] = useState(0);
   const [nowTick, setNowTick] = useState(Date.now());
+  const [launchTime] = useState(Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 10000);
     return () => clearInterval(timer);
   }, []);
 
-  const staleMinutes = lastRemoteSync > 0 ? Math.floor((nowTick - lastRemoteSync) / 60000) : 0;
-  const isStale = staleMinutes >= 15;
+  const staleMinutes = lastRemoteSync > 0 ? Math.floor((nowTick - lastRemoteSync) / 60000) : Math.floor((nowTick - launchTime) / 60000);
+  const isStale = lastRemoteSync <= 0 || staleMinutes >= 15;
 
   // Always acquire true hardware GPS satellite reception on launch
   useEffect(() => {
@@ -313,7 +321,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     // Weather refresh every 3 minutes via resilient backend
     const wxInterval = setInterval(() => {
       if (simulateStormRef.current) return;
-      ResilientBackendEngine.getAtmosphericTelemetry(liveCoords)
+      ResilientBackendEngine.getAtmosphericTelemetry(liveCoords, {
+        strikes: strikesRef.current,
+      })
         .then((snap) => {
           if (!simulateStormRef.current) {
             setBackendSnapshot(snap);
@@ -368,11 +378,17 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
     let lvl = riskLevel(p, strikes);
 
     // ANTI-FALSE-SAFE GUARDRAIL:
-    // If telemetry data is > 15 minutes old, strip the green "ALL CLEAR" badge!
-    // Downgrade to advisory and floor probability so user is not misled.
+    // If telemetry data is > 15 minutes old (or never synced), strip the green
+    // "ALL CLEAR" badge! Downgrade to advisory and floor probability so the
+    // user is not misled.
+    // STALE DECAY: danger also requires FRESH evidence. A strike that fired
+    // danger 25 min ago must not hold "SHELTER NOW" forever after the network
+    // drops — cap stale levels at advisory (unknown), never safe, never danger.
     if (isStale && lvl === 'safe') {
       lvl = 'advisory';
       p = Math.max(p, 25);
+    } else if (isStale && lvl === 'danger') {
+      lvl = 'advisory';
     }
 
     return {
@@ -384,7 +400,9 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   const nearest = strikes[0] ?? null;
 
   const survival: SurvivalPanel = useMemo(() => {
-    const breach = strikes.some((s) => s.distanceKm <= SAFETY_RADIUS_KM);
+    // Only FRESH strikes (≤20 min, same window as riskLevel) can order shelter.
+    // An old strike near pool expiry must not command "Go inside NOW".
+    const breach = strikes.some((s) => s.distanceKm <= SAFETY_RADIUS_KM && s.ageMin <= 20);
     const doNot: string[] = breach ? ['Do NOT shelter near plumbing or windows'] : [];
     return {
       directive: breach ? 'Go to interior hallway NOW — avoid basement if wet' : 'Monitor — no verified refuge needed',
@@ -402,7 +420,7 @@ export function WarnlyProvider({ children }: { children: ReactNode }) {
   // not to Date.now() at render time — so the countdown doesn't jump every
   // time the 15-s strike poll returns a new array identity.
   const shelterUntil = useMemo(() => {
-    const breach = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM);
+    const breach = strikes.filter((s) => s.distanceKm <= SAFETY_RADIUS_KM && s.ageMin <= 20);
     if (!breach.length) return null;
     const freshestAgeMin = Math.min(...breach.map((s) => s.ageMin));
     const now = Date.now();
