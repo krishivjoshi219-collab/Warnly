@@ -10,12 +10,14 @@ declare const __DEV__: boolean | undefined;
 
 /**
  * Warnly Astra - RevenueCat In-App Subscriptions & Paywall Integration
- * Test Public API Key provided for sandbox testing.
+ * API Key retrieved securely from environment variables.
  */
-const DEFAULT_RC_KEY = "test_iHpFsmOUyIMiZeBzDglxAvosjFr";
-export const REVENUECAT_TEST_API_KEY =
+export const REVENUECAT_API_KEY =
   (typeof process !== "undefined" && process.env && (process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || process.env.REVENUECAT_API_KEY)) ||
-  DEFAULT_RC_KEY;
+  "";
+
+// Alias for backwards compatibility
+export const REVENUECAT_TEST_API_KEY = REVENUECAT_API_KEY;
 
 /** Entitlement IDs configured in RevenueCat dashboard */
 export const PRO_ENTITLEMENT_IDS = ["astra_pro", "warnly_pro", "pro", "premium", "tactical_pass"] as const;
@@ -58,12 +60,17 @@ export function getActiveEntitlements(info: CustomerInfo | null | undefined): st
  * Safe against double-initialization and handles web/sandbox fallbacks.
  */
 export async function initializeRevenueCat(
-  apiKey: string = REVENUECAT_TEST_API_KEY,
+  apiKey: string = REVENUECAT_API_KEY,
   appUserId?: string
 ): Promise<boolean> {
   if (isInitialized) {
     console.log("[RevenueCat] Already initialized.");
     return true;
+  }
+
+  if (!apiKey) {
+    console.warn("[RevenueCat] Initialization skipped: No API key set in environment.");
+    return false;
   }
 
   try {
