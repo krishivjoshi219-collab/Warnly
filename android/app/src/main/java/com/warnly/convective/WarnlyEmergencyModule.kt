@@ -67,6 +67,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
     }
 
     private fun setupBarometerInternal() {
+        if (barometerListener != null) return
         try {
             sensorManager = reactApplicationContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
             pressureSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PRESSURE)
@@ -464,6 +465,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
         }
 
         // 8-second safety timeout: fall back to last known location or reject
+        // Must stay in sync with postDelayed() below or GPS cold-start will abort early.
         mainHandler.postDelayed({
             if (!resolved) {
                 resolved = true
@@ -484,7 +486,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                     promise.reject("TIMEOUT", "Hardware GPS timed out waiting for satellite fix")
                 }
             }
-        }, 3500)
+        }, 8000)
 
         mainHandler.post {
             try {

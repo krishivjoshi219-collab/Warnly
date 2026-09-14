@@ -21,14 +21,15 @@ export function boundingRadius(fixes: SearchFix[]): { lat: number; lon: number; 
   if (!fixes.length) return null;
   const lat = fixes.reduce((s, f) => s + f.responderLat, 0) / fixes.length;
   const lon = fixes.reduce((s, f) => s + f.responderLon, 0) / fixes.length;
-  const radiusM = Math.min(...fixes.map((f) => f.rangeM));
+  const radiusM = Math.max(...fixes.map((f) => f.rangeM));
   return { lat, lon, radiusM };
 }
 
 export function chirpMatched(rx: number[], template: number[]): { delaySamples: number; peak: number } {
-  let best = 0;
+  if (!rx.length || !template.length || template.length > rx.length) return { delaySamples: 0, peak: 0 };
+  let best = -Infinity;
   let idx = 0;
-  for (let lag = 0; lag < rx.length - template.length; lag++) {
+  for (let lag = 0; lag <= rx.length - template.length; lag++) {
     let acc = 0;
     for (let i = 0; i < template.length; i++) acc += rx[lag + i] * template[i];
     if (acc > best) {
