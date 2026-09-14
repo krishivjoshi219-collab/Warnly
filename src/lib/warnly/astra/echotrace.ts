@@ -8,7 +8,10 @@ export function speedOfSoundMs(tempC: number): number {
 
 export function rangeFromToF(deltaSec: number, tempC: number): number {
   // Round-trip chirp: d ≈ c/2 * Δt
-  return Math.max(0, (speedOfSoundMs(tempC) / 2) * deltaSec);
+  if (!Number.isFinite(deltaSec) || !Number.isFinite(tempC)) return 0;
+  const c = speedOfSoundMs(tempC);
+  if (!Number.isFinite(c)) return 0;
+  return Math.max(0, (c / 2) * deltaSec);
 }
 
 export interface SearchFix {

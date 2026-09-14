@@ -281,6 +281,9 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
     fun stopAlarmSiren() {
         Log.i(TAG, "stopAlarmSiren called, interrupting siren thread")
         isPlayingSiren = false
+        try {
+            audioTrack?.stop()
+        } catch (ignored: Exception) {}
         sirenThread?.interrupt()
         sirenThread = null
     }
@@ -505,11 +508,17 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
             } catch (e: SecurityException) {
                 if (!resolved) {
                     resolved = true
+                    try {
+                        mainHandler.removeCallbacks(timeoutRunnable)
+                    } catch (ignored: Exception) {}
                     promise.reject("SECURITY_EXCEPTION", e.message)
                 }
             } catch (e: Exception) {
                 if (!resolved) {
                     resolved = true
+                    try {
+                        mainHandler.removeCallbacks(timeoutRunnable)
+                    } catch (ignored: Exception) {}
                     promise.reject("GPS_REQUEST_ERR", e.message)
                 }
             }
