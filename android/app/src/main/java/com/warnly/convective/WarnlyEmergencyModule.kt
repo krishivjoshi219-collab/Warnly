@@ -264,7 +264,8 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                     track.stop()
                     track.release()
                 } catch (ignored: Exception) {}
-                audioTrack = null
+                // Only clear if still ours — restart creates a new track.
+                if (audioTrack === track) audioTrack = null
                 Log.i(TAG, "Emergency siren stopped and AudioTrack released")
             }
         }.apply {
@@ -422,9 +423,9 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
             return
         }
 
-        // If cached hardware location is fresh (< 2 minutes old), return immediately
+        // If cached hardware location is fresh (< 2 minutes old) and accurate, return immediately
         val twoMinAgo = System.currentTimeMillis() - 2 * 60 * 1000
-        if (bestLocation != null && bestLocation.time > twoMinAgo) {
+        if (bestLocation != null && bestLocation.time > twoMinAgo && (!bestLocation.hasAccuracy() || bestLocation.accuracy <= 100f)) {
             val map = Arguments.createMap().apply {
                 putDouble("latitude", bestLocation.latitude)
                 putDouble("longitude", bestLocation.longitude)
@@ -440,11 +441,15 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
         // 2. Request live hardware GPS satellite fix
         val mainHandler = Handler(Looper.getMainLooper())
         var resolved = false
+        lateinit var timeoutRunnable: Runnable
 
         val listener = object : LocationListener {
             override fun onLocationChanged(loc: Location) {
                 if (resolved) return
                 resolved = true
+                try {
+                    mainHandler.removeCallbacks(timeoutRunnable)
+                } catch (ignored: Exception) {}
                 try {
                     lm.removeUpdates(this)
                 } catch (ignored: Exception) {}
@@ -466,7 +471,7 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
 
         // 8-second safety timeout: fall back to last known location or reject
         // Must stay in sync with postDelayed() below or GPS cold-start will abort early.
-        mainHandler.postDelayed({
+        timeoutRunnable = Runnable {
             if (!resolved) {
                 resolved = true
                 try {
@@ -486,7 +491,8 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                     promise.reject("TIMEOUT", "Hardware GPS timed out waiting for satellite fix")
                 }
             }
-        }, 8000)
+        }
+        mainHandler.postDelayed(timeoutRunnable, 8000)
 
         mainHandler.post {
             try {
@@ -593,5 +599,25 @@ class WarnlyEmergencyModule(reactContext: ReactApplicationContext) :
                 barometerListener = null
             }
         } catch (ignored: Exception) {}
+    }
+
+    override fun onCatalystInstanceDestroy() {
+        isPlayingSiren = false
+        try {
+            sirenThread?.interrupt()
+        } catch (ignored: Exception) {}
+        sirenThread = null
+        try {
+            audioTrack?.stop()
+            audioTrack?.release()
+        } catch (ignored: Exception) {}
+        audioTrack = null
+        try {
+            if (barometerListener != null) {
+                sensorManager?.unregisterListener(barometerListener)
+                barometerListener = null
+            }
+        } catch (ignored: Exception) {}
+        super.onCatalystInstanceDestroy()
     }
 }
