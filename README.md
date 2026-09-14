@@ -1,346 +1,316 @@
 <div align="center">
 
-# ⚡ WARNLY
-### **Tier-1 Convective Storm & Tactical Emergency Defense System**
-*The World's First Zero-Infrastructure, Offline-Native Disaster Defense Console*
+# Warnly
+
+### Autonomous Convective Storm & Tactical Emergency Defense System
+*Zero-infrastructure atmospheric monitoring, acoustic strike triangulation, and deterministic offline resilience.*
 
 <br/>
 
-[![Live Console](https://img.shields.io/badge/Live%20Console-warnly--k.workers.dev-00E5FF?style=for-the-badge&logo=cloudflare&logoColor=white)](https://warnly-k.krishivjoshi219.workers.dev)
-[![Download APK](https://img.shields.io/badge/Download-Warnly%20Astra%20v0.6.4%20APK-FF0055?style=for-the-badge&logo=android&logoColor=white)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk)
-[![Release Latest](https://img.shields.io/badge/Release-v0.6.4%20Latest-10B981?style=for-the-badge&logo=github&logoColor=white)](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)
-[![Hardware Verified](https://img.shields.io/badge/Physical%20Device-Realme%20RMX3381%20Verified-F59E0B?style=for-the-badge&logo=android&logoColor=white)](https://github.com/krishivjoshi219-collab/Warnly)
+[![Release](https://img.shields.io/badge/Release-v0.6.4-1e293b?style=flat-square&logo=github)](https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v0.6.4)
+[![Download APK](https://img.shields.io/badge/Download-Android%20APK-2563eb?style=flat-square&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk)
+[![Hardware Verified](https://img.shields.io/badge/Hardware%20Verified-Realme%20RMX3381%20(Android%2013)-334155?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
 
 <br/>
 
-[![React Native](https://img.shields.io/badge/React%20Native-0.74%20(Expo%2051)-61DAFB?style=flat-square&logo=react)](https://reactnative.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![NOAA METAR](https://img.shields.io/badge/NOAA%20Aviation-METAR%20Nowcast-0284C7?style=flat-square&logo=airplane)](https://github.com/krishivjoshi219-collab/Warnly)
-[![Blitzortung](https://img.shields.io/badge/Blitzortung-Live%20Telemetry-EAB308?style=flat-square&logo=lightning)](https://github.com/krishivjoshi219-collab/Warnly)
-[![MEMS Barometer](https://img.shields.io/badge/MEMS%20Sensor-Continuous%20Hardware-10B981?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
-[![Astra Audit](https://img.shields.io/badge/Astra%20Audit-26%2F26%20Passed-10B981?style=flat-square&logo=checkmarx)](https://github.com/krishivjoshi219-collab/Warnly)
-[![Cloud CI/CD](https://img.shields.io/badge/GitHub%20Actions-Cloud%20CI%2FCD-00E5FF?style=flat-square&logo=github-actions)](https://github.com/krishivjoshi219-collab/Warnly/actions)
-[![Offline Native](https://img.shields.io/badge/Offline--Native-100%25%20Grid%20Independent-8B5CF6?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
-
-<br/>
-
-<img src="docs/screenshots/hero_showcase.png" width="960" alt="Warnly Tactical Defense Console Showcase" style="border-radius: 16px; box-shadow: 0 12px 40px rgba(0, 229, 255, 0.2);" />
+[![React Native](https://img.shields.io/badge/React%20Native-0.74%20(Expo%2051)-0f172a?style=flat-square)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-0f172a?style=flat-square)](https://www.typescriptlang.org/)
+[![NOAA METAR](https://img.shields.io/badge/NOAA%20Aviation-METAR%20Nowcast-0f172a?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
+[![Blitzortung](https://img.shields.io/badge/Blitzortung-VLF%20Telemetry-0f172a?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
+[![MEMS Barometer](https://img.shields.io/badge/Sensor-Hardware%20MEMS%201Hz-0f172a?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
+[![License](https://img.shields.io/badge/License-Apache%202.0-0f172a?style=flat-square)](LICENSE)
 
 <br/><br/>
 
-> **"Traditional weather apps predict the rain. Warnly keeps you alive when the sky falls."**
+> **"Traditional weather applications forecast tomorrow's conditions. Warnly provides the critical window required for survival when severe weather strikes without warning."**
 
 <br/>
 
-[🚀 Live Web Console](https://warnly-k.krishivjoshi219.workers.dev) • [📱 Download Android APK](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk) • [🛡️ Astra Engines](#-astra-killer-features--10-offline-survival-engines) • [📸 Live Device Gallery](#-hardware-verified-live-device-production-gallery) • [🔬 Meteorological Physics](#-meteorological-physics--threat-thresholds) • [⚖️ Evaluation Summary](#️-evaluation-summary-for-judges)
+[Download APK](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk) • [Production Gallery](#hardware-verified-production-gallery) • [Detection Pipeline](#convective-detection-pipeline) • [Offline Engine Suite](#the-astra-offline-engine-suite) • [Meteorological Models](#meteorological-physics--thermodynamic-models) • [Evaluation](#evaluation-matrix)
 
 </div>
 
 ---
 
-## 🚨 The Life-or-Death Problem
+## The Convective Warning Gap
 
-Every year, over **24,000 people are killed by lightning strikes**, and thousands more perish in flash floods and Glacial Lake Outburst Floods (GLOFs). 
+Severe convective storms, cloudbursts, and dry lightning claim thousands of civilian lives annually. Lightning alone remains one of the leading causes of weather-related casualties globally.
 
-Conventional weather apps (Apple Weather, AccuWeather, Google) were built for umbrellas and morning commutes—**not extreme survival**:
+The primary vulnerability is systemic: conventional weather forecasting tools deteriorate during sudden convective events.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                       THE THREE FATAL FLAWS OF CONVENTIONAL WEATHER APPS                     │
+│                             THE CONVECTIVE WARNING BREAKDOWN                                │
 ├──────────────────────────────┬──────────────────────────────┬───────────────────────────────┤
-│      1. THE LATENCY TRAP     │  2. THE INFRASTRUCTURE VOID  │     3. ACTION AMBIGUITY       │
+│      1. Model Latency        │  2. Infrastructure Loss      │     3. Ambiguous Directives   │
 ├──────────────────────────────┼──────────────────────────────┼───────────────────────────────┤
-│ Radar uploads lag ground     │ Cellular towers fail and     │ Generic blurbs like "Flood    │
-│ conditions by 15–45 minutes. │ Wi-Fi collapses in storms.   │ Watch" provide zero azimuths, │
-│ By notification time, the    │ Cloud-tethered apps flatline │ zero elevation targets, and   │
-│ supercell is overhead.       │ with blank error screens.    │ no time-to-impact countdowns. │
+│ Numerical weather models     │ Downburst winds and lightning│ General advisories lack       │
+│ operate on 1- to 4-hour      │ disrupt cellular towers and  │ specific azimuth bearings,    │
+│ cycles. Microbursts develop  │ electrical grids. Cloud-     │ high-ground egress routes, or │
+│ and strike in 15–25 minutes. │ dependent services fail.     │ deterministic time-to-shelter.│
 └──────────────────────────────┴──────────────────────────────┴───────────────────────────────┘
 ```
 
-**Warnly is the antidote.** Engineered as an offline-first tactical emergency defense console, Warnly executes local thermodynamic calculations, millisecond sound-wave acoustic triangulation, ad-hoc BLE mesh relaying, and topographic ridge escape pathfinding—**functioning seamlessly even if the entire regional electrical grid and cellular network collapse.**
+Warnly addresses this vulnerability through an architectural requirement: **survival systems must function independent of external network infrastructure.**
+
+When cellular connectivity and grid power are severed, Warnly operates as an autonomous tactical survival console. It utilizes onboard hardware sensors, evaluates thermodynamic calculations locally, routes to designated high-ground refuges, and broadcasts peer-to-peer mesh distress signals.
 
 ---
 
-## ⚔️ Why Warnly Wins: The Competitive Moat
+## Hardware-Verified Production Gallery
 
-| Capability | Standard Weather Apps | Warnly Tactical Console | Technical Moat |
-| :--- | :---: | :---: | :--- |
-| **Aviation METAR Nowcasting** | ❌ Delayed 1–4 hour forecast models | ✅ **Real-Time NOAA METAR Aerodrome Decodes** | Nearest ICAO station surface winds, flight category (VFR/IFR), and altimeter QNH |
-| **Atmospheric Pressure Tracking** | ❌ Stationary cloud estimates | ✅ **Continuous Hardware MEMS Barometer (`Sensor.TYPE_PRESSURE`)** | High-frequency $\Delta P / \Delta t$ 3-hour tendency detecting squall front passage |
-| **Real-Time Lightning Telemetry** | ❌ 15–30 min delayed radar approximations | ✅ **Blitzortung TOA Live WebSocket + Ring Buffer** | Sub-second strike arrival timestamps with 150-strike circular telemetry pool |
-| **Grid Independence** | ❌ Fails when towers collapse | ✅ **100% Offline-Native + BLE Mesh** | Runs entirely on edge without cloud dependencies |
-| **Pre-Impact Lead Time** | ❌ Delayed 15–45 min post-facto | ✅ **$T-40\text{m}$ to $T-2\text{m}$ Dynamic Action Countdown** | Doppler advection vector extrapolation |
-| **Lightning Triangulation** | ❌ Generic 3-hour radar blob | ✅ **Millisecond Acoustic Flash-to-Bang ($v_s \approx 349\text{ m/s}$)** | Thermodynamic speed-of-sound physics |
-| **Flash-Flood / GLOF Guidance** | ❌ Text blurb with zero navigation | ✅ **Topographic Hydraulic Escape Corridors (+95m Ridge HUD)** | Perpendicular ridge climbing azimuths |
-| **Blackout Survivor Endurance** | ❌ Drains phone battery in 3–5 hours | ✅ **72–172 Hour SAR Survivor Mode + 120-Frame Blackbox** | Extreme CPU throttling & 30s burst beacons |
-| **Acoustic Rescue Signalling** | ❌ None | ✅ **18 kHz Ultrasonic Canine Chirp + Optical Morse SOS** | Dual-channel canine & rescue drone beacon |
-| **Emergency DND Siren Override** | ❌ Muted by phone's silent switch | ✅ **Hardware `STREAM_ALARM` Synthesized 760/960Hz Siren** | Hardware-level audio routing punches through DND |
-| **Interface Design Philosophy** | 🟡 Playful consumer widgets | 🛡️ **Obsidian Military HUD with 100% Vector Precision** | Zero-emoji, OLED power-saving aesthetic |
-
----
-
-## 🏆 Astra Killer Features — 10 Offline Survival Engines
-
-> **Thesis:** Turning uncertain, chaotic information into defensible, life-saving action when communications, power grids, and human attention fail.
-
-Warnly integrates **10 native offline survival engines** built for extreme disaster resilience without relying on remote servers:
-
-```mermaid
-flowchart TD
-    subgraph INTAKE["1. INTAKE & VERIFICATION"]
-        A["External Alert / Broadcast / Sensor"] --> B{"1. SIGNALLOCK Engine"}
-        B -->|"Tampered / Expired"| C["❌ Rejected with Cryptographic Proof"]
-        B -->|"Verified Signature"| D["Valid Disaster Payload"]
-    end
-
-    subgraph REASONING["2. OFFLINE DECISION & COMPILATION"]
-        D --> E{"2. AEGIS Action Compiler"}
-        E -->|"Physical Constraint Checks"| F["Do This NOW / Do NOT Do / Fallback"]
-        D --> G{"4. CUTLINE Engine"}
-        G -->|"Time-to-Impact vs Transit"| H["Evacuate vs. Shelter-in-Place"]
-        D --> I{"3. REFUGE-ID Engine"}
-        I -->|"QR Waypoints & Obstacle Map"| J["Accessible Indoor Egress Path"]
-    end
-
-    subgraph TELEMETRY["3. SENSORS & TRIANGULATION"]
-        K["Barometric Pressure (1Hz)"] --> L{"5. PRESSURENET Engine"}
-        L -->|"Hampel Outlier Filter"| M["Downburst Gust Front Bearing"]
-        N["Optical Flash + Thunderclap"] --> O{"8. ECHOTRACE Engine"}
-        O -->|"ToF Triangulation: d = c/2 * dt"| P["2m Victim Proximity Echo"]
-    end
-
-    subgraph SURVIVAL["4. RESCUE & ENDURANCE"]
-        F & H --> Q{"6. PACT Protocol"}
-        Q -->|"BLE Rendezvous Merge"| R["Irreversible NEEDS_HELP Propagation"]
-        R --> S{"7. RESCUECHAIN Engine"}
-        S -->|"Stored -> Relayed -> Gateway"| T["Cryptographic Rescue Dispatch Receipt"]
-        U{"9. LIFERESERVE Engine"} -->|"Duty-Cycled Burst Beacons"| V["72h - 172h Phone Battery Life"]
-        W{"10. GROUNDTRUTH Engine"} -->|"CRDT Pass-by Sync"| X["Decentralized Hazard Map Consensus"]
-    end
-```
-
-### Technical Engine Specifications
-
-| # | Engine | Offline Mechanism | 30-Sec Test Vector | Mathematical Foundation | Source Module |
-|---|---|---|---|---|---|
-| **1** | **SIGNALLOCK** | Alert provenance validator (`ACTIVE`, `UPDATED`, `EXPIRED`, `STALE`, `UNVERIFIED`) | Rejects expired/tampered offline alerts with deterministic cryptographic proof | SHA-256 HMAC & ECDSA offline validation | [`signallock.ts`](file:///home/k/Warnly/src/lib/warnly/astra/signallock.ts) |
-| **2** | **AEGIS** | Real-time action compiler emitting `DO THIS NOW`, `DO NOT DO THIS`, and fallback escape vectors | Toggling basement flooded immediately reroutes shelter directive upstairs | Contextual constraint satisfaction logic | [`aegis.ts`](file:///home/k/Warnly/src/lib/warnly/astra/aegis.ts) |
-| **3** | **REFUGE-ID** | Indoor evacuation topological graph with QR waypoint anchors | Simulates blocked exit hallway; calculates accessible alternate egress route | Dijkstra / A* over interior accessibility graph | [`refuge-id.ts`](file:///home/k/Warnly/src/lib/warnly/astra/refuge-id.ts) |
-| **4** | **CUTLINE** | Evacuate vs. Shelter-in-Place boundary solver based on time-to-impact vs. escape transit time | Bridges washed out: auto-transitions from vehicle evac to reinforced shelter-in-place | $t_{\text{evac}} = \frac{d_{\text{safe}}}{v_{\text{transit}}} < t_{\text{impact}}$ | [`cutline.ts`](file:///home/k/Warnly/src/lib/warnly/astra/cutline.ts) |
-| **5** | **PRESSURENET** | Local barometric wavefront bearing predictor using Hampel outlier rejection filter | Ingests raw barometric pressure drop to compute downburst gust-front bearing | 3-point microbarograph gradient triangulation | [`pressurenet.ts`](file:///home/k/Warnly/src/lib/warnly/astra/pressurenet.ts) |
-| **6** | **PACT** | BLE rally-point sync ensuring irreversible `NEEDS_HELP` status propagation | Multi-device rendezvous state merge over BLE without cellular connectivity | Monotonic CRDT state merge | [`pact.ts`](file:///home/k/Warnly/src/lib/warnly/astra/pact.ts) |
-| **7** | **RESCUECHAIN** | Cryptographic audit trail: `stored` → `relayed` → `gateway` → `desk` → `dispatched` | Offline SOS queue preserves timestamped signature until bridge node is encountered | Append-only hash-chained custody log | [`rescuechain.ts`](file:///home/k/Warnly/src/lib/warnly/astra/rescuechain.ts) |
-| **8** | **ECHOTRACE** | Dual-channel acoustic ToF & BLE proximity triangulation | Acoustic chirp echo narrows trapped victim search radius down to ~2 meters | $d \approx \frac{c}{2} \cdot \Delta t$ acoustic ranging | [`echotrace.ts`](file:///home/k/Warnly/src/lib/warnly/astra/echotrace.ts) |
-| **9** | **LIFERESERVE** | Dynamic 72-hour battery lifecycle manager with duty-cycled emergency beacons | Throttles CPU and screen to extend phone endurance from 8 hours to 74+ hours | $P_{\text{avg}} = \frac{t_{\text{burst}}}{T_{\text{cycle}}} P_{\text{active}} + P_{\text{sleep}}$ | [`lifereserve.ts`](file:///home/k/Warnly/src/lib/warnly/astra/lifereserve.ts) |
-| **10** | **GROUNDTRUTH** | Conflict-free replicated hazard map (CRDT) for offline pass-by peer synchronization | Merges road obstruction and bridge status reports across passing devices | State-based PN-Counter & OR-Set CRDTs | [`groundtruth.ts`](file:///home/k/Warnly/src/lib/warnly/astra/groundtruth.ts) |
-
-> [!TIP]
-> **Automated Astra Audit Suite**: Run `npm run astra:audit` anytime. All 26 offline test assertions pass with 0 failures:
-> ```bash
-> npm run astra:audit
-> # ⚡ ASTRA AUDIT: PASSED (all 26 tests green, zero failures)
-> ```
-
----
-
-## 📱 Hardware-Verified Live Device Production Gallery
-
-Every single screenshot below is **100% authentic, captured directly from a connected physical Android device** (**Realme RMX3381 / Android 13**) running the production Warnly APK compiled via GitHub Actions:
+All captures below are from physical hardware validation on a **Realme Narzo 30 5G (RMX3381, Android 13)** running the production build:
 
 <div align="center">
 
-### ⚡ Theme 1: Critical Threat & Supercell Emergency Intercept
+### Operational Console & Radar Telemetry
 
-| 01. Live Tactical Console (Vadodara) | 02. Active Supercell Emergency HUD | 03. Mandatory Evacuation Directives |
+| 01. Atmospheric Console | 02. Multi-Hazard Radar Mosaic | 03. Aerodrome METAR Observation |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/live_home_320.png" width="280" alt="Live Tactical Console" style="border-radius: 12px; border: 1px solid #1E293B;" /> | <img src="docs/screenshots/live_supercell_active.png" width="280" alt="Supercell Emergency HUD" style="border-radius: 12px; border: 1px solid #EF4444;" /> | <img src="docs/screenshots/live_supercell_details.png" width="280" alt="Mandatory Evacuation Protocols" style="border-radius: 12px; border: 1px solid #EF4444;" /> |
-| *Real-time GPS atmospheric telemetry in Vadodara, Gujarat with live Astra directive banner and 1-tap Supercell demo button.* | *Live 30-30 countdown timer (27:52), AEGIS "DO THIS NOW: Go to interior hallway NOW", and siren audio override.* | *Prioritized 4-step emergency shelter protocols and safe camp routing with one-tap acknowledgment dismissal.* |
+| <img src="docs/screenshots/live_home_gps.png" width="280" alt="Atmospheric Console" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_radar_320.png" width="280" alt="Multi-Hazard Radar Mosaic" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_radar_metar.png" width="280" alt="Aerodrome METAR Observation" style="border-radius: 8px; border: 1px solid #334155;" /> |
+| *Real-time GPS positioning with continuous barometric monitoring, baseline risk assessment, and tactical control strip.* | *Composite ESRI satellite base, RainViewer convective cloud overlay, lightning strike vectors, and shelter indicators.* | *Decoded meteorological aerodrome report from Vadodara Airport (VABO, 1.7 km): VFR status, Q1009 hPa altimeter, and surface wind vectors.* |
 
 <br/>
 
-### 🎯 Theme 2: Convective Radar, Doppler Tiles & Aviation METAR
+### Emergency Intercept & Protective Directives
 
-| 04. Multi-Hazard Satellite Radar | 05. NOAA METAR Live Airport Observation | 06. 100% Threat Index Active HUD |
+| 04. Supercell Threat Activation | 05. 30-30 Rule Clearance Watch | 06. Life-Safety Directives |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/live_radar_320.png" width="280" alt="Live Multi-Hazard Satellite Radar" style="border-radius: 12px; border: 1px solid #00E5FF;" /> | <img src="docs/screenshots/live_radar_metar.png" width="280" alt="NOAA METAR Live Airport Observation" style="border-radius: 12px; border: 1px solid #0284C7;" /> | <img src="docs/screenshots/live_home_supercell_active.png" width="280" alt="100% Threat Index Active HUD" style="border-radius: 12px; border: 1px solid #EF4444;" /> |
-| *Live ESRI satellite tiles, RainViewer Doppler convective cells, real-time lightning strike pins, and verified refuge shelters.* | *Live decoded aviation weather from Vadodara Airport (`VABO`) 1.7km away: VFR flight rules, 2kt wind, Q1009 hPa, temperature & dewpoint.* | *100% Threat Index triggered: CAPE 1880 J/kg, Lift Index -3.7 K, strike breach warning, and tactical evacuation vectors.* |
+| <img src="docs/screenshots/live_supercell_active.png" width="280" alt="Supercell Threat Activation" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_supercell_details.png" width="280" alt="30-30 Rule Clearance Watch" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_action_strip.png" width="280" alt="Life-Safety Directives" style="border-radius: 8px; border: 1px solid #334155;" /> |
+| *100% Threat Index trigger: dual-frequency 760/960 Hz alert tone, Doppler advection ETA, and explicit shelter directive.* | *Deterministic 30-30 rule countdown timer, shelter protocols, and nearest verified refuge routing.* | *Tactical action strip: Safe Camps pathing, Range Strike acoustic ranger, Mesh SOS broadcast, and survival documentation.* |
 
 <br/>
 
-### 🔊 Theme 3: Precision Acoustic Physics & Mass Alerting
+### Acoustic Triangulation & Mesh Communications
 
-| 07. Flash-to-Bang Stopwatch | 08. Triangulated Strike Distance (7.02 km) | 09. Mass SOS Emergency Broadcast |
+| 07. Flash-to-Bang Precision Timer | 08. Temperature-Compensated Range | 09. Encrypted Mesh SOS Modal |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/live_acoustic_running.png" width="280" alt="Flash-to-Bang Stopwatch" style="border-radius: 12px; border: 1px solid #10B981;" /> | <img src="docs/screenshots/live_acoustic_7km.png" width="280" alt="Triangulated Strike Distance" style="border-radius: 12px; border: 1px solid #00E5FF;" /> | <img src="docs/screenshots/live_sos_mesh.png" width="280" alt="Mass SOS Emergency Broadcast Modal" style="border-radius: 12px; border: 1px solid #EF4444;" /> |
-| *Millisecond acoustic stopwatch measuring live elapsed time ($5.95\text{ s}$) between optical flash and thunderclap.* | *Exact calculated strike distance ($7.02\text{ km}$ / $4.36\text{ mi}$) with $26^{\circ}\text{C}$ temperature-compensated acoustic velocity ($347.1\text{ m/s}$).* | *Formatted emergency payload with WhatsApp/SMS bridge, offline P2P mesh relay, and nearest evacuation camps.* |
+| <img src="docs/screenshots/live_acoustic_running.png" width="280" alt="Flash-to-Bang Precision Timer" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_acoustic_7km.png" width="280" alt="Temperature-Compensated Range" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_sos_mesh.png" width="280" alt="Encrypted Mesh SOS Modal" style="border-radius: 8px; border: 1px solid #334155;" /> |
+| *Millisecond timer capturing delta between optical lightning discharge and acoustic thunderclap.* | *Computed distance (7.02 km / 4.36 mi) calibrated against ambient air temperature (26°C).* | *Offline peer-to-peer 64-byte binary mesh packet with GPS coordinates, battery reserve, and distress metadata.* |
 
 <br/>
 
-### 🛡️ Theme 4: Family Shield, Weather Horizon & Tactical Action Strip
+### Family Coordination & Telemetry Health
 
-| 10. Multi-Zone Family Shield | 11. Real-Time Weather Nowcast | 12. Tactical Emergency Action Strip |
+| 10. Multi-Zone Family Shield | 11. Hyper-Local Weather Horizon | 12. Sensor Pipeline Status |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/live_family_shield.png" width="280" alt="Multi-Zone Family Shield" style="border-radius: 12px; border: 1px solid #F59E0B;" /> | <img src="docs/screenshots/live_weather_nowcast.png" width="280" alt="Real-Time Weather Nowcast" style="border-radius: 12px; border: 1px solid #1E293B;" /> | <img src="docs/screenshots/live_action_strip.png" width="280" alt="Tactical Emergency Action Strip" style="border-radius: 12px; border: 1px solid #10B981;" /> |
-| *GPS primary tracker in Vadodara (SAFE) with Astra Family Pact offline mesh rendezvous protocols.* | *Live $26^{\circ}\text{C}$ drizzle, 98% humidity, $1004\text{ hPa}$, feels like $32^{\circ}\text{C}$, and 15-minute rain nowcasting.* | *One-tap triggers for Safe Camps, Range Strike, SOS Mesh, and Evacuation Guide.* |
-
-<br/>
-
-### 🌐 Theme 5: Sensor Feeds, MEMS Barometer & Telemetry Baseline
-
-| 13. Sensor Feeds (100% Green HTTP 200) | 14. MEMS Barometer & Settings Hub | 15. Live GPS Telemetry Baseline |
-| :---: | :---: | :---: |
-| <img src="docs/screenshots/live_settings_feeds.png" width="280" alt="Sensor Feeds Table" style="border-radius: 12px; border: 1px solid #10B981;" /> | <img src="docs/screenshots/live_settings_320.png" width="280" alt="Settings Hub & Barometer" style="border-radius: 12px; border: 1px solid #00E5FF;" /> | <img src="docs/screenshots/live_home_gps.png" width="280" alt="Live GPS Telemetry Baseline" style="border-radius: 12px; border: 1px solid #10B981;" /> |
-| *USGS, Open-Meteo, GloFAS River Flood, RainViewer Doppler & OSM all reporting live HTTP 200 operational health.* | *Hardware MEMS barometer toggle, alert radii (5km/10km/20km), metric units, and offline demo supercell trigger.* | *Live Vadodara baseline with $1500\text{ J/kg}$ CAPE, $-2.4\text{ K}$ Lifted Index, and zero-strike safe perimeter.* |
+| <img src="docs/screenshots/live_family_shield.png" width="280" alt="Multi-Zone Family Shield" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_weather_nowcast.png" width="280" alt="Hyper-Local Weather Horizon" style="border-radius: 8px; border: 1px solid #334155;" /> | <img src="docs/screenshots/live_settings_feeds.png" width="280" alt="Sensor Pipeline Status" style="border-radius: 8px; border: 1px solid #334155;" /> |
+| *Synchronized safety monitoring across defined family zones with Astra PACT rendezvous verification.* | *Real-time surface observation: 26°C, 1004 hPa pressure, 98% humidity, and 15-minute precipitation projection.* | *Continuous health evaluation across 6 global telemetry endpoints (USGS, Open-Meteo, GloFAS, RainViewer, OSM, GeoJS).* |
 
 </div>
 
 ---
 
-## ⏱️ 30-Second Quick Walkthrough for Judges & Evaluators
+## Convective Detection Pipeline
 
-You can verify Warnly's complete feature suite in **30 seconds** on the web or on a physical Android phone:
+### 1. VLF Lightning Pulse Telemetry (Blitzortung)
+- Ingests real-time Very Low Frequency (VLF) radio atmospheric pulses emitted during electrical discharges.
+- Computes sub-second stroke arrival timestamps within local detection radii.
+- Maintains a 150-strike ring buffer tracking strike velocity, approach azimuth, and stroke rate trends.
+
+### 2. Doppler Radar Reflectivity Composite (RainViewer)
+- Overlays regional Doppler radar reflectivity mosaics atop high-resolution satellite imagery.
+- Identifies severe precipitation cores (>= 45 dBZ) associated with microbursts, heavy precipitation, and hail.
+- Calculates cell motion using Lagrangian advection vectors to project arrival timelines (T-40m to T-2m).
+
+### 3. Aerodrome Observation Decoding (NOAA METAR/SPECI)
+- Continuous polling of International Civil Aviation Organization (ICAO) stations (e.g., Vadodara Airport `VABO`).
+- Decodes surface wind vectors, barometric pressure (QNH), cloud base heights, and prevailing visibility.
+- Triggers immediate status changes upon receiving unscheduled SPECI bulletins for wind shear or storm passage.
+
+### 4. Onboard Barometric Pressure Gradient (Android MEMS Sensor)
+- Direct 1 Hz sampling via Android `Sensor.TYPE_PRESSURE`.
+- Functions fully offline without cellular, Wi-Fi, or satellite internet.
+- Monitors 3-hour pressure rate of change (Delta P / Delta t). Rapid drops exceeding -2.0 hPa / 3h indicate squall-line or gust-front approach, generating alerts prior to visual cloud formation.
+
+### 5. Telemetry Freshness Watchdog
+- Failsafe guardrail against stale network cache: suppresses all-clear indicators if data age exceeds 15 minutes.
+- Transitions to deterministic offline algorithms whenever external data sources become unreachable.
+
+---
+
+## The Astra Offline Engine Suite
+
+When connectivity fails, Warnly executes 10 deterministic algorithms designed for zero-infrastructure operation:
+
+```mermaid
+flowchart TD
+    subgraph INTAKE["1. Intake & Verification"]
+        A["External Alert / Broadcast / Sensor"] --> B{"1. SIGNALLOCK"}
+        B -->|"Invalid Signature"| C["Rejected: Cryptographic Proof"]
+        B -->|"Verified Signature"| D["Validated Alert Payload"]
+    end
+
+    subgraph REASONING["2. Offline Evaluation"]
+        D --> E{"2. AEGIS"}
+        E -->|"Physical Constraints"| F["Directive: Immediate Action / Avoid"]
+        D --> G{"4. CUTLINE"}
+        G -->|"Transit vs Impact Time"| H["Decision: Evacuate vs Shelter"]
+        D --> I{"3. REFUGE-ID"}
+        I -->|"Topological Graph"| J["Accessible Indoor Egress"]
+    end
+
+    subgraph TELEMETRY["3. Sensor Triangulation"]
+        K["Barometric Pressure (1Hz)"] --> L{"5. PRESSURENET"}
+        L -->|"Hampel Filter"| M["Downburst Gust Front Bearing"]
+        N["Optical Flash + Thunderclap"] --> O{"8. ECHOTRACE"}
+        O -->|"ToF Triangulation"| P["Acoustic Proximity Estimation"]
+    end
+
+    subgraph SURVIVAL["4. Mesh Propagation & Continuity"]
+        F & H --> Q{"6. PACT Protocol"}
+        Q -->|"BLE Rendezvous Merge"| R["Monotonic State Propagation"]
+        R --> S{"7. RESCUECHAIN"}
+        S -->|"Cryptographic Custody"| T["Relayed Dispatch Record"]
+        U{"9. LIFERESERVE"} -->|"Duty-Cycled Burst"| V["Extended Battery Lifespan"]
+        W{"10. GROUNDTRUTH"} -->|"CRDT Pass-by Sync"| X["Decentralized Hazard Consensus"]
+    end
+```
+
+### Engine Specifications
+
+| ID | Engine | Core Mechanism | Validation Case | Algorithmic Basis | Implementation |
+|---|---|---|---|---|---|
+| **01** | **SIGNALLOCK** | Alert authenticity and provenance verification | Rejection of spoofed or expired alerts | SHA-256 HMAC & ECDSA validation | [`signallock.ts`](src/lib/warnly/astra/signallock.ts) |
+| **02** | **AEGIS** | Real-time emergency action compiler | Structural hazard redirects evacuation route | Constraint satisfaction state machine | [`aegis.ts`](src/lib/warnly/astra/aegis.ts) |
+| **03** | **REFUGE-ID** | Offline topological indoor evacuation graph | Dynamic path recalculation around blocked corridors | Dijkstra / A* over local vector graph | [`refuge-id.ts`](src/lib/warnly/astra/refuge-id.ts) |
+| **04** | **CUTLINE** | Evacuate vs. shelter-in-place decision threshold | Evaluates storm arrival against transit time | Time-distance threshold evaluation | [`cutline.ts`](src/lib/warnly/astra/cutline.ts) |
+| **05** | **PRESSURENET** | Microburst detection via pressure rate-of-change | Identifies squall front from 1 Hz sensor data | Gradient analysis with Hampel filter | [`pressurenet.ts`](src/lib/warnly/astra/pressurenet.ts) |
+| **06** | **PACT** | Distributed family check-in and rendezvous | Propagates unacknowledged beacons peer-to-peer | Monotonic State Merge over BLE | [`pact.ts`](src/lib/warnly/astra/pact.ts) |
+| **07** | **RESCUECHAIN** | Cryptographic custody trail for distress calls | Buffers and relays SOS payloads to gateways | Append-only hash-chained custody log | [`rescuechain.ts`](src/lib/warnly/astra/rescuechain.ts) |
+| **08** | **ECHOTRACE** | Flash-to-bang acoustic strike rangefinder | Strike distance calculated from temperature | Thermal acoustic velocity model | [`echotrace.ts`](src/lib/warnly/astra/echotrace.ts) |
+| **09** | **LIFERESERVE** | Disaster battery endurance manager | Extends device uptime from 8 to 72+ hours | Duty-cycled periodic burst signaling | [`lifereserve.ts`](src/lib/warnly/astra/lifereserve.ts) |
+| **10** | **GROUNDTRUTH** | Decentralized hazard map synchronization | Merges road blockage reports peer-to-peer | PN-Counter and Observed-Remove Set | [`groundtruth.ts`](src/lib/warnly/astra/groundtruth.ts) |
+
+---
+
+## Meteorological Physics & Thermodynamic Models
+
+Atmospheric stability and threat vectors are evaluated using established physical formulations:
+
+### Convective Available Potential Energy (CAPE)
+Quantifies buoyant kinetic energy available to an ascending air parcel:
+
+$$\text{CAPE} = \int_{z_{\text{LFC}}}^{z_{\text{EL}}} g \left( \frac{T_{v, \text{parcel}} - T_{v, \text{env}}}{T_{v, \text{env}}} \right) dz$$
+
+Values exceeding $2{,}000\text{ J/kg}$ indicate high probability of severe updrafts, hail, and microburst generation.
+
+### Temperature-Compensated Acoustic Velocity
+Ambient temperature significantly influences the speed of acoustic propagation:
+
+$$v_s = 331.3 \cdot \sqrt{1 + \frac{T_{^{\circ}\text{C}}}{273.15}} \approx 331.3 + (0.606 \times T_{^{\circ}\text{C}}) \quad [\text{m/s}]$$
+
+Warnly samples ambient temperature to dynamically calibrate strike distance calculations.
+
+### Flash-to-Bang Distance Calculation
+Calculates distance to cloud-to-ground strike discharge:
+
+$$d_{\text{strike}} = v_s(T) \times \Delta t_{\text{flash-to-thunder}} \quad [\text{m}]$$
+
+### 30-30 Lightning Safety Standard
+- **30-Second Rule**: If elapsed time between optical discharge and acoustic arrival is less than 30 seconds, the strike is within approximately 10 km (6 miles). Seek immediate shelter.
+- **30-Minute Rule**: Remain in shelter for a minimum of 30 minutes following the last audible thunderclap. Warnly tracks this period deterministically.
+
+---
+
+## Evaluation Tour
+
+Demonstration workflow for evaluators on physical Android hardware:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                              30-SECOND JUDGE EVALUATION TOUR                                │
-├───────┬──────────────────────────────┬──────────────────────────────────────────────────────┤
-│ STEP  │ ACTION                       │ WHAT YOU WILL OBSERVE                                │
+┌───────┬──────────────────────────────┬──────────────────────────────────────────────────────┐
+│ Step  │ Action                       │ Verification Output                                  │
 ├───────┼──────────────────────────────┼──────────────────────────────────────────────────────┤
-│ **1** │ Tap **"DEMO: TRIGGER         │ 5 lightning strikes spawn, Doppler advection ETA 18m │
-│       │ SUPERCELL"** on Home         │ appears, and 100% Threat Index triggers.             │
+│ 01    │ Tap "DEMO: TRIGGER           │ 5 lightning strikes spawn within radius, Doppler ETA │
+│       │ SUPERCELL"                   │ shows 18m, Threat Index increases to 100%.           │
 ├───────┼──────────────────────────────┼──────────────────────────────────────────────────────┤
-│ **2** │ Observe Emergency HUD        │ Two-tone 760/960Hz siren starts, 30-30 countdown     │
-│       │ & AEGIS Action Directive     │ begins, and "DO THIS NOW: Interior Hallway" displays.│
+│ 02    │ Inspect Emergency HUD        │ 760/960 Hz alert fires, 30-30 clearance countdown    │
+│       │                              │ begins, AEGIS interior hallway directive displays.   │
 ├───────┼──────────────────────────────┼──────────────────────────────────────────────────────┤
-│ **3** │ Open **"Range Strike"**      │ Tap on flash → stopwatch runs → tap on thunder →     │
-│       │ (Acoustic Ranger)            │ calculated distance (e.g. 9.97 km) displays instantly.│
+│ 03    │ Open "Range Strike"          │ Trigger flash timer -> trigger thunder arrival ->    │
+│       │                              │ calibrated distance calculates (e.g. 7.02 km).       │
 ├───────┼──────────────────────────────┼──────────────────────────────────────────────────────┤
-│ **4** │ Switch to **Radar Tab**      │ ESRI satellite view renders with strike pins, cells, │
-│       │                              │ and nearest verified municipal safe shelters.        │
+│ 04    │ Switch to Radar Tab          │ ESRI satellite layer renders with strike markers,    │
+│       │                              │ RainViewer cloud overlay, and shelter locations.     │
 ├───────┼──────────────────────────────┼──────────────────────────────────────────────────────┤
-│ **5** │ Check **Settings Tab**       │ Inspect Sensor Health table: all 6 global feeds show │
-│       │                              │ sub-second latencies and green HTTP 200 status.      │
+│ 05    │ Inspect Settings Tab         │ Verify telemetry health table: all 6 feeds display   │
+│       │                              │ HTTP 200; toggle between Free and Pro tiers.         │
 └───────┴──────────────────────────────┴──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔬 Meteorological Physics & Threat Thresholds
-
-Warnly processes thermodynamic atmospheric profiles from global meteorological networks (WMO / Open-Meteo / USGS):
-
-### 1. Convective Available Potential Energy (CAPE)
-$$\text{CAPE} = \int_{z_f}^{z_n} g \left( \frac{T_{v, \text{parcel}} - T_{v, \text{env}}}{T_{v, \text{env}}} \right) dz$$
-
-### 2. Thermodynamic Speed of Sound ($v_s$)
-$$v_s = 331.3 \cdot \sqrt{1 + \frac{T_{^{\circ}\text{C}}}{273.15}} \approx 331.3 + (0.606 \times T_{^{\circ}\text{C}}) \quad [\text{m/s}]$$
-
-### 3. Flash-to-Bang Distance Triangulation
-$$d_{\text{strike}} = v_s(T) \times \Delta t_{\text{flash-to-thunder}} \quad [\text{m}]$$
-
-### 4. Critical Atmospheric Threshold Matrix
-
-| Parameter | Normal Envelope | Critical Threshold | Severe Threat Manifestation |
-| :--- | :--- | :--- | :--- |
-| **CAPE** | $< 500\text{ J/kg}$ | **$> 2,000\text{ J/kg}$** | Violent updrafts, baseball hail, extreme microburst downbursts |
-| **Lifted Index (LI)** | $> 0\text{ K}$ | **$< -3\text{ K}$** | Severe atmospheric instability; explosive convective thunderstorm genesis |
-| **Barometric Tendency** | $\pm 0.5\text{ hPa / 3h}$ | **$< -2.0\text{ hPa / 3h}$** | Rapid cyclonic deepening; imminent squall line or derecho passage |
-| **Radar Reflectivity** | $< 20\text{ dBZ}$ | **$> 45\text{ dBZ}$** | Torrential convective rain core, flash flood risk, high-density hail |
-| **Seismic P/S Delay** | $\Delta t > 0\text{ s}$ | **$V_p \approx 6\text{ km/s}, V_s \approx 3.5\text{ km/s}$** | 5 to 45 seconds advance warning before destructive shear S-waves arrive |
-
----
-
-## 🌐 Real-Time Sensor Feeds (Live Latency Benchmarks)
-
-Warnly interfaces with 8 high-reliability global scientific data feeds and on-device hardware telemetry. The latency benchmarks below were measured live on physical hardware during the Android verification run:
-
-| Feed Provider | Data Scope | Measured Latency | HTTP Status | Failover Mechanism |
-| :--- | :--- | :---: | :---: | :--- |
-| **NOAA Aviation Weather (AWC)** | Real-time decoded METAR aerodrome observations (nearest ICAO) | `312 ms` | `HTTP 200` | Cached aerodrome observation & station model |
-| **Blitzortung TOA Lightning** | Sub-second lightning discharge network & WebSocket | `185 ms` | `HTTP 200 / WSS` | Local circular strike pool buffer (150 strikes) |
-| **Hardware MEMS Barometer** | Continuous on-device ambient pressure sensor (`1 Hz`) | `8 ms` | `Hardware Native` | Open-Meteo barometric elevation baseline |
-| **USGS Earthquake API** | Global seismograph sensor network ($M \ge 2.5$) | `821 ms` | `HTTP 200` | Local circular seismic blackbox |
-| **Open-Meteo Weather API** | Convective stability indices (CAPE, LI, Dew Point) | `1215 ms` | `HTTP 200` | Cached thermodynamic atmospheric model |
-| **GloFAS River Discharge** | Global river flood surge & discharge models | `1185 ms` | `HTTP 200` | Topographic ridge ascent elevation map |
-| **RainViewer Doppler Radar** | Composite radar reflectivity mosaic frames | `1022 ms` | `HTTP 200` | Local Doppler advection vector extrapolation |
-| **OpenStreetMap Geocoder** | Emergency shelter, hospital & camp coordinates | `200 ms` | `HTTP 200` | Pre-cached offline safe camp database |
-| **GeoJS IP Geolocation** | Instant network geolocation fallback | `435 ms` | `HTTP 200` | Hardware GPS / GLONASS satellite fix |
-
----
-
-## 🎨 Design System: Military Tactical HUD
-
-Warnly completely rejects toy-like consumer weather aesthetics:
-- **Zero-Emoji Architecture**: 100% bespoke native vector iconography for razor-sharp clarity in extreme lighting.
-- **OLED Black Palette (`#070A0F`)**: Minimizes display power draw by up to 60% during emergency blackouts.
-- **High-Contrast Tactical Color Palette**:
-  - `Emerald (#10B981)`: Operational status / All-Clear envelope.
-  - `Cyan (#00E5FF)`: Precision telemetry / Geodesic radar sweep.
-  - `Amber (#F59E0B)`: Outflow boundary advance / 30-30 advisory.
-  - `Rose / Red (#EF4444)`: Direct strike perimeter / GLOF emergency.
-- **Sub-Second Responsiveness**: Native gesture drivers, zero layout thrashing, and high-contrast typography readable under direct blinding sunlight.
-
----
-
-## 🏗️ Architecture & Cloud CI/CD Pipeline
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 WARNLY SYSTEM ARCHITECTURE                                  │
+│                                 WARNLY ARCHITECTURE                                         │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│  PRESENTATION LAYER (React Native 0.74 / Expo 51)                                           │
+│  PRESENTATION (React Native 0.74 / Expo 51)                                                 │
 │  • Tactical Command Center   • Multi-Hazard Radar (ESRI)   • Acoustic Ranger HUD            │
-│  • Family Shield Console     • Weather Nowcasting Strip    • Mass Alert Distribution Modal  │
-│  • NOAA METAR Airport Card   • Stale-Data Watchdog Banner  • Tactical Action Strip Hub      │
+│  • Family Shield Console     • Weather Horizon Strip       • Mass Alert Distribution Modal  │
+│  • NOAA METAR Airport Card   • Freshness Watchdog Banner   • Tactical Action Strip Hub      │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ASTRA OFFLINE SURVIVAL ENGINE LAYER (TypeScript 5.3)                                       │
+│  OFFLINE ENGINE LAYER (TypeScript 5.3)                                                      │
 │  • SIGNALLOCK • AEGIS • REFUGE-ID • CUTLINE • PRESSURENET • PACT • RESCUECHAIN • LIFERESERVE│
-│  • Blitzortung WebSocket/REST Stream • NOAA METAR Decoder • 15-Min Stale Watchdog Core     │
+│  • Blitzortung WebSocket/REST Stream • NOAA METAR Decoder • 15-Minute Watchdog Core         │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│  HARDWARE BRIDGE LAYER (Native Android SDK 34 / Kotlin)                                     │
-│  • USAGE_ALARM Siren Routing • High-Precision GPS • Camera Morse Strobe • 18kHz Audio Engine│
-│  • Hardware MEMS Barometer (Sensor.TYPE_PRESSURE) • Battery Life & Charge Telemetry Bridge  │
+│  HARDWARE INTERACTION (Android SDK 34 / Kotlin)                                             │
+│  • STREAM_ALARM Siren Override • Precision Location • Camera Strobe • Ultrasonic Signaling │
+│  • Hardware MEMS Barometer (Sensor.TYPE_PRESSURE) • Device Power State Manager              │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│  DISTRIBUTION & CI/CD                                                                       │
-│  • Web Preview: Vite 6.4 + React Native Web on Cloudflare Workers Edge                      │
-│  • Android: GitHub Actions automated cloud builds with 1-tap APK release assets             │
+│  DISTRIBUTION                                                                               │
+│  • Android Releases: Automated GitHub Actions CI pipeline producing standalone APK assets   │
+│  • Device Deployment: Direct side-load APK installation and ADB debug runner                │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🌐 Instant Live Web Console & 📱 1-Tap APK Installation
-
-Judges and evaluators can interact with Warnly immediately through either channel:
-
-<div align="center">
-
-[![Launch Live Web Console](https://img.shields.io/badge/Launch%20Live%20Console-warnly--k.workers.dev-00E5FF?style=for-the-badge&logo=cloudflare&logoColor=white)](https://warnly-k.krishivjoshi219.workers.dev)
-[![Direct Download APK](https://img.shields.io/badge/Direct%20Download-Warnly%20Astra%20v0.6.4%20APK-FF0055?style=for-the-badge&logo=android&logoColor=white)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk)
-
-*Deployed globally on Cloudflare Edge • Release assets on [GitHub Releases](https://github.com/krishivjoshi219-collab/Warnly/releases/latest)*
-
-</div>
-
-- **Option A (Instant Browser Evaluation)**: Click [**Launch Live Console**](https://warnly-k.krishivjoshi219.workers.dev) to test the full tactical HUD, radar sweep, and offline scenario engines directly in any modern browser.
-- **Option B (Native Android Device)**: Tap [**Direct Download APK**](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk) on any Android phone to install with 1 tap.
+### In-App Subscriptions & Evaluation Mode
+Warnly incorporates the **RevenueCat SDK** (`react-native-purchases`) for long-term sustainability while preserving core safety features:
+- **Free Tier**: Real-time atmospheric alerts, acoustic strike ranger, baseline radar, single-location monitoring.
+- **Astra Pro**: Multi-zone Family Shield monitoring, priority satellite Doppler overlays, custom siren overrides.
+- **Evaluation Sandbox**: A toggle in Settings allows reviewers to switch between Free and Pro states without payment processing.
 
 ---
 
-## ⚖️ Evaluation Summary for Judges
+## Evaluation Matrix
 
-| Evaluation Dimension | Traditional Weather Apps | Warnly Convective Defense |
+| Evaluation Dimension | Conventional Weather Applications | Warnly Defensive Architecture |
 | :--- | :--- | :--- |
-| **Real-World Impact** | Predicts tomorrow's umbrella needs | Saves lives during the critical $0\text{–}45\text{ min}$ convective warning void |
-| **Zero-Infrastructure Viability** | Dies when cellular towers lose power | Runs 100% offline with ad-hoc BLE mesh and pre-cached shelter graphs |
-| **Physics & Mathematical Rigor** | Generic cloud probability percentages | True speed-of-sound thermodynamics, CAPE integration & Hampel filtering |
-| **Hardware Execution Quality** | Standard system notifications | DND audio bypass (`STREAM_ALARM`), Morse strobe, and 18kHz canine chirp |
-| **Production Verification** | Unverified simulator screenshots | 15 verified live screenshots on physical Android 13 hardware (`RMX3381`) |
+| **Operational Impact** | General daily forecasts | Critical 0–25 minute convective warning window |
+| **Zero-Infrastructure Viability** | Dependent on cellular and cloud connectivity | Fully autonomous on-device sensors and deterministic algorithms |
+| **Physical Rigor** | Aggregated probabilistic percentages | Thermodynamic models, CAPE values, Hampel barometric filtering |
+| **Hardware Integration** | Standard system notification channels | `STREAM_ALARM` audio bypass, optical strobe, MEMS hardware barometer |
+| **Physical Verification** | Emulator / mock screenshots | 12 validated captures from Android 13 physical hardware (`Realme RMX3381`) |
+
+---
+
+## Development & Build Setup
+
+### Requirements
+- Node.js 18+ and npm
+- Android Studio (for native Android builds) or Expo Go
+
+### Local Setup
+```bash
+# Clone the repository
+git clone https://github.com/krishivjoshi219-collab/Warnly.git
+cd Warnly
+
+# Install dependencies
+npm install
+
+# Start Expo development server
+npm start
+
+# Deploy to connected Android device via ADB
+npm run android
+```
 
 ---
 
 <div align="center">
 
-**Warnly — Extreme Weather Defense for the Real World.**  
-Distributed under the **Apache License 2.0**.
+Warnly is distributed under the **Apache License 2.0**.
 
 </div>
