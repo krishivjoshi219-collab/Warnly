@@ -6,7 +6,7 @@
  * - Offline persistent caching via offlineCache
  * - Unified synthesis of Doppler cells, Barometric tendencies, and GLOF dynamics
  */
-import type { Coords, WeatherSnapshot } from './types';
+import type { Coords, Strike, WeatherSnapshot } from './types';
 import { offlineCache } from './offline-cache';
 import { fetchWeather } from './weather';
 import { BarometerAnalyzer, type BarometricAnalysis } from './barometric-surge';
@@ -14,6 +14,7 @@ import { analyzeDopplerCells, type DopplerRadarSummary } from './doppler-vector'
 import { evaluateGlofRisk, type GlofRiskAssessment } from './glof';
 import { computeEarlyWarnings, type EarlyWarningSummary } from './early-warning';
 import { fetchNearbyMetar, type AirportMetar } from './metar';
+import { fetchFloodRisk, fetchEarthquakes, type FloodSnapshot, type Quake } from './hazards';
 import { NativeEmergency, type HardwareBarometerResult } from './native-emergency';
 
 export type BackendConnectionState = 'ONLINE_REALTIME' | 'ONLINE_DEGRADED' | 'OFFLINE_CACHED';
@@ -57,8 +58,14 @@ export class ResilientBackendEngine {
 
   /**
    * Fetches weather and atmospheric telemetry with resilient multi-tier fallback.
+   * Optional ctx carries already-known live inputs (e.g. latest strikes) so the
+   * multi-hazard early-warning synthesis never runs on dummy empty arrays.
+   * Flood + quake feeds are ingested here in parallel with everything else.
    */
-  static async getAtmosphericTelemetry(coords: Coords): Promise<UnifiedBackendSnapshot> {
+  static async getAtmosphericTelemetry(
+    coords: Coords,
+    ctx: { strikes?: Strike[] } = {}
+  ): Promise<UnifiedBackendSnapshot> {
     let weather: WeatherSnapshot | null = null;
     let connectionState: BackendConnectionState = 'ONLINE_REALTIME';
 
@@ -118,9 +125,11 @@ export class ResilientBackendEngine {
     const cacheAge = this.lastSyncTimestamp > 0 ? Math.round((now - this.lastSyncTimestamp) / 1000) : 0;
 
     // 4-8. Run independent ingestions in parallel (was sequential awaits).
-    // Hardware barometer, METAR, GLOF, and early warnings don't depend on
-    // each other — awaiting them one-by-one blocked the first paint.
-    const [hwBaro, metar, glof, earlyWarning] = await (async () => {
+    // Hardware barometer, METAR, GLOF, flood, and quakes don't depend on each
+    // other — awaiting them one-by-one blocked the first paint. Early warnings
+    // synthesize AFTER flood/quakes resolve, fed with real inputs (never dummy
+    // empty arrays) plus the latest known strikes via ctx.
+    const [hwBaro, metar, glof, flood, quakes] = await (async () => {
       const hwP: Promise<HardwareBarometerResult | null> = (async () => {
         try {
           return await fetchWithTimeout(NativeEmergency.getHardwareBarometer(), 2500);
@@ -145,15 +154,32 @@ export class ResilientBackendEngine {
           return null;
         }
       })();
-      const earlyP: Promise<EarlyWarningSummary | null> = (async () => {
+      const floodP: Promise<FloodSnapshot | null> = (async () => {
         try {
-          return await fetchWithTimeout(computeEarlyWarnings(coords, weather, [], null, []), 5000);
+          return await fetchWithTimeout(fetchFloodRisk(coords), 8000);
         } catch {
           return null;
         }
       })();
-      return Promise.all([hwP, metarP, glofP, earlyP]);
+      const quakeP: Promise<Quake[]> = (async () => {
+        try {
+          return await fetchWithTimeout(fetchEarthquakes(coords), 8000);
+        } catch {
+          return [];
+        }
+      })();
+      return Promise.all([hwP, metarP, glofP, floodP, quakeP]);
     })();
+
+    let earlyWarning: EarlyWarningSummary | null = null;
+    try {
+      earlyWarning = await fetchWithTimeout(
+        computeEarlyWarnings(coords, weather, ctx.strikes ?? [], flood, quakes ?? []),
+        5000
+      );
+    } catch {
+      earlyWarning = null;
+    }
 
     if (metar && metar.isSevereConvective) {
       // Immediate nowcast override: airport confirms active severe convective event

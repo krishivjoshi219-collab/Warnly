@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -66,17 +66,34 @@ export const EmergencyOverlay: React.FC = () => {
   const title = topAlert?.title ?? "LIGHTNING DANGER DETECTED";
   const primaryAction = topAlert?.primaryAction ?? "GET INDOORS NOW - 30/30 RULE ACTIVE";
 
+  // SIR-OWNER-OVERLAY: the overlay drives the siren ONLY for non-danger
+  // early-warning criticals (GLOF/quake/flood). App.tsx owns the
+  // lightning-danger siren, so the two never double-start, and a dismissed
+  // alert stays silent. Stable boolean dep: summary text updates never
+  // restart the siren mid-wail.
+  const overlayOwnsSiren = isCritical && level !== "danger" && !alertDismissedAt;
+  const overlaySirenRef = useRef(false);
+  const alertTextRef = useRef({ title, primaryAction });
+  alertTextRef.current = { title, primaryAction };
   useEffect(() => {
-    if (isCritical && !alertDismissedAt) {
+    if (overlayOwnsSiren && !overlaySirenRef.current) {
+      overlaySirenRef.current = true;
       startSirenAudio();
-      NativeEmergency.postCriticalAlert(title, primaryAction);
-      return () => {
-        stopSirenAudio();
-      };
-    } else {
+      NativeEmergency.postCriticalAlert(
+        alertTextRef.current.title,
+        alertTextRef.current.primaryAction
+      );
+    } else if (!overlayOwnsSiren && overlaySirenRef.current) {
+      overlaySirenRef.current = false;
       stopSirenAudio();
     }
-  }, [isCritical, alertDismissedAt, title, primaryAction]);
+    return () => {
+      if (overlaySirenRef.current) {
+        overlaySirenRef.current = false;
+        stopSirenAudio();
+      }
+    };
+  }, [overlayOwnsSiren]);
 
   if (!isCritical || alertDismissedAt) return null;
 
