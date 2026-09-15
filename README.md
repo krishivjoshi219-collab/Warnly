@@ -9,6 +9,7 @@
 
 [![Release](https://img.shields.io/badge/Release-v0.6.4-1e293b?style=flat-square&logo=github)](https://github.com/krishivjoshi219-collab/Warnly/releases/tag/v0.6.4)
 [![Download APK](https://img.shields.io/badge/Download-Android%20APK-2563eb?style=flat-square&logo=android)](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk)
+[![Website](https://img.shields.io/badge/Website-warnly.coderx32.workers.dev-10b981?style=flat-square&logo=cloudflare)](https://warnly.coderx32.workers.dev/)
 [![Hardware Verified](https://img.shields.io/badge/Hardware%20Verified-Realme%20RMX3381%20(Android%2013)-334155?style=flat-square)](https://github.com/krishivjoshi219-collab/Warnly)
 
 <br/>
@@ -26,7 +27,7 @@
 
 <br/>
 
-[Download APK](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk) • [Production Gallery](#hardware-verified-production-gallery) • [Detection Pipeline](#convective-detection-pipeline) • [Offline Engine Suite](#the-astra-offline-engine-suite) • [Meteorological Models](#meteorological-physics--thermodynamic-models) • [Evaluation](#evaluation-matrix)
+[🌐 Website & Live Demo](https://warnly.coderx32.workers.dev/) • [Download APK](https://github.com/krishivjoshi219-collab/Warnly/releases/download/v0.6.4/Warnly-Astra-v0.6.4.apk) • [Production Gallery](#hardware-verified-production-gallery) • [Detection Pipeline](#convective-detection-pipeline) • [Offline Engine Suite](#the-astra-offline-engine-suite) • [Meteorological Models](#meteorological-physics--thermodynamic-models) • [Evaluation](#evaluation-matrix)
 
 </div>
 
@@ -54,6 +55,24 @@ The primary vulnerability is systemic: conventional weather forecasting tools de
 Warnly addresses this vulnerability through an architectural requirement: **survival systems must function independent of external network infrastructure.**
 
 When cellular connectivity and grid power are severed, Warnly operates as an autonomous tactical survival console. It utilizes onboard hardware sensors, evaluates thermodynamic calculations locally, routes to designated high-ground refuges, and broadcasts peer-to-peer mesh distress signals.
+
+---
+
+## 🌐 Promotional Website & Interactive Web Experience
+
+> **Official Website**: [https://warnly.coderx32.workers.dev/](https://warnly.coderx32.workers.dev/)
+> 
+> *“Storm warnings that work even with no signal — 20 minutes of warning before lightning, cloudbursts, and flash floods hit.”*
+
+The official Warnly promotional website provides an interactive, in-depth look at Warnly's zero-infrastructure survival systems:
+
+- **⚡ Interactive Storm & Lightning Simulator**: Explore a real-time convective storm simulation set in the Kathmandu Valley — click anywhere on the tactical map to simulate cloud-to-ground lightning discharges and experience instant sub-second distance triangulation, approach velocity, and ETA calculations.
+- **📡 Zero-Signal Survival Architecture**: Learn how Warnly reads onboard MEMS barometric pressure sensors to detect violent storm fingerprints (rapid pressure plunge) even when cell towers, Wi-Fi, and internet services are severed.
+- **🏔️ Topological Uphill Safe Shelters**: Interactive routing illustrating elevation-aware guidance that leads individuals uphill away from flood channels, flash floods, and mudslides to pre-verified safe shelters.
+- **🔗 Peer-to-Peer Mesh Relay (PACT & RESCUECHAIN)**: Demonstrates how nearby devices pass cryptographically signed warnings and SOS distress beacons phone-to-phone over local Bluetooth and Wi-Fi mesh without cell reception.
+- **🛡️ Multi-Hazard Conflict Resolution (AEGIS)**: How Warnly dynamically reconciles competing survival directives (e.g., redirecting away from low-lying underground tornado shelters during flash flood events).
+- **🔋 LifeReserve Endurance Engine**: Visualizes how intelligent radio pulse cycling stretches 8 hours of critical battery reserve into 72+ hours of life-saving connectivity.
+- **🔒 Privacy-First Architecture**: 100% on-device processing with zero tracking, no accounts, and no data brokers.
 
 ---
 
@@ -260,6 +279,7 @@ Demonstration workflow for evaluators on physical Android hardware:
 │  • Hardware MEMS Barometer (Sensor.TYPE_PRESSURE) • Device Power State Manager              │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
 │  DISTRIBUTION                                                                               │
+│  • Web Showcase: https://warnly.coderx32.workers.dev/ (Interactive live demo & portal)     │
 │  • Android Releases: Automated GitHub Actions CI pipeline producing standalone APK assets   │
 │  • Device Deployment: Direct side-load APK installation and ADB debug runner                │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
