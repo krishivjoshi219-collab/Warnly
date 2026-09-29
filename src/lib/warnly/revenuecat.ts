@@ -10,19 +10,29 @@ declare const __DEV__: boolean | undefined;
 
 /**
  * Warnly Astra - RevenueCat In-App Subscriptions & Paywall Integration
- * No API key is committed. Provide EXPO_PUBLIC_REVENUECAT_API_KEY at build
- * time; SDK init is skipped gracefully when missing (offline/sandbox safe).
+ * Pre-configured with the project's verified RevenueCat Test Store public key.
+ * Can also be overridden with EXPO_PUBLIC_REVENUECAT_API_KEY if desired.
  */
-function resolveRevenueCatKey(): string | null {
+function resolveRevenueCatKey(): string {
   const fromEnv =
     (typeof process !== "undefined" && process.env && (process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || process.env.REVENUECAT_API_KEY)) ||
     null;
-  return typeof fromEnv === "string" && fromEnv.length > 0 ? fromEnv : null;
+  if (typeof fromEnv === "string" && fromEnv.length > 0) {
+    return fromEnv;
+  }
+  return "test_iHpFsmOUyIMiZeBzDglxAvosjFr";
 }
 export const REVENUECAT_TEST_API_KEY = resolveRevenueCatKey();
 
 /** Entitlement IDs configured in RevenueCat dashboard */
-export const PRO_ENTITLEMENT_IDS = ["astra_pro", "warnly_pro", "pro", "premium", "tactical_pass"] as const;
+export const PRO_ENTITLEMENT_IDS = [
+  "warnly_pro",
+  "warly_pro",
+  "astra_pro",
+  "pro",
+  "premium",
+  "tactical_pass",
+] as const;
 
 export interface RevenueCatStatus {
   isConfigured: boolean;
