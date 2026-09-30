@@ -23,7 +23,7 @@
     "lucide-react": "^1.45.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-native": "0.74.5",
+    "react-native": "0.87.1",
     "react-native-purchases": "^10.9.1",
     "react-native-web": "~0.19.10"
   },
